@@ -1,5 +1,10 @@
 package edu.uci.ics.genomix.pregelix.operator.simplebubblemerge;
 
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -33,6 +38,8 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
     private ArrayList<SimpleBubbleMergeMessage> receivedMsgList = new ArrayList<SimpleBubbleMergeMessage>();
     private SimpleBubbleMergeMessage topMsg = new SimpleBubbleMergeMessage();
     private SimpleBubbleMergeMessage curMsg = new SimpleBubbleMergeMessage();
+    
+    private static volatile String genome = null;
 
     /**
      * initiate kmerSize, maxIteration
@@ -138,10 +145,20 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
 
             // log bubble info
             if (logBubbleInfo) {
+                VKmer kmer = receivedMsgList.get(i).getNode().getInternalKmer();
+                if (genome == null) {
+                    try {
+                        genome = StandardCharsets.UTF_8.decode(ByteBuffer.wrap(Files.readAllBytes(Paths.get("/cbcl/wbiesing/genomix-data/ecoli/genome/ecoli.genome.fasta")))).toString();
+                    } catch (IOException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                        throw new RuntimeException(e);
+                    }
+                }
                 logInfo += "\tNo." + (i + 1) + " bubble(internalKmer): " + bubble + "\tPathLength: "
                         + bubble.getKmerLetterLength() + "\tCoverage: "
                         + Math.round(receivedMsgList.get(i).getNode().getAverageCoverage()) + "\tID: "
-                        + receivedMsgList.get(i).getSourceVertexId() + "\n";
+                        + receivedMsgList.get(i).getSourceVertexId() + "\tPresent in genome? " + (genome.indexOf(kmer.toString()) != -1 || genome.indexOf(kmer.reverse().toString()) != -1)  + "\n";
                 logInfo += "\t\t Dissimilar: ";
             }
 
