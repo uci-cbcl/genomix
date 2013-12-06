@@ -159,6 +159,9 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
 
             String logInfo_remove = "";
             int removedNum = 0;
+            ArrayList<SimpleBubbleMergeMessage> originalMsgList = null;
+            if(logBubbleInfo)
+                originalMsgList = new ArrayList<SimpleBubbleMergeMessage>(receivedMsgList);
             Iterator<SimpleBubbleMergeMessage> it = receivedMsgList.iterator();
             topMsg = it.next();
             it.remove(); //delete topCoverage node
@@ -186,11 +189,11 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
                     // log bubble info
                     if (logBubbleInfo) {
                         int i = 0;
-                        for (; i < receivedMsgList.size(); i++){
-                            if(receivedMsgList.get(i).equals(curMsg))
+                        for (; i < originalMsgList.size(); i++){
+                            if(originalMsgList.get(i).equals(curMsg))
                                 break;
                         }
-                        logInfo_remove += "No." + (i + 1) + " - " + curMsg.getSourceVertexId() + "; ";
+                        logInfo_remove += "No." + (i + 1) + " bubble - " + curMsg.getSourceVertexId() + "; ";
                     }
                     it.remove();
                     removedNum++;
