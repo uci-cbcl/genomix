@@ -1,6 +1,5 @@
 package edu.uci.ics.genomix.pregelix.operator.simplebubblemerge;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -29,7 +28,6 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
     private static int MAX_LENGTH = -1;
     private static boolean logBubbleInfo = false;
     private String logInfo = "";
-    
 
     private Map<VKmer, ArrayList<SimpleBubbleMergeMessage>> receivedMsgMap = new HashMap<VKmer, ArrayList<SimpleBubbleMergeMessage>>();
     private ArrayList<SimpleBubbleMergeMessage> receivedMsgList = new ArrayList<SimpleBubbleMergeMessage>();
@@ -45,9 +43,8 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
         if (MAX_DISSIMILARITY < 0)
             MAX_DISSIMILARITY = Float.parseFloat(getContext().getConfiguration().get(
                     GenomixJobConf.BUBBLE_MERGE_MAX_DISSIMILARITY));
-        if (MAX_LENGTH < 0) 
-            MAX_LENGTH = Integer.parseInt(getContext().getConfiguration().get(
-                    GenomixJobConf.BUBBLE_MERGE_MAX_LENGTH));
+        if (MAX_LENGTH < 0)
+            MAX_LENGTH = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.BUBBLE_MERGE_MAX_LENGTH));
         if (logBubbleInfo == false)
             logBubbleInfo = Boolean.parseBoolean(getContext().getConfiguration().get(
                     GenomixJobConf.BUBBLE_MERGE_LOG_BUBBLE_INFO));
@@ -116,15 +113,15 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
         return (topMajorToBubbleEdgetype.dir() == curMajorToBubbleEdgetype.dir())
                 && topMinorToBubbleEdgetype.dir() == curMinorToBubbleEdgetype.dir();
     }
-    
-    public void updateStatsAndLogBubbleInfo(){
+
+    public void updateStatsAndLogBubbleInfo() {
         boolean[] sameOrientationWithFirstBubble = new boolean[receivedMsgList.size()];
-        
+
         // keep relative orientation with the first bubble
         sameOrientationWithFirstBubble[0] = true;
         for (int i = 1; i < receivedMsgList.size(); i++)
             sameOrientationWithFirstBubble[i] = receivedMsgList.get(i).sameOrientation(receivedMsgList.get(0));
-        
+
         for (int i = 0; i < receivedMsgList.size(); i++) {
             // print in the same orientation
             VKmer bubble;
@@ -135,6 +132,9 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
 
             // add 'pathLength' to statistics distribution
             updateStats("pathLength", bubble.getKmerLetterLength());
+
+            // add 'pathCoverage' to statistics distribution
+            updateStats("pathCoverage", Math.round(receivedMsgList.get(i).getNode().getAverageCoverage()));
 
             // log bubble info
             if (logBubbleInfo) {
@@ -164,12 +164,12 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
             }
         }
     }
-    
+
     public void processSimilarSet() {
         while (!receivedMsgList.isEmpty()) {
             /* log and update stats */
             updateStatsAndLogBubbleInfo();
-            
+
             /* detect kept bubble and removed bubble **/
             String logInfo_remove = "";
             int removedNum = 0;
