@@ -130,11 +130,11 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
             else
                 bubble = receivedMsgList.get(i).getNode().getInternalKmer().reverse();
 
-            // add 'pathLength' to statistics distribution
+            // add 'pathLength' to statistics counter
             updateStats("pathLength", bubble.getKmerLetterLength());
 
-            // add 'pathCoverage' to statistics distribution
-            updateStats("pathCoverage", Math.round(receivedMsgList.get(i).getNode().getAverageCoverage()));
+            // add 'pathCoverage' to statistics counter
+            updateStats("totalPathsCoverage", Math.round(receivedMsgList.get(i).getNode().getAverageCoverage()));
 
             // log bubble info
             if (logBubbleInfo) {
@@ -148,7 +148,7 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
             for (int j = 0; j < receivedMsgList.size(); j++) {
                 if (i == j)
                     continue;
-                // add 'editDistance' to statistics distribution
+                // add 'editDistance' to statistics counter
                 float editDistance = receivedMsgList.get(i).editDistance(receivedMsgList.get(j));
                 updateStats("editDistance", Math.round(editDistance));
                 float fractionDissimilar = receivedMsgList.get(i).computeDissimilar(receivedMsgList.get(j));
@@ -208,11 +208,15 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
                         }
                         logInfo_remove += "No." + (i + 1) + " bubble - " + curMsg.getSourceVertexId() + "; ";
                     }
+                    
+                    // add 'removedPathCoverage' to statistics counter
+                    updateStats("removedPathsCoverage", Math.round(curMsg.getNode().getAverageCoverage()));
+                    
                     it.remove();
                     removedNum++;
                 }
             }
-            // add 'removedPaths' to statistics distribution
+            // add 'removedPaths' to statistics counter
             updateStats("removedPaths", removedNum);
 
             // log bubble info
@@ -256,7 +260,7 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
         for (VKmer majorVertexId : receivedMsgMap.keySet()) {
             receivedMsgList = receivedMsgMap.get(majorVertexId);
             if (receivedMsgList.size() > 1) { // filter simple paths
-                // add to 'totalPaths' statistics distribution
+                // add to 'totalPaths' statistics counter
                 updateStats("totalPaths", receivedMsgList.size());
 
                 logInfo = "";
