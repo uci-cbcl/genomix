@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-import java.util.SortedSet;
 
 public class ReadHeadSet extends ExternalableTreeSet<ReadHeadInfo> implements Iterable<ReadHeadInfo> {
     private static final long serialVersionUID = 1L;
@@ -23,14 +22,9 @@ public class ReadHeadSet extends ExternalableTreeSet<ReadHeadInfo> implements It
 
     public int getOffsetFromReadId(long readId) {
         ReadHeadInfo lowKey = ReadHeadInfo.getLowerBoundInfo(readId);
-        ReadHeadInfo highKey = ReadHeadInfo.getUpperBoundInfo(readId);
-        SortedSet<ReadHeadInfo> result = super.rangeSearch(lowKey, highKey);
-        if (result.size() != 0) {
-            for (ReadHeadInfo readHeadInfo : result) {
-                if (readHeadInfo.getReadId() == readId) {
-                    return readHeadInfo.getOffset();
-                }
-            }
+        ReadHeadInfo hit = super.inMemorySet.ceiling(lowKey);
+        if (hit != null && hit.getReadId() == readId){
+            return hit.getOffset();
         }
         throw new IllegalArgumentException("The input parameter readId " + readId
                 + " should exist in this ReadHeadSet, but not here!");
@@ -39,14 +33,14 @@ public class ReadHeadSet extends ExternalableTreeSet<ReadHeadInfo> implements It
     /**
      * @param data
      * @param offset
-     * @return How many bytes read by this function.
+     * @return The current offset after reading this object.
      * @throws IOException
      */
     public int setAsCopy(byte[] data, int offset) throws IOException {
         ByteArrayInputStream bin = new ByteArrayInputStream(data, offset, data.length);
         DataInputStream din = new DataInputStream(bin);
         super.readFields(din);
-        return data.length - bin.available() - offset;
+        return data.length - bin.available();
     }
 
     public int size() {
@@ -80,14 +74,14 @@ public class ReadHeadSet extends ExternalableTreeSet<ReadHeadInfo> implements It
 
     public void unionUpdate(ReadHeadSet readIds, float lengthFactor, boolean flipOffset, int otherLength) {
         if (!flipOffset) {
-            for (ReadHeadInfo p : super.inMemorySet) {
+            for (ReadHeadInfo p : readIds) {
                 this.add(p.getMateId(), p.getReadId(), (int) ((p.getOffset() + 1) * lengthFactor - lengthFactor),
                         p.getThisReadSequence(), p.getMateReadSequence());
             }
         } else {
             // int newOtherOffset = (int) ((otherLength - 1) * lengthFactor);
             // stream theirs in, offset and flipped
-            for (ReadHeadInfo p : super.inMemorySet) {
+            for (ReadHeadInfo p : readIds) {
                 int newPOffset = otherLength - 1 - p.getOffset();
                 this.add(p.getMateId(), p.getReadId(), (int) ((newPOffset + 1) * lengthFactor - lengthFactor),
                         p.getThisReadSequence(), p.getMateReadSequence());
@@ -95,7 +89,7 @@ public class ReadHeadSet extends ExternalableTreeSet<ReadHeadInfo> implements It
         }
     }
 
-    public void postAppendOffsets(int newThisOffset) {
+    public void prependOffsets(int newThisOffset) {
         for (ReadHeadInfo p : super.inMemorySet) {
             p.resetOffset(newThisOffset + p.getOffset());
         }
@@ -106,7 +100,7 @@ public class ReadHeadSet extends ExternalableTreeSet<ReadHeadInfo> implements It
         super.union(setB);
     }
 
-    public void preAppendOffset(int newOtherOffset) {
+    public void flipOffset(int newOtherOffset) {
         for (ReadHeadInfo p : super.inMemorySet) {
             p.resetOffset(newOtherOffset - p.getOffset());
         }

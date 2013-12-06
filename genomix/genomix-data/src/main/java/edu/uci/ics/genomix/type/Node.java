@@ -345,10 +345,10 @@ public class Node implements Writable, Serializable {
             }
         }
         if ((activeFields & NODE_FIELDS.UNFLIPPED_READ_IDS) != 0) {
-            offset += getUnflippedReadIds().setAsCopy(data, offset);
+            offset = getUnflippedReadIds().setAsCopy(data, offset);
         }
         if ((activeFields & NODE_FIELDS.FLIPPED_READ_IDS) != 0) {
-            offset += getFlippedReadIds().setAsCopy(data, offset);
+            offset = getFlippedReadIds().setAsCopy(data, offset);
         }
         if ((activeFields & NODE_FIELDS.INTERNAL_KMER) != 0) {
             offset = getInternalKmer().setAsCopy(data, offset);
@@ -371,10 +371,10 @@ public class Node implements Writable, Serializable {
             }
         }
         if ((activeFields & NODE_FIELDS.UNFLIPPED_READ_IDS) != 0) {
-            offset += getUnflippedReadIds().setAsCopy(data, offset);
+            offset = getUnflippedReadIds().setAsCopy(data, offset);
         }
         if ((activeFields & NODE_FIELDS.FLIPPED_READ_IDS) != 0) {
-            offset += getFlippedReadIds().setAsCopy(data, offset);
+            offset = getFlippedReadIds().setAsCopy(data, offset);
         }
         if ((activeFields & NODE_FIELDS.INTERNAL_KMER) != 0) {
             offset = getInternalKmer().setAsReference(data, offset);
@@ -735,11 +735,11 @@ public class Node implements Writable, Serializable {
                 newOtherOffset = thisLength - K + 1;
                 // stream theirs in with my offset
                 if (other.unflippedReadIds != null) {
-                    other.unflippedReadIds.postAppendOffsets(newOtherOffset);
+                    other.unflippedReadIds.prependOffsets(newOtherOffset);
                     getUnflippedReadIds().unionUpdate(other.unflippedReadIds);
                 }
                 if (other.flippedReadIds != null) {
-                    other.flippedReadIds.postAppendOffsets(newOtherOffset);
+                    other.flippedReadIds.prependOffsets(newOtherOffset);
                     getFlippedReadIds().unionUpdate(other.flippedReadIds);
                 }
                 break;
@@ -747,11 +747,11 @@ public class Node implements Writable, Serializable {
                 newOtherOffset = thisLength - K + otherLength;
                 // stream theirs in, offset and flipped
                 if (other.unflippedReadIds != null) {
-                    other.unflippedReadIds.preAppendOffset(newOtherOffset);
+                    other.unflippedReadIds.flipOffset(newOtherOffset);
                     getFlippedReadIds().unionUpdate(other.unflippedReadIds);
                 }
                 if (other.flippedReadIds != null) {
-                    other.flippedReadIds.preAppendOffset(newOtherOffset);
+                    other.flippedReadIds.flipOffset(newOtherOffset);
                     getUnflippedReadIds().unionUpdate(other.flippedReadIds);
                 }
                 break;
@@ -760,17 +760,17 @@ public class Node implements Writable, Serializable {
                 newOtherOffset = otherLength - 1;
                 // shift my offsets (other is prepended)
                 if (unflippedReadIds != null) {
-                    unflippedReadIds.postAppendOffsets(newThisOffset);
+                    unflippedReadIds.prependOffsets(newThisOffset);
                 }
                 if (flippedReadIds != null) {
-                    flippedReadIds.postAppendOffsets(newThisOffset);
+                    flippedReadIds.prependOffsets(newThisOffset);
                 }
                 if (other.unflippedReadIds != null) {
-                    other.unflippedReadIds.preAppendOffset(newOtherOffset);
+                    other.unflippedReadIds.flipOffset(newOtherOffset);
                     getFlippedReadIds().unionUpdate(other.unflippedReadIds);
                 }
                 if (other.flippedReadIds != null) {
-                    other.flippedReadIds.preAppendOffset(newOtherOffset);
+                    other.flippedReadIds.flipOffset(newOtherOffset);
                     getUnflippedReadIds().unionUpdate(other.flippedReadIds);
                 }
                 break;
@@ -778,10 +778,10 @@ public class Node implements Writable, Serializable {
                 newThisOffset = otherLength - K + 1;
                 // shift my offsets (other is prepended)
                 if (unflippedReadIds != null) {
-                    unflippedReadIds.postAppendOffsets(newThisOffset);
+                    unflippedReadIds.prependOffsets(newThisOffset);
                 }
                 if (flippedReadIds != null) {
-                    flippedReadIds.postAppendOffsets(newThisOffset);
+                    flippedReadIds.prependOffsets(newThisOffset);
                 }
                 if (other.unflippedReadIds != null) {
                     getUnflippedReadIds().unionUpdate(other.unflippedReadIds);

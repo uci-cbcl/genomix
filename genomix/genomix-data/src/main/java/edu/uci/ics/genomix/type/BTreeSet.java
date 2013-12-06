@@ -297,12 +297,12 @@ public class BTreeSet implements Serializable {
 
         BTreeAccessor smallerAccessor = otherSet.totalTupleCount < this.totalTupleCount ? otherSet.btreeAccessor
                 : this.btreeAccessor;
-        BTreeAccessor larggerAccessor = otherSet.totalTupleCount >= this.totalTupleCount ? otherSet.btreeAccessor
+        BTreeAccessor largerAccessor = otherSet.totalTupleCount >= this.totalTupleCount ? otherSet.btreeAccessor
                 : this.btreeAccessor;
         ITreeIndexCursor scanCursor = smallerAccessor.createDiskOrderScanCursor();
         smallerAccessor.diskOrderScan(scanCursor);
 
-        ITreeIndexCursor searchCursor = larggerAccessor.createSearchCursor(false);
+        ITreeIndexCursor searchCursor = largerAccessor.createSearchCursor(false);
 
         writer.open();
         long count = 0;
@@ -320,7 +320,7 @@ public class BTreeSet implements Serializable {
             searchRange.setHighKeyComparator(comparator);
 
             searchCursor.reset();
-            larggerAccessor.search(searchCursor, searchRange);
+            largerAccessor.search(searchCursor, searchRange);
             if (searchCursor.hasNext()) {
                 ITupleReference tuple = scanCursor.getTuple();
                 writeTuple(writer, tuple, outputBuffer, outputAppender);

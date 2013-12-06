@@ -118,7 +118,7 @@ public class TestUtils {
                                 + lineExpected);
                     }
                 } else {
-                    if (!compareStringByFields(lineExpected, actualLine, unorderedField)) {
+                    if (!compareGeneLettersByFields(lineExpected, actualLine, unorderedField)) {
                         throw new Exception("Comparing " + expectedFile + " and " + actualFile + ":  Result for changed at line " + num + ":\n< " + lineExpected + "\n> "
                                 + actualLine);
                     }
@@ -133,7 +133,7 @@ public class TestUtils {
         }
     }
 
-    private static boolean compareStringByFields(String lineExpected, String actualLine,
+    private static boolean compareGeneLettersByFields(String lineExpected, String actualLine,
             final Set<Integer> unorderedField) {
         if (lineExpected.equals(actualLine)) {
             return true;
