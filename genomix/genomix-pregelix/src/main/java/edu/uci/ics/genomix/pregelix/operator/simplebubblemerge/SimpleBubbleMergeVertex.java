@@ -11,8 +11,8 @@ import edu.uci.ics.genomix.data.config.GenomixJobConf;
 import edu.uci.ics.genomix.data.types.DIR;
 import edu.uci.ics.genomix.data.types.EDGETYPE;
 import edu.uci.ics.genomix.data.types.Node;
-import edu.uci.ics.genomix.data.types.VKmer;
 import edu.uci.ics.genomix.data.types.Node.NeighborInfo;
+import edu.uci.ics.genomix.data.types.VKmer;
 import edu.uci.ics.genomix.pregelix.base.DeBruijnGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.base.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.types.GraphMutations;
@@ -53,9 +53,9 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
 
         // get majorVertex and minorVertex and meToMajorEdgeType and meToMinorEdgeType
         if (forwardNeighbor.kmer.equals(reverseNeighbor.kmer)) {
-            LOG.fine("majorVertexId is equal to minorVertexId, this is not allowed!\n" + "forwardKmer is "
-                    + forwardNeighbor.kmer + "\n" + "reverseKmer is " + reverseNeighbor.kmer + "\n" + "this vertex is "
-                    + getVertexId() + ", value: " + getVertexValue());
+//            LOG.fine("majorVertexId is equal to minorVertexId, this is not allowed!\n" + "forwardKmer is "
+//                    + forwardNeighbor.kmer + "\n" + "reverseKmer is " + reverseNeighbor.kmer + "\n" + "this vertex is "
+//                    + getVertexId() + ", value: " + getVertexValue());
             return;
         }
 
@@ -109,33 +109,34 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
 
     public void processSimilarSet() {
         while (!receivedMsgList.isEmpty()) {
-            for(int i = 0; i < receivedMsgList.size(); i ++){
+            for (int i = 0; i < receivedMsgList.size(); i++) {
                 VKmer bubble = receivedMsgList.get(i).getNode().getInternalKmer();
                 // add 'pathLength' to statistics distribution
                 updateStats("pathLength", bubble.getKmerLetterLength());
-                
+
                 // log bubble info
-                if(logBubbleInfo){
-                    LOG.info("\tNo." + i + " bubble(internalKmer): " + bubble + "\t PathLength: " + bubble.getKmerLetterLength() + "\n");
+                if (logBubbleInfo) {
+                    LOG.info("\tNo." + i + " bubble(internalKmer): " + bubble + "\t PathLength: "
+                            + bubble.getKmerLetterLength() + "\n");
                     LOG.info("\t\t Dissimilar: ");
                 }
 
-                for(int j = i + 1; j < receivedMsgList.size(); j ++){
+                for (int j = i + 1; j < receivedMsgList.size(); j++) {
                     // add 'editDistance' to statistics distribution
                     float editDistance = receivedMsgList.get(i).editDistance(receivedMsgList.get(j));
                     updateStats("editDistance", Math.round(editDistance));
                     float fractionDissimilar = receivedMsgList.get(i).computeDissimilar(receivedMsgList.get(j));
                     updateStats("fractionDissimilar", Math.round(fractionDissimilar));
-                    
+
                     // log bubble info
-                    if(logBubbleInfo){
+                    if (logBubbleInfo) {
                         LOG.info(fractionDissimilar + " with No." + j + " bubble;  ");
                     }
                 }
-                
+
             }
-            
-            if(logBubbleInfo){
+
+            if (logBubbleInfo) {
                 LOG.info("\n\n Remove bubble: ");
             }
             int removedNum = 0;
@@ -152,7 +153,7 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
 
                 //compute the dissimilarity
                 float fractionDissimilar = topMsg.computeDissimilar(curMsg); // TODO change to simmilarity everywhere
-                
+
                 if (fractionDissimilar <= DISSIMILAR_THRESHOLD) { //if similar with top node, delete this node
                     topChanged = true;
                     boolean sameOrientation = topMsg.sameOrientation(curMsg);
@@ -164,7 +165,7 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
                     outgoingMsg.setFlag(MESSAGETYPE.KILL_SELF.get());
                     sendMsg(curMsg.getSourceVertexId(), outgoingMsg);
                     // log bubble info
-                    if(logBubbleInfo){
+                    if (logBubbleInfo) {
                         LOG.info(curMsg.getNode().getInternalKmer().toString() + ";  ");
                     }
                     it.remove();
@@ -173,10 +174,10 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
             }
             // add 'removedPaths' to statistics distribution
             updateStats("removedPaths", removedNum);
-            
+
             // log bubble info
-            if(logBubbleInfo){
-                LOG.info("/n ////////////////////////////////////////////////////////////////////// /n"); 
+            if (logBubbleInfo) {
+                LOG.info("\n ///////////////////////////////////////////////////////////////////////////////////////// \n");
             }
             // process topNode -- send message to topVertex to update their coverage
             if (topChanged) {
@@ -211,17 +212,17 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
             if (receivedMsgList.size() > 1) { // filter simple paths
                 // add to 'totalPaths' statistics distribution
                 updateStats("totalPaths", receivedMsgList.size());
-                if(logBubbleInfo){
+                if (logBubbleInfo) {
                     LOG.info("Major: " + majorVertexId + "  Minor: " + getVertexId() + "\n");
                     LOG.info("NumOfPaths: " + receivedMsgList.size() + "\n");
                 }
-                
+
                 // for each majorVertex, sort the node by decreasing order of coverage
                 Collections.sort(receivedMsgList, new SimpleBubbleMergeMessage.SortByCoverage());
 
                 // process similarSet, keep the unchanged set and deleted set & add coverage to unchange node 
                 processSimilarSet();
-                
+
                 getCounters().findCounter(GraphMutations.Num_RemovedBubbles).increment(1);
             }
         }
