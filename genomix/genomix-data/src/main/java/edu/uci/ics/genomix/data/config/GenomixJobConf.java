@@ -165,6 +165,9 @@ public class GenomixJobConf extends JobConf {
 
         @Option(name = "-runAllStats", usage = "Whether or not to run a STATS job after each normal job")
         private boolean runAllStats = false;
+        
+        @Option(name = "-logBubbleInfo", usage = "Whether or not to log bubble info on simple bubble merge")
+        private boolean logBubbleInfo = false;
     }
 
     /**
@@ -262,6 +265,7 @@ public class GenomixJobConf extends JobConf {
     // Graph cleaning   
     public static final String BRIDGE_REMOVE_MAX_LENGTH = "genomix.bridgeRemove.maxLength";
     public static final String BUBBLE_MERGE_MAX_DISSIMILARITY = "genomix.bubbleMerge.maxDissimilarity";
+    public static final String BUBBLE_MERGE_LOG_BUBBLE_INFO = "genomix.bubbleMerge.logBubbleInfo";
     public static final String BUBBLE_MERGE_WITH_SEARCH_MAX_LENGTH = "genomix.bubbleMergeWithSearch.maxSearchLength";
     public static final String BUBBLE_MERGE_WITH_SEARCH_SEARCH_DIRECTION = "genomix.bubbleMergeWithSearch.searchDirection";
     public static final String GRAPH_CLEAN_MAX_ITERATIONS = "genomix.graphClean.maxIterations";
@@ -518,6 +522,7 @@ public class GenomixJobConf extends JobConf {
         if (opts.extraConfFiles != null)
             set(EXTRA_CONF_FILES, opts.extraConfFiles);
         setBoolean(RUN_ALL_STATS, opts.runAllStats);
+        setBoolean(BUBBLE_MERGE_LOG_BUBBLE_INFO, opts.logBubbleInfo);
     }
 
     /**
