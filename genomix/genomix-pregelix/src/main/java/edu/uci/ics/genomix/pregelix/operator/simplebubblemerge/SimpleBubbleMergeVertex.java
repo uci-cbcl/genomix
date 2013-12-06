@@ -25,6 +25,7 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
     private static final Logger LOG = Logger.getLogger(SimpleBubbleMergeVertex.class.getName());
 
     private static float DISSIMILAR_THRESHOLD = -1;
+    private static boolean logBubbleInfo = true;
 
     private Map<VKmer, ArrayList<SimpleBubbleMergeMessage>> receivedMsgMap = new HashMap<VKmer, ArrayList<SimpleBubbleMergeMessage>>();
     private ArrayList<SimpleBubbleMergeMessage> receivedMsgList = new ArrayList<SimpleBubbleMergeMessage>();
@@ -108,15 +109,35 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
 
     public void processSimilarSet() {
         while (!receivedMsgList.isEmpty()) {
-            // add 'editDistance' and 'pathLength' to statistics distribution
             for(int i = 0; i < receivedMsgList.size(); i ++){
+                VKmer bubble = receivedMsgList.get(i).getNode().getInternalKmer();
+                // add 'pathLength' to statistics distribution
+                updateStats("pathLength", bubble.getKmerLetterLength());
+                
+                // log bubble info
+                if(logBubbleInfo){
+                    LOG.info("\tNo." + i + " bubble(internalKmer): " + bubble + "\t PathLength: " + bubble.getKmerLetterLength() + "\n");
+                    LOG.info("\t\t Dissimilar: ");
+                }
+
                 for(int j = i + 1; j < receivedMsgList.size(); j ++){
+                    // add 'editDistance' to statistics distribution
                     float editDistance = receivedMsgList.get(i).editDistance(receivedMsgList.get(j));
                     updateStats("editDistance", Math.round(editDistance));
+                    float fractionDissimilar = receivedMsgList.get(i).computeDissimilar(receivedMsgList.get(j));
+                    updateStats("fractionDissimilar", Math.round(fractionDissimilar));
+                    
+                    // log bubble info
+                    if(logBubbleInfo){
+                        LOG.info(fractionDissimilar + " with No." + j + " bubble;  ");
+                    }
                 }
-                updateStats("pathLength", receivedMsgList.get(i).getNode().getKmerLength());
+                
             }
             
+            if(logBubbleInfo){
+                LOG.info("\n\n Remove bubble: ");
+            }
             int removedNum = 0;
             Iterator<SimpleBubbleMergeMessage> it = receivedMsgList.iterator();
             topMsg = it.next();
@@ -142,6 +163,10 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
                     outgoingMsg.reset();
                     outgoingMsg.setFlag(MESSAGETYPE.KILL_SELF.get());
                     sendMsg(curMsg.getSourceVertexId(), outgoingMsg);
+                    // log bubble info
+                    if(logBubbleInfo){
+                        LOG.info(curMsg.getNode().getInternalKmer().toString() + ";  ");
+                    }
                     it.remove();
                     removedNum++;
                 }
@@ -149,6 +174,10 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
             // add 'removedPaths' to statistics distribution
             updateStats("removedPaths", removedNum);
             
+            // log bubble info
+            if(logBubbleInfo){
+                LOG.info("/n ////////////////////////////////////////////////////////////////////// /n"); 
+            }
             // process topNode -- send message to topVertex to update their coverage
             if (topChanged) {
                 outgoingMsg.reset();
@@ -182,6 +211,10 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
             if (receivedMsgList.size() > 1) { // filter simple paths
                 // add to 'totalPaths' statistics distribution
                 updateStats("totalPaths", receivedMsgList.size());
+                if(logBubbleInfo){
+                    LOG.info("Major: " + majorVertexId + "  Minor: " + getVertexId() + "\n");
+                    LOG.info("NumOfPaths: " + receivedMsgList.size() + "\n");
+                }
                 
                 // for each majorVertex, sort the node by decreasing order of coverage
                 Collections.sort(receivedMsgList, new SimpleBubbleMergeMessage.SortByCoverage());
