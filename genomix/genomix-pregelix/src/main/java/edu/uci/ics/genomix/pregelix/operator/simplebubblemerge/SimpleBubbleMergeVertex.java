@@ -110,57 +110,65 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
         return (topMajorToBubbleEdgetype.dir() == curMajorToBubbleEdgetype.dir())
                 && topMinorToBubbleEdgetype.dir() == curMinorToBubbleEdgetype.dir();
     }
+    
+    public void updateStatsAndLogBubbleInfo(){
+        boolean[] sameOrientationWithFirstBubble = new boolean[receivedMsgList.size()];
+        
+        // keep relative orientation with the first bubble
+        sameOrientationWithFirstBubble[0] = true;
+        for (int i = 1; i < receivedMsgList.size(); i++)
+            sameOrientationWithFirstBubble[i] = receivedMsgList.get(i).sameOrientation(receivedMsgList.get(0));
+        
+        for (int i = 0; i < receivedMsgList.size(); i++) {
+            // print in the same orientation
+            VKmer bubble;
+            if (sameOrientationWithFirstBubble[i])
+                bubble = receivedMsgList.get(i).getNode().getInternalKmer();
+            else
+                bubble = receivedMsgList.get(i).getNode().getInternalKmer().reverse();
 
-    public void processSimilarSet() {
-        while (!receivedMsgList.isEmpty()) {
-            /* log and update stats */
-            boolean[] sameOrientationWithFirstBubble = new boolean[receivedMsgList.size()];
-            sameOrientationWithFirstBubble[0] = true;
-            for (int i = 1; i < receivedMsgList.size(); i++)
-                sameOrientationWithFirstBubble[i] = receivedMsgList.get(i).sameOrientation(receivedMsgList.get(0));
-            for (int i = 0; i < receivedMsgList.size(); i++) {
-                // print the same orientation
-                VKmer bubble;
-                if (sameOrientationWithFirstBubble[i])
-                    bubble = receivedMsgList.get(i).getNode().getInternalKmer();
-                else
-                    bubble = receivedMsgList.get(i).getNode().getInternalKmer().reverse();
+            // add 'pathLength' to statistics distribution
+            updateStats("pathLength", bubble.getKmerLetterLength());
 
-                // add 'pathLength' to statistics distribution
-                updateStats("pathLength", bubble.getKmerLetterLength());
+            // log bubble info
+            if (logBubbleInfo) {
+                logInfo += "\tNo." + (i + 1) + " bubble(internalKmer): " + bubble + "\tPathLength: "
+                        + bubble.getKmerLetterLength() + "\tCoverage: "
+                        + Math.round(receivedMsgList.get(i).getNode().getAverageCoverage()) + "\tID: "
+                        + receivedMsgList.get(i).getSourceVertexId() + "\n";
+                logInfo += "\t\t Dissimilar: ";
+            }
+
+            for (int j = 0; j < receivedMsgList.size(); j++) {
+                if (i == j)
+                    continue;
+                // add 'editDistance' to statistics distribution
+                float editDistance = receivedMsgList.get(i).editDistance(receivedMsgList.get(j));
+                updateStats("editDistance", Math.round(editDistance));
+                float fractionDissimilar = receivedMsgList.get(i).computeDissimilar(receivedMsgList.get(j));
+                updateStats("fractionDissimilar", Math.round(fractionDissimilar));
 
                 // log bubble info
                 if (logBubbleInfo) {
-                    logInfo += "\tNo." + (i + 1) + " bubble(internalKmer): " + bubble + "\tPathLength: "
-                            + bubble.getKmerLetterLength() + "\tCoverage: "
-                            + receivedMsgList.get(i).getNode().getAverageCoverage() + "\tID: "
-                            + receivedMsgList.get(i).getSourceVertexId() + "\n";
-                    logInfo += "\t\t Dissimilar: ";
-                }
-
-                for (int j = 0; j < receivedMsgList.size(); j++) {
-                    if (i == j)
-                        continue;
-                    // add 'editDistance' to statistics distribution
-                    float editDistance = receivedMsgList.get(i).editDistance(receivedMsgList.get(j));
-                    updateStats("editDistance", Math.round(editDistance));
-                    float fractionDissimilar = receivedMsgList.get(i).computeDissimilar(receivedMsgList.get(j));
-                    updateStats("fractionDissimilar", Math.round(fractionDissimilar));
-
-                    // log bubble info
-                    if (logBubbleInfo) {
-                        logInfo += fractionDissimilar + " with No." + (j + 1) + " bubble;  ";
-                    }
-                }
-                if (logBubbleInfo) {
-                    logInfo += "\n";
+                    logInfo += fractionDissimilar + " with No." + (j + 1) + " bubble;  ";
                 }
             }
-
+            if (logBubbleInfo) {
+                logInfo += "\n";
+            }
+        }
+    }
+    
+    public void processSimilarSet() {
+        while (!receivedMsgList.isEmpty()) {
+            /* log and update stats */
+            updateStatsAndLogBubbleInfo();
+            
+            /* detect kept bubble and removed bubble **/
             String logInfo_remove = "";
             int removedNum = 0;
             ArrayList<SimpleBubbleMergeMessage> originalMsgList = null;
-            if(logBubbleInfo)
+            if (logBubbleInfo)
                 originalMsgList = new ArrayList<SimpleBubbleMergeMessage>(receivedMsgList);
             Iterator<SimpleBubbleMergeMessage> it = receivedMsgList.iterator();
             topMsg = it.next();
@@ -189,8 +197,8 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
                     // log bubble info
                     if (logBubbleInfo) {
                         int i = 0;
-                        for (; i < originalMsgList.size(); i++){
-                            if(originalMsgList.get(i).equals(curMsg))
+                        for (; i < originalMsgList.size(); i++) {
+                            if (originalMsgList.get(i).equals(curMsg))
                                 break;
                         }
                         logInfo_remove += "No." + (i + 1) + " bubble - " + curMsg.getSourceVertexId() + "; ";
@@ -220,7 +228,7 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
             LOG.info(logInfo);
         }
     }
-    
+
     /**
      * step 1
      */
