@@ -101,6 +101,8 @@ public abstract class DeBruijnGraphCleanVertex<V extends VertexValueWritable, M 
 
     /**
      * initiate kmerSize, maxIteration
+     * 
+     * @throws IOException
      */
     public void initVertex() {
         if (getSuperstep() == 1) {
@@ -111,7 +113,12 @@ public abstract class DeBruijnGraphCleanVertex<V extends VertexValueWritable, M 
                 maxIteration = Integer.parseInt(getContext().getConfiguration().get(
                         GenomixJobConf.GRAPH_CLEAN_MAX_ITERATIONS));
             }
-            GenomixJobConf.setGlobalStaticConstants(getContext().getConfiguration());
+            try {
+                GenomixJobConf.setGlobalStaticConstants(getContext().getConfiguration());
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
         }
 
         verbose = false;

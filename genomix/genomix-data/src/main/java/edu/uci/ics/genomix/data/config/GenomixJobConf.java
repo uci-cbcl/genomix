@@ -15,6 +15,7 @@
 
 package edu.uci.ics.genomix.data.config;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -22,11 +23,13 @@ import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.JobConf;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
+import edu.uci.ics.genomix.data.types.ExternalableTreeSet;
 import edu.uci.ics.genomix.data.types.Kmer;
 import edu.uci.ics.genomix.data.types.VKmer;
 import edu.uci.ics.genomix.data.utils.GenerateGraphViz.GRAPH_TYPE;
@@ -85,6 +88,9 @@ public class GenomixJobConf extends JobConf {
 
         @Option(name = "-bubbleMerge_maxDissimilarity", usage = "Maximum dissimilarity (1 - % identity) allowed between two kmers while still considering them a \"bubble\", (leading to their collapse into a single node)", required = false)
         private float bubbleMerge_maxDissimilarity = -1;
+        
+        @Option(name = "-bubbleMerge_maxLength", usage = "The maximum length an internal node may be and still be considered a bubble", required = false)
+        private int bubbleMerge_maxLength;
 
         @Option(name = "-bubbleMergewithsearch_maxLength", usage = "Maximum length can be searched", required = false)
         private int bubbleMergeWithSearch_maxLength = -1;
@@ -266,6 +272,7 @@ public class GenomixJobConf extends JobConf {
     public static final String BRIDGE_REMOVE_MAX_LENGTH = "genomix.bridgeRemove.maxLength";
     public static final String BUBBLE_MERGE_MAX_DISSIMILARITY = "genomix.bubbleMerge.maxDissimilarity";
     public static final String BUBBLE_MERGE_LOG_BUBBLE_INFO = "genomix.bubbleMerge.logBubbleInfo";
+    public static final String BUBBLE_MERGE_MAX_LENGTH = "genomix.bubbleMerge.maxLength";
     public static final String BUBBLE_MERGE_WITH_SEARCH_MAX_LENGTH = "genomix.bubbleMergeWithSearch.maxSearchLength";
     public static final String BUBBLE_MERGE_WITH_SEARCH_SEARCH_DIRECTION = "genomix.bubbleMergeWithSearch.searchDirection";
     public static final String GRAPH_CLEAN_MAX_ITERATIONS = "genomix.graphClean.maxIterations";
@@ -388,7 +395,10 @@ public class GenomixJobConf extends JobConf {
             setInt(BRIDGE_REMOVE_MAX_LENGTH, kmerLength + 1);
 
         if (getFloat(BUBBLE_MERGE_MAX_DISSIMILARITY, -1) == -1)
-            setFloat(BUBBLE_MERGE_MAX_DISSIMILARITY, .5f);
+            setFloat(BUBBLE_MERGE_MAX_DISSIMILARITY, .05f);
+        
+        if (getInt(BUBBLE_MERGE_MAX_LENGTH, -1) == -1)
+            setInt(BUBBLE_MERGE_MAX_LENGTH, kmerLength * 5);
 
         if (getInt(BUBBLE_MERGE_WITH_SEARCH_MAX_LENGTH, -1) == -1)
             setInt(BUBBLE_MERGE_WITH_SEARCH_MAX_LENGTH, kmerLength * 2);
@@ -498,6 +508,7 @@ public class GenomixJobConf extends JobConf {
         // Graph cleaning
         setInt(BRIDGE_REMOVE_MAX_LENGTH, opts.bridgeRemove_maxLength);
         setFloat(BUBBLE_MERGE_MAX_DISSIMILARITY, opts.bubbleMerge_maxDissimilarity);
+        setInt(BUBBLE_MERGE_MAX_LENGTH, opts.bubbleMerge_maxLength);
         setInt(BUBBLE_MERGE_WITH_SEARCH_MAX_LENGTH, opts.bubbleMergeWithSearch_maxLength);
         if (opts.bubbleMergeWithSearch_searchDirection != null)
             set(BUBBLE_MERGE_WITH_SEARCH_SEARCH_DIRECTION, opts.bubbleMergeWithSearch_searchDirection);
@@ -548,8 +559,9 @@ public class GenomixJobConf extends JobConf {
             return System.currentTimeMillis() - time;
     }
 
-    public static void setGlobalStaticConstants(Configuration conf) {
+    public static void setGlobalStaticConstants(Configuration conf) throws IOException {
         Kmer.setGlobalKmerLength(Integer.parseInt(conf.get(GenomixJobConf.KMER_LENGTH)));
+        ExternalableTreeSet.setupManager(conf, new Path(conf.get("hadoop.tmp.dir", "/tmp")));
         //        EdgeWritable.MAX_READ_IDS_PER_EDGE = Integer.parseInt(conf.get(GenomixJobConf.MAX_READIDS_PER_EDGE));
         debug = conf.get(GenomixJobConf.DEBUG_KMERS) != null;
         if (debugKmers == null) {

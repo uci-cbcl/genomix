@@ -1,5 +1,6 @@
 package edu.uci.ics.genomix.pregelix.operator.test;
 
+import java.io.IOException;
 import java.util.Iterator;
 
 import edu.uci.ics.genomix.data.config.GenomixJobConf;
@@ -47,7 +48,12 @@ public class BubbleAddVertex extends DeBruijnGraphCleanVertex<VertexValueWritabl
     public void initVertex() {
         if (kmerSize == -1)
             kmerSize = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.KMER_LENGTH));
-        GenomixJobConf.setGlobalStaticConstants(getContext().getConfiguration());
+        try {
+            GenomixJobConf.setGlobalStaticConstants(getContext().getConfiguration());
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
         if (majorVertexId == null) {
             majorVertexId = new VKmer(getContext().getConfiguration().get(MAJOR_VERTEXID));
         }

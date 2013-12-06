@@ -553,7 +553,7 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
         revcomp.setReversedFromStringBytes(kmer.getKmerLetterLength(), kmer.toString().getBytes(), 0);
         mergeWithFFKmer(initialKmerSize, revcomp);
     }
-
+    
     /**
      * Merge Kmer with the next connected Kmer, when that Kmer needs to be
      * reverse-complemented e.g. AAGCTAA merge with GGTTGTT, if the initial

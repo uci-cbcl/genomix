@@ -1,5 +1,6 @@
 package edu.uci.ics.genomix.pregelix.operator.simplebubblemerge;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -24,9 +25,11 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
 
     private static final Logger LOG = Logger.getLogger(SimpleBubbleMergeVertex.class.getName());
 
-    private static float DISSIMILAR_THRESHOLD = -1;
+    private static float MAX_DISSIMILARITY = -1;
+    private static int MAX_LENGTH = -1;
     private static boolean logBubbleInfo = false;
     private String logInfo = "";
+    
 
     private Map<VKmer, ArrayList<SimpleBubbleMergeMessage>> receivedMsgMap = new HashMap<VKmer, ArrayList<SimpleBubbleMergeMessage>>();
     private ArrayList<SimpleBubbleMergeMessage> receivedMsgList = new ArrayList<SimpleBubbleMergeMessage>();
@@ -39,9 +42,12 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
     @Override
     public void initVertex() {
         super.initVertex();
-        if (DISSIMILAR_THRESHOLD < 0)
-            DISSIMILAR_THRESHOLD = Float.parseFloat(getContext().getConfiguration().get(
+        if (MAX_DISSIMILARITY < 0)
+            MAX_DISSIMILARITY = Float.parseFloat(getContext().getConfiguration().get(
                     GenomixJobConf.BUBBLE_MERGE_MAX_DISSIMILARITY));
+        if (MAX_LENGTH < 0) 
+            MAX_LENGTH = Integer.parseInt(getContext().getConfiguration().get(
+                    GenomixJobConf.BUBBLE_MERGE_MAX_LENGTH));
         if (logBubbleInfo == false)
             logBubbleInfo = Boolean.parseBoolean(getContext().getConfiguration().get(
                     GenomixJobConf.BUBBLE_MERGE_LOG_BUBBLE_INFO));
@@ -183,8 +189,7 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
 
                 //compute the dissimilarity
                 float fractionDissimilar = topMsg.computeDissimilar(curMsg); // TODO change to simmilarity everywhere
-
-                if (fractionDissimilar <= DISSIMILAR_THRESHOLD) { //if similar with top node, delete this node
+                if (fractionDissimilar <= MAX_DISSIMILARITY) { //if similar with top node, delete this node
                     topChanged = true;
                     boolean sameOrientation = topMsg.sameOrientation(curMsg);
                     // 1. add coverage to top node -- for unchangedSet
@@ -234,7 +239,8 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
      */
     public void detectBubble() {
         VertexValueWritable vertex = getVertexValue();
-        if (vertex.degree(DIR.REVERSE) == 1 && vertex.degree(DIR.FORWARD) == 1) {
+        if (vertex.degree(DIR.REVERSE) == 1 && vertex.degree(DIR.FORWARD) == 1
+                && vertex.getInternalKmer().getKmerLetterLength() < MAX_LENGTH) {
             // send bubble and major vertex msg to minor vertex 
             sendBubbleAndMajorVertexMsgToMinorVertex();
         }
