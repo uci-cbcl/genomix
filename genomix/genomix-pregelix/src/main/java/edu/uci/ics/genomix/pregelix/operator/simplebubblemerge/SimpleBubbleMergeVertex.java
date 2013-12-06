@@ -220,8 +220,8 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
 
     @Override
     public void compute(Iterator<SimpleBubbleMergeMessage> msgIterator) {
+        initVertex();
         if (getSuperstep() == 1) {
-            initVertex();
             detectBubble();
         } else if (getSuperstep() == 2) {
             processBubblesInMinorVertex(msgIterator);
