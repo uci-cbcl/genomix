@@ -148,7 +148,7 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
                 VKmer kmer = receivedMsgList.get(i).getNode().getInternalKmer();
                 if (genome == null) {
                     try {
-                        genome = StandardCharsets.UTF_8.decode(ByteBuffer.wrap(Files.readAllBytes(Paths.get("/cbcl/wbiesing/genomix-data/ecoli/genome/ecoli.genome.fasta")))).toString();
+                        genome = StandardCharsets.UTF_8.decode(ByteBuffer.wrap(Files.readAllBytes(Paths.get("/cbcl/wbiesing/genomix-data/ecoli/genome/ecoli.genome.flattened.fasta")))).toString();
                     } catch (IOException e) {
                         // TODO Auto-generated catch block
                         e.printStackTrace();
