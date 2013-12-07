@@ -39,13 +39,6 @@ public class KmerFactoryTest {
             lastKmer = kmerFactory.getSubKmerFromChain(9 - i, i, kmer);
             Assert.assertEquals("AGCTGACCG".substring(9 - i), lastKmer.toString());
         }
-        VKmer vlastKmer;
-        for (int i = 8; i > 0; i--) {
-            vlastKmer = kmerFactory.getLastKmerFromChain(i, kmer);
-            Assert.assertEquals("AGCTGACCG".substring(9 - i), vlastKmer.toString());
-            vlastKmer = kmerFactory.getSubKmerFromChain(9 - i, i, kmer);
-            Assert.assertEquals("AGCTGACCG".substring(9 - i), vlastKmer.toString());
-        }
     }
 
     @Test
