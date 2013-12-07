@@ -90,7 +90,7 @@ public class GenomixJobConf extends JobConf {
         private float bubbleMerge_maxDissimilarity = -1;
         
         @Option(name = "-bubbleMerge_maxLength", usage = "The maximum length an internal node may be and still be considered a bubble", required = false)
-        private int bubbleMerge_maxLength;
+        private int bubbleMerge_maxLength = -1;
 
         @Option(name = "-bubbleMergewithsearch_maxLength", usage = "Maximum length can be searched", required = false)
         private int bubbleMergeWithSearch_maxLength = -1;
