@@ -6,6 +6,7 @@ import java.io.IOException;
 
 import edu.uci.ics.genomix.data.types.Kmer;
 import edu.uci.ics.genomix.data.types.Node;
+import edu.uci.ics.genomix.data.types.VKmer;
 import edu.uci.ics.genomix.data.types.VKmerList;
 import edu.uci.ics.genomix.pregelix.base.MessageWritable;
 
@@ -20,12 +21,12 @@ public class TipRemoveWithSearchMessage extends MessageWritable {
      *            the vertex to add to incomingMsg's path
      * @param incomingMsg
      */
-    public void visitNode(Node n) {
+    public void visitNode(VKmer id, Node n) {
         if (visitedLength == null) {
             setVisitedLength(0);
         }
         visitedLength += n.getKmerLength() - Kmer.getKmerLength() + 1;
-        getVisitedNodes().append(n.getInternalKmer());
+        getVisitedNodes().append(id);
     }
 
     public int getVisitedLength() {

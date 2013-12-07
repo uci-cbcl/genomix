@@ -88,11 +88,11 @@ public class TipRemoveWithSearchVertex extends
             } else if (node.degree(outDir) == 0) {
                 // no longer a path in this direction; stop at this node  ( A----B ) 
                 stop = true;
-                incomingMsg.visitNode(node);
+                incomingMsg.visitNode(getVertexId(), node);
             } else {
                 // a simple path node; continue the search
                 stop = false;
-                incomingMsg.visitNode(node);
+                incomingMsg.visitNode(getVertexId(), node);
             }
 
             if (incomingMsg.getVisitedLength() < MIN_LENGTH_TO_KEEP) {
