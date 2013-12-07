@@ -25,10 +25,24 @@ import edu.uci.ics.genomix.data.utils.GeneCode;
 public class FixedKmerFactoryTest {
     static byte[] array = { 'A', 'G', 'C', 'T', 'G', 'A', 'C', 'C', 'G', 'T' };
 
-    KmerFactory kmerFactory = new KmerFactory(8);
+    KmerFactory kmerFactory = new KmerFactory(9);
 
     @Test
-    public void TestGetLastKmer() {
+    public void TestGetKmerByRead(){
+        VKmer vkmer = new VKmer();
+        vkmer.setAsCopy(kmerFactory.getKmerByRead(9, array, 0));
+        Assert.assertEquals("AGCTGACCG", vkmer.toString());
+    }
+    
+    @Test
+    public void TestGetKmerByReadReverse(){
+        VKmer vkmer = new VKmer();
+        vkmer.setAsCopy(kmerFactory.getKmerByReadReverse(9, array, 0));
+        Assert.assertEquals("CGGTCAGCT", vkmer.toString());
+    }
+    
+    @Test
+    public void TestGetLastKmerFromChain() {
         VKmer kmer = new VKmer();
         kmer.setFromStringBytes(9, array, 0);
         Assert.assertEquals("AGCTGACCG", kmer.toString());
@@ -42,7 +56,7 @@ public class FixedKmerFactoryTest {
     }
 
     @Test
-    public void TestGetFirstKmer() {
+    public void TestGetFirstKmerFromChain() {
         VKmer kmer = new VKmer();
         kmer.setFromStringBytes(9, array, 0);
         Assert.assertEquals("AGCTGACCG", kmer.toString());
@@ -52,13 +66,6 @@ public class FixedKmerFactoryTest {
             Assert.assertEquals("AGCTGACCG".substring(0, i), firstKmer.toString());
             firstKmer = kmerFactory.getSubKmerFromChain(0, i, kmer);
             Assert.assertEquals("AGCTGACCG".substring(0, i), firstKmer.toString());
-        }
-        VKmer vfirstKmer;
-        for (int i = 8; i > 0; i--) {
-            vfirstKmer = kmerFactory.getFirstKmerFromChain(i, kmer);
-            Assert.assertEquals("AGCTGACCG".substring(0, i), vfirstKmer.toString());
-            vfirstKmer = kmerFactory.getSubKmerFromChain(0, i, kmer);
-            Assert.assertEquals("AGCTGACCG".substring(0, i), vfirstKmer.toString());
         }
     }
 
