@@ -31,7 +31,6 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
 
     private static float MAX_DISSIMILARITY = -1;
     private static int MAX_LENGTH = -1;
-    private static boolean logBubbleInfo = false;
     private String logInfo = "";
 
     private Map<VKmer, ArrayList<SimpleBubbleMergeMessage>> receivedMsgMap = new HashMap<VKmer, ArrayList<SimpleBubbleMergeMessage>>();
@@ -52,9 +51,6 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
                     GenomixJobConf.BUBBLE_MERGE_MAX_DISSIMILARITY));
         if (MAX_LENGTH < 0)
             MAX_LENGTH = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.BUBBLE_MERGE_MAX_LENGTH));
-        if (logBubbleInfo == false)
-            logBubbleInfo = Boolean.parseBoolean(getContext().getConfiguration().get(
-                    GenomixJobConf.BUBBLE_MERGE_LOG_BUBBLE_INFO));
         if (outgoingMsg == null)
             outgoingMsg = new SimpleBubbleMergeMessage();
     }
@@ -67,9 +63,6 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
 
         // get majorVertex and minorVertex and meToMajorEdgeType and meToMinorEdgeType
         if (forwardNeighbor.kmer.equals(reverseNeighbor.kmer)) {
-            //            LOG.fine("majorVertexId is equal to minorVertexId, this is not allowed!\n" + "forwardKmer is "
-            //                    + forwardNeighbor.kmer + "\n" + "reverseKmer is " + reverseNeighbor.kmer + "\n" + "this vertex is "
-            //                    + getVertexId() + ", value: " + getVertexValue());
             return;
         }
 
@@ -86,9 +79,6 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
             outgoingMsg.setMajorToBubbleEdgetype(reverseNeighbor.et.mirror());
             outgoingMsg.setMinorToBubbleEdgetype(forwardNeighbor.et.mirror());
             minorVertexId = forwardNeighbor.kmer;
-        }
-        if (verbose) {
-            LOG.info("Major vertex is: " + outgoingMsg.getMajorVertexId());
         }
         outgoingMsg.setSourceVertexId(getVertexId());
         outgoingMsg.setNode(getVertexValue());
@@ -144,7 +134,7 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
             updateStats("totalPathsCoverage", Math.round(receivedMsgList.get(i).getNode().getAverageCoverage()));
 
             // log bubble info
-            if (logBubbleInfo) {
+            if (verbose) {
                 VKmer kmer = receivedMsgList.get(i).getNode().getInternalKmer();
                 if (genome == null) {
                     try {
@@ -172,11 +162,11 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
                 updateStats("fractionDissimilar", Math.round(fractionDissimilar));
 
                 // log bubble info
-                if (logBubbleInfo) {
+                if (verbose) {
                     logInfo += fractionDissimilar + " with No." + (j + 1) + " bubble;  ";
                 }
             }
-            if (logBubbleInfo) {
+            if (verbose) {
                 logInfo += "\n";
             }
         }
@@ -191,7 +181,7 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
             String logInfo_remove = "";
             int removedNum = 0;
             ArrayList<SimpleBubbleMergeMessage> originalMsgList = null;
-            if (logBubbleInfo)
+            if (verbose)
                 originalMsgList = new ArrayList<SimpleBubbleMergeMessage>(receivedMsgList);
             Iterator<SimpleBubbleMergeMessage> it = receivedMsgList.iterator();
             topMsg = it.next();
@@ -217,7 +207,7 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
                     outgoingMsg.setFlag(MESSAGETYPE.KILL_SELF.get());
                     sendMsg(curMsg.getSourceVertexId(), outgoingMsg);
                     // log bubble info
-                    if (logBubbleInfo) {
+                    if (verbose) {
                         int i = 0;
                         for (; i < originalMsgList.size(); i++) {
                             if (originalMsgList.get(i).equals(curMsg))
@@ -231,13 +221,15 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
                     
                     it.remove();
                     removedNum++;
+                    
+                    getCounters().findCounter(GraphMutations.Num_RemovedBubbles).increment(1);
                 }
             }
             // add 'removedPaths' to statistics counter
             updateStats("removedPaths", removedNum);
-
+            
             // log bubble info
-            if (logBubbleInfo) {
+            if (verbose) {
                 logInfo += "Remove " + removedNum + " bubbles: ";
                 logInfo += logInfo_remove;
                 logInfo += "\n/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// \n";
@@ -250,7 +242,7 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
                 sendMsg(topMsg.getSourceVertexId(), outgoingMsg);
             }
         }
-        if (logBubbleInfo) {
+        if (verbose) {
             LOG.info(logInfo);
         }
     }
@@ -281,7 +273,7 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
                 updateStats("totalPaths", receivedMsgList.size());
 
                 logInfo = "";
-                if (logBubbleInfo) {
+                if (verbose) {
                     logInfo += "\nMajor: " + majorVertexId + "  Minor: " + getVertexId() + "\n";
                     logInfo += "NumOfPaths: " + receivedMsgList.size() + "\n";
                 }
@@ -291,8 +283,6 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
 
                 // process similarSet, keep the unchanged set and deleted set & add coverage to unchange node 
                 processSimilarSet();
-
-                getCounters().findCounter(GraphMutations.Num_RemovedBubbles).increment(1);
             }
         }
     }

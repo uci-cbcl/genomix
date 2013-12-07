@@ -271,7 +271,6 @@ public class GenomixJobConf extends JobConf {
     // Graph cleaning   
     public static final String BRIDGE_REMOVE_MAX_LENGTH = "genomix.bridgeRemove.maxLength";
     public static final String BUBBLE_MERGE_MAX_DISSIMILARITY = "genomix.bubbleMerge.maxDissimilarity";
-    public static final String BUBBLE_MERGE_LOG_BUBBLE_INFO = "genomix.bubbleMerge.logBubbleInfo";
     public static final String BUBBLE_MERGE_MAX_LENGTH = "genomix.bubbleMerge.maxLength";
     public static final String BUBBLE_MERGE_WITH_SEARCH_MAX_LENGTH = "genomix.bubbleMergeWithSearch.maxSearchLength";
     public static final String BUBBLE_MERGE_WITH_SEARCH_SEARCH_DIRECTION = "genomix.bubbleMergeWithSearch.searchDirection";
@@ -533,7 +532,6 @@ public class GenomixJobConf extends JobConf {
         if (opts.extraConfFiles != null)
             set(EXTRA_CONF_FILES, opts.extraConfFiles);
         setBoolean(RUN_ALL_STATS, opts.runAllStats);
-        setBoolean(BUBBLE_MERGE_LOG_BUBBLE_INFO, opts.logBubbleInfo);
     }
 
     /**

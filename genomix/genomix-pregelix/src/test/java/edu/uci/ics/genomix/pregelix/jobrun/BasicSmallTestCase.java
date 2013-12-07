@@ -43,6 +43,7 @@ import org.jfree.data.xy.XYSeriesCollection;
 import org.junit.Test;
 
 import edu.uci.ics.genomix.data.cluster.GenomixClusterManager;
+import edu.uci.ics.genomix.data.config.GenomixJobConf;
 import edu.uci.ics.genomix.data.utils.GenerateGraphViz;
 import edu.uci.ics.genomix.data.utils.GenerateGraphViz.GRAPH_TYPE;
 import edu.uci.ics.genomix.hadoop.utils.GraphStatistics;
@@ -122,8 +123,8 @@ public class BasicSmallTestCase extends TestCase {
                 oldC.findCounter(g, c.getName()).increment(c.getValue());
             }
         }
-        GraphStatistics.saveGraphStats(resultFileDir + "stats", oldC, null, true);
-        GraphStatistics.drawStatistics(resultFileDir + "stats", oldC, null, true);
+        GraphStatistics.saveGraphStats(resultFileDir + "stats", oldC, (GenomixJobConf)new Configuration());
+        GraphStatistics.drawStatistics(resultFileDir + "stats", oldC, (GenomixJobConf)new Configuration());
     }
 
     public String toString() {

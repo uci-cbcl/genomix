@@ -134,8 +134,7 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
     /**
      * run a map-reduce job on the given input graph and save a simple text file of the relevant counters
      */
-    public static void saveGraphStats(String outputDir, Counters jobCounters, GenomixJobConf conf, boolean runLocal)
-            throws IOException {
+    public static void saveGraphStats(String outputDir, Counters jobCounters, GenomixJobConf conf) throws IOException {
         // get relevant counters
 
         TreeMap<String, Long> sortedCounters = new TreeMap<String, Long>();
@@ -147,12 +146,7 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
             }
         }
 
-        FileSystem fileSys;
-        if (runLocal) {
-            Configuration configure = new Configuration();
-            fileSys = FileSystem.getLocal(configure);
-        } else
-            fileSys = FileSystem.get(conf);
+        FileSystem fileSys = FileSystem.get(conf);
         fileSys.mkdirs(new Path(outputDir));
         FSDataOutputStream outstream = fileSys.create(new Path(outputDir + File.separator + "stats.txt"), true);
         PrintWriter writer = new PrintWriter(outstream);
@@ -167,8 +161,7 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
      * for example, the coverage counters have the group "coverage-bins", the counter name "5" and the count 10
      * meaning the coverage chart has a bar at X=5 with height Y=10
      */
-    public static void drawStatistics(String outputDir, Counters jobCounters, GenomixJobConf conf, boolean runLocal)
-            throws IOException {
+    public static void drawStatistics(String outputDir, Counters jobCounters, GenomixJobConf conf) throws IOException {
         HashMap<String, TreeMap<Integer, Long>> allHists = new HashMap<String, TreeMap<Integer, Long>>();
         TreeMap<Integer, Long> curCounts;
 
@@ -203,15 +196,10 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
             JFreeChart chart = ChartFactory.createXYBarChart(graphType, graphType, false, "Count", xyDataset,
                     PlotOrientation.VERTICAL, true, true, false);
             // Write the data to the output stream:
-            FileSystem fileSys;
-            if (runLocal) {
-                Configuration configure = new Configuration();
-                fileSys = FileSystem.getLocal(configure);
-            } else
-                fileSys = FileSystem.get(conf);
+            FileSystem fileSys = FileSystem.get(conf);
             FSDataOutputStream outstream = fileSys.create(
                     new Path(outputDir + File.separator + graphType + "-hist.png"), true);
-            ChartUtilities.writeChartAsPNG(outstream, chart, 800, 600); 
+            ChartUtilities.writeChartAsPNG(outstream, chart, 800, 600);
             outstream.close();
         }
     }
@@ -397,7 +385,7 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
                 oldC.findCounter(g, c.getName()).increment(c.getValue());
             }
         }
-        GraphStatistics.saveGraphStats(outputDir + File.separator + "counters", oldC, conf, false);
-        GraphStatistics.drawStatistics(outputDir + File.separator + "counters", oldC, conf, false);
+        GraphStatistics.saveGraphStats(outputDir + File.separator + "counters", oldC, conf);
+        GraphStatistics.drawStatistics(outputDir + File.separator + "counters", oldC, conf);
     }
 }
