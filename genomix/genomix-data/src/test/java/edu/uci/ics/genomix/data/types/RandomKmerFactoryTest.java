@@ -25,8 +25,28 @@ public class RandomKmerFactoryTest {
         }
     }
     
-//    @Test
-//    public void 
+    @Test
+    public void TestGetKmerByRead(){
+        VKmer vkmer = new VKmer();
+        int strLength = RandomDataGenHelper.genRandomInt(strMinLength, strMaxLength);
+        String input = RandomDataGenHelper.generateString(strLength);
+        int kmerSize = strLength - RandomDataGenHelper.genRandomInt(kmerDiffMin,kmerDiffMax);
+        KmerFactory kmerFactory = new KmerFactory(kmerSize);
+        vkmer.setAsCopy(kmerFactory.getKmerByRead(kmerSize, input.getBytes(), 0));
+        Assert.assertEquals(input.substring(0, kmerSize), vkmer.toString());
+    }
+    
+    @Test
+    public void TestGetKmerByReadReverse(){
+        VKmer vkmer = new VKmer();
+        int strLength = RandomDataGenHelper.genRandomInt(strMinLength, strMaxLength);
+        String input = RandomDataGenHelper.generateString(strLength);
+        int kmerSize = strLength - RandomDataGenHelper.genRandomInt(kmerDiffMin,kmerDiffMax);
+        KmerFactory kmerFactory = new KmerFactory(kmerSize);
+        vkmer.setAsCopy(kmerFactory.getKmerByReadReverse(kmerSize, input.getBytes(), 0));
+        String expectedReverse = RandomDataGenHelper.getReverseStr(input.substring(0, kmerSize));
+        Assert.assertEquals(expectedReverse, vkmer.toString());
+    }
     
     @Test
     public void TestGetLastKmeFromChainr() {
@@ -61,6 +81,20 @@ public class RandomKmerFactoryTest {
             Assert.assertEquals(input.substring(0, i), firstKmer.toString());
             firstKmer = kmerFactory.getSubKmerFromChain(0, i, kmer);
             Assert.assertEquals(input.substring(0, i), firstKmer.toString());
+        }
+    }
+    
+    @Test
+    public void TestGetSubKmer() {
+        VKmer kmer = new VKmer();
+        kmer.setFromStringBytes(9, array, 0);
+        Assert.assertEquals("AGCTGACCG", kmer.toString());
+        VKmer subKmer;
+        for (int istart = 0; istart < kmer.getKmerLetterLength() - 1; istart++) {
+            for (int isize = 1; isize + istart <= kmer.getKmerLetterLength(); isize++) {
+                subKmer = kmerFactory.getSubKmerFromChain(istart, isize, kmer);
+                Assert.assertEquals("AGCTGACCG".substring(istart, istart + isize), subKmer.toString());
+            }
         }
     }
 }

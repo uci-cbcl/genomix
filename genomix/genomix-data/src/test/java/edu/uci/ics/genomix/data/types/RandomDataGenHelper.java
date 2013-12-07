@@ -19,8 +19,32 @@ public class RandomDataGenHelper {
         }
         return new String(buf);
     }
-    
-    public static int genRandomInt(int min, int max){
+
+    public static int genRandomInt(int min, int max) {
         return min + (int) (Math.random() * ((max - min) + 1));
+    }
+
+    public static String getReverseStr(String src) {
+        int length = src.length();
+        char[] input = new char[length];
+        char[] output = new char[length];
+        src.getChars(0, length, input, 0);
+        for (int i = length - 1; i >= 0; i--) {
+            switch (input[i]) {
+                case 'A':
+                    output[length - 1 - i] = 'T';
+                    break;
+                case 'C':
+                    output[length - 1 - i] = 'G';
+                    break;
+                case 'G':
+                    output[length - 1 - i] = 'C';
+                    break;
+                case 'T':
+                    output[length - 1 - i] = 'A';
+                    break;
+            }
+        }
+        return new String(output);
     }
 }
