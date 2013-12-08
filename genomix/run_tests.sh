@@ -37,7 +37,7 @@ if [ "$PIPELINE_TESTS" == "true" ]; then
         run_and_save_exit_code
         
         # pipeline that repeats steps
-        cmd=( bin/genomix $RUN_LOCAL -kmerLength 55 -pipelineOrder BUILD_HADOOP,LOW_COVERAGE,MERGE,TIP,MERGE,BUBBLE,MERGE,SPLIT_REPEAT,MERGE,TIP_REMOVE,MERGE,BUBBLE,MERGE,SPLIT_REPEAT,MERGE,BUBBLE,MERGE,SPLIT_REPEAT,MERGE,BUBBLE,MERGE,SPLIT_REPEAT,MERGE -localInput ../../src/test/resources/data/sequence/pathmerge/hg19.chr18.skip12K.first1K.1Kreads/ )
+        cmd=( bin/genomix $RUN_LOCAL -kmerLength 55 -pipelineOrder BUILD,LOW_COVERAGE,MERGE,TIP,MERGE,BUBBLE,MERGE,SPLIT_REPEAT,MERGE,TIP,MERGE,BUBBLE,MERGE,SPLIT_REPEAT,MERGE,BUBBLE,MERGE,SPLIT_REPEAT,MERGE,BUBBLE,MERGE,SPLIT_REPEAT,MERGE -localInput ../../src/test/resources/data/sequence/pathmerge/hg19.chr18.skip12K.first1K.1Kreads/ )
         run_and_save_exit_code
 
         popd
