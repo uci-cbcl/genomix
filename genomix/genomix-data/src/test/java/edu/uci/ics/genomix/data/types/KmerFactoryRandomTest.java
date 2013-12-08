@@ -11,10 +11,16 @@ public class KmerFactoryRandomTest {
     public static int strMaxLength;
     public static int strMinLength;
     
+    /**
+     * This TestClass for which we only need to set strMaxLength and strMinLength these 2 parameters.
+     * After setting them, each test case will begin with a String "input" within the range(strMaxLength, strMinLength).
+     * our testting input vkmer can be got by kmerFactory.getKmerByRead(kmerSize, input.getBytes(), 0) where kmerSize
+     * is determined by a range (1, input.length()) in a random way.
+     */
     @Before
     public void setUp(){
         strMaxLength = 15;
-        strMinLength = 15;
+        strMinLength = 13;
         if(strMinLength > strMaxLength){
             throw new IllegalStateException("incorrect test parameters!");
         }
@@ -140,18 +146,15 @@ public class KmerFactoryRandomTest {
         String input1 = RandomTestHelper.generateString(strLength1);
         int kmerSize1 = RandomTestHelper.genRandomInt(1,strLength1);
         vkmer1.setFromStringBytes(kmerSize1, input1.getBytes(), 0);
-        
         VKmer vkmer2 = new VKmer();
         int strLength2 = RandomTestHelper.genRandomInt(strMinLength, strMaxLength);
         String input2 = RandomTestHelper.generateString(strLength2);
         int kmerSize2 = RandomTestHelper.genRandomInt(1,strLength2);
         vkmer2.setFromStringBytes(kmerSize2, input2.getBytes(), 0);
-        
         String expected1 = input1.substring(0, kmerSize1);
         String expected2 = input2.substring(0, kmerSize2);
         Assert.assertEquals(expected1, vkmer1.toString());
         Assert.assertEquals(expected2, vkmer2.toString());
-        
         KmerFactory kmerFactory = new KmerFactory(kmerSize1 + kmerSize2);
         VKmer merged = kmerFactory.mergeTwoKmer(vkmer1, vkmer2);
         StringBuilder expectedMerge = new StringBuilder();
@@ -174,7 +177,6 @@ public class KmerFactoryRandomTest {
     
     @Test
     public void TestShiftWithNextCode() {
-        
         VKmer vkmer = new VKmer();
         int strLength = RandomTestHelper.genRandomInt(strMinLength, strMaxLength);
         String input = RandomTestHelper.generateString(strLength);
@@ -182,7 +184,6 @@ public class KmerFactoryRandomTest {
         vkmer.setFromStringBytes(kmerSize, input.getBytes(), 0);
         String expectedKmer = input.substring(0, kmerSize);
         Assert.assertEquals(expectedKmer, vkmer.toString());
-        
         KmerFactory kmerFactory = new KmerFactory(kmerSize);
         VKmer kmerForward = kmerFactory.shiftKmerWithNextCode(vkmer, GeneCode.A);
         expectedKmer = expectedKmer.substring(1) + "A";
@@ -200,7 +201,6 @@ public class KmerFactoryRandomTest {
     
     @Test
     public void TestShiftWithPreCode() {
-        
         VKmer vkmer = new VKmer();
         int strLength = RandomTestHelper.genRandomInt(strMinLength, strMaxLength);
         String input = RandomTestHelper.generateString(strLength);
@@ -208,7 +208,6 @@ public class KmerFactoryRandomTest {
         vkmer.setFromStringBytes(kmerSize, input.getBytes(), 0);
         String expectedKmer = input.substring(0, kmerSize);
         Assert.assertEquals(expectedKmer, vkmer.toString());
-        
         KmerFactory kmerFactory = new KmerFactory(kmerSize);
         VKmer kmerForward = kmerFactory.shiftKmerWithPreCode(vkmer, GeneCode.A);
         expectedKmer = "A" + expectedKmer.substring(0, kmerSize - 1);
