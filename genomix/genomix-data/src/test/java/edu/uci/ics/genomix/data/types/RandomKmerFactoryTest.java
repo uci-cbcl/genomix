@@ -14,13 +14,8 @@ public class RandomKmerFactoryTest {
     @Before
     public void setUp(){
         strMaxLength = 15;
-        strMinLength = 9;
-        kmerDiffMax = 4;
-        kmerDiffMin = 1;
-        if((strMinLength >= strMaxLength) && (kmerDiffMax >= kmerDiffMin)){
-            throw new IllegalStateException("incorrect test parameters!");
-        }
-        if((kmerDiffMax >= strMaxLength) && (kmerDiffMin <= strMinLength)){
+        strMinLength = 15;
+        if(strMinLength > strMaxLength){
             throw new IllegalStateException("incorrect test parameters!");
         }
     }
@@ -30,7 +25,7 @@ public class RandomKmerFactoryTest {
         VKmer vkmer = new VKmer();
         int strLength = RandomDataGenHelper.genRandomInt(strMinLength, strMaxLength);
         String input = RandomDataGenHelper.generateString(strLength);
-        int kmerSize = strLength - RandomDataGenHelper.genRandomInt(kmerDiffMin,kmerDiffMax);
+        int kmerSize = RandomDataGenHelper.genRandomInt(1,strLength);
         KmerFactory kmerFactory = new KmerFactory(kmerSize);
         vkmer.setAsCopy(kmerFactory.getKmerByRead(kmerSize, input.getBytes(), 0));
         Assert.assertEquals(input.substring(0, kmerSize), vkmer.toString());
@@ -41,7 +36,7 @@ public class RandomKmerFactoryTest {
         VKmer vkmer = new VKmer();
         int strLength = RandomDataGenHelper.genRandomInt(strMinLength, strMaxLength);
         String input = RandomDataGenHelper.generateString(strLength);
-        int kmerSize = strLength - RandomDataGenHelper.genRandomInt(kmerDiffMin,kmerDiffMax);
+        int kmerSize = RandomDataGenHelper.genRandomInt(1,strLength);
         KmerFactory kmerFactory = new KmerFactory(kmerSize);
         vkmer.setAsCopy(kmerFactory.getKmerByReadReverse(kmerSize, input.getBytes(), 0));
         String expectedReverse = RandomDataGenHelper.getReverseStr(input.substring(0, kmerSize));
@@ -53,7 +48,7 @@ public class RandomKmerFactoryTest {
         VKmer kmer = new VKmer();
         int strLength = RandomDataGenHelper.genRandomInt(strMinLength, strMaxLength);
         String input = RandomDataGenHelper.generateString(strLength);
-        int kmerSize = strLength - RandomDataGenHelper.genRandomInt(kmerDiffMin,kmerDiffMax);
+        int kmerSize = RandomDataGenHelper.genRandomInt(1,strLength);
         kmer.setFromStringBytes(kmerSize, input.getBytes(), 0);
         Assert.assertEquals(input.substring(0, kmerSize), kmer.toString());
         VKmer lastKmer;
@@ -71,7 +66,7 @@ public class RandomKmerFactoryTest {
         VKmer kmer = new VKmer();
         int strLength = RandomDataGenHelper.genRandomInt(strMinLength, strMaxLength);
         String input = RandomDataGenHelper.generateString(strLength);
-        int kmerSize = strLength - RandomDataGenHelper.genRandomInt(kmerDiffMin,kmerDiffMax);
+        int kmerSize = RandomDataGenHelper.genRandomInt(1,strLength);
         kmer.setFromStringBytes(kmerSize, input.getBytes(), 0);
         Assert.assertEquals(input.substring(0, kmerSize), kmer.toString());
         VKmer firstKmer;
@@ -87,13 +82,17 @@ public class RandomKmerFactoryTest {
     @Test
     public void TestGetSubKmer() {
         VKmer kmer = new VKmer();
-        kmer.setFromStringBytes(9, array, 0);
-        Assert.assertEquals("AGCTGACCG", kmer.toString());
+        int strLength = RandomDataGenHelper.genRandomInt(strMinLength, strMaxLength);
+        String input = RandomDataGenHelper.generateString(strLength);
+        int kmerSize = RandomDataGenHelper.genRandomInt(1,strLength);
+        kmer.setFromStringBytes(kmerSize, input.getBytes(), 0);
+        Assert.assertEquals(input.substring(0, kmerSize), kmer.toString());
         VKmer subKmer;
+        KmerFactory kmerFactory = new KmerFactory(kmerSize);
         for (int istart = 0; istart < kmer.getKmerLetterLength() - 1; istart++) {
             for (int isize = 1; isize + istart <= kmer.getKmerLetterLength(); isize++) {
                 subKmer = kmerFactory.getSubKmerFromChain(istart, isize, kmer);
-                Assert.assertEquals("AGCTGACCG".substring(istart, istart + isize), subKmer.toString());
+                Assert.assertEquals(input.substring(0, kmerSize).substring(istart, istart + isize), subKmer.toString());
             }
         }
     }
