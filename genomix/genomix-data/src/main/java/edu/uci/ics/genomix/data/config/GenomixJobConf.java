@@ -558,6 +558,7 @@ public class GenomixJobConf extends JobConf {
     public static void setGlobalStaticConstants(Configuration conf) throws IOException {
         Kmer.setGlobalKmerLength(Integer.parseInt(conf.get(GenomixJobConf.KMER_LENGTH)));
         ExternalableTreeSet.setupManager(conf, new Path(conf.get("hadoop.tmp.dir", "/tmp")));
+        ExternalableTreeSet.setCountLimit(1000);
         //        EdgeWritable.MAX_READ_IDS_PER_EDGE = Integer.parseInt(conf.get(GenomixJobConf.MAX_READIDS_PER_EDGE));
         debug = conf.get(GenomixJobConf.DEBUG_KMERS) != null;
         if (debugKmers == null) {
