@@ -212,7 +212,7 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
     }
 
     /**
-     * Get one genecode (A|G|C|T) from the given kmer index e.g. Get the 4th
+     * Get one genecode (A|G|C|T) from the given kmer index e.g. Get the 3th (start from 0)
      * gene of the kmer ACGTA will return T
      * 
      * @param pos
@@ -553,7 +553,7 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
         revcomp.setReversedFromStringBytes(kmer.getKmerLetterLength(), kmer.toString().getBytes(), 0);
         mergeWithFFKmer(initialKmerSize, revcomp);
     }
-    
+
     /**
      * Merge Kmer with the next connected Kmer, when that Kmer needs to be
      * reverse-complemented e.g. AAGCTAA merge with GGTTGTT, if the initial

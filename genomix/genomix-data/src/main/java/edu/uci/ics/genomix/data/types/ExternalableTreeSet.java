@@ -88,6 +88,10 @@ public abstract class ExternalableTreeSet<T extends WritableComparable<T> & Seri
      * Returns a view of the portion of this set whose elements range from fromElement, inclusive, to
      * toElement, exclusive. (If fromElement and toElement are equal, the returned set is empty.)
      * [lowKey, highKey)
+     * The returned set is backed by this set, so changes in the returned set are reflected in this
+     * set, and vice-versa. The returned set supports all optional set operations that this set supports.
+     * The returned set will throw an IllegalArgumentException on an attempt to insert an element outside its
+     * range.
      * 
      * @param lowKey
      * @param highKey
@@ -134,9 +138,9 @@ public abstract class ExternalableTreeSet<T extends WritableComparable<T> & Seri
         oos.close();
     }
 
-    public abstract T readEachNonGenericElement(DataInput in) throws IOException;
+    public abstract T readNonGenericElement(DataInput in) throws IOException;
 
-    public abstract void writeEachNonGenericElement(DataOutput out, T t) throws IOException;
+    public abstract void writeNonGenericElement(DataOutput out, T t) throws IOException;
 
     @SuppressWarnings("unchecked")
     @Override
@@ -146,7 +150,7 @@ public abstract class ExternalableTreeSet<T extends WritableComparable<T> & Seri
         path = null;
         if (size < countLimit) {
             for (int i = 0; i < size; ++i) {
-                inMemorySet.add(readEachNonGenericElement(in));
+                inMemorySet.add(readNonGenericElement(in));
             }
         } else {
             path = new Path(in.readUTF());
@@ -165,7 +169,7 @@ public abstract class ExternalableTreeSet<T extends WritableComparable<T> & Seri
         out.writeInt(inMemorySet.size());
         if (inMemorySet.size() < countLimit) {
             for (T t : inMemorySet) {
-                writeEachNonGenericElement(out, t);
+                writeNonGenericElement(out, t);
             }
             if (path != null) {
                 manager.deleteFile(path);

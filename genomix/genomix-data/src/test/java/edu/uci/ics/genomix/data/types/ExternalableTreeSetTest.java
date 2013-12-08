@@ -75,14 +75,14 @@ public class ExternalableTreeSetTest implements Serializable {
         private static final long serialVersionUID = 1L;
 
         @Override
-        public TestIntWritable readEachNonGenericElement(DataInput in) throws IOException {
+        public TestIntWritable readNonGenericElement(DataInput in) throws IOException {
             TestIntWritable iw = new TestIntWritable();
             iw.readFields(in);
             return iw;
         }
 
         @Override
-        public void writeEachNonGenericElement(DataOutput out, TestIntWritable t) throws IOException {
+        public void writeNonGenericElement(DataOutput out, TestIntWritable t) throws IOException {
             t.write(out);
         }
 

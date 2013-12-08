@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.Iterator;
+import java.util.SortedSet;
 import java.util.logging.Logger;
 
 import edu.uci.ics.genomix.data.config.GenomixJobConf;
@@ -34,6 +35,9 @@ public class RayVertex extends DeBruijnGraphCleanVertex<ScaffoldingVertexValueWr
         ///Complete this!
         if (kmerSize == -1) {
             kmerSize = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.KMER_LENGTH));
+        }
+        if (readLength == -1) {
+            readLength = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.READ_LENGTH));
         }
         if (outgoingMsg == null) {
             outgoingMsg = new RayScaffoldingMessage();
@@ -83,40 +87,28 @@ public class RayVertex extends DeBruijnGraphCleanVertex<ScaffoldingVertexValueWr
     }
 
     // for each Kmer in the walk and each BranchKmer finds the offset
-    public int offset(VKmer neighbor) {
-        int offset = 0;
-        ReadHeadSet readIds;
-        if (getVertexValue().flipFalg) {
-            readIds = getVertexValue().getFlippedReadIds();
-        } else {
-            readIds = getVertexValue().getUnflippedReadIds();
-        }
-        for (ReadHeadInfo read : readIds) {
-            if (checkedDistance(read, neighbor)) {
-                offset++;
+    private int vote(SortedSet<ReadHeadInfo> validReads, VKmer neighbor) {
+        int vote = 0;
+        for (ReadHeadInfo read : validReads) {
+            if (checkedIfValid(read, neighbor)) {
+                vote++;
             }
         }
-        return offset;
+        return vote;
     }
 
-    public boolean checkedDistance(ReadHeadInfo readHead, VKmer neighbor) {
+    private boolean checkedIfValid(ReadHeadInfo readHead, VKmer neighbor) {
         //if neighbor exist in read table
         //How to work with a read?
         //int neighborPositionOnRead = getVertexValue().walk.size() - getVertexValue().index  + 1;
         int neighborPositionOnRead = getVertexValue().walkSize - getVertexValue().index;
-        if (indexOfKmerOnRead(readHead, neighbor) == neighborPositionOnRead) {
-            return true;
-        } else {
-            return false;
+        for (int i = 0; i < kmerSize; i++) {
+            if (readHead.getThisReadSequence().getGeneCodeAtPosition(neighborPositionOnRead + i) != neighbor
+                    .getGeneCodeAtPosition(i)) {
+                return false;
+            }
         }
-    }
-
-    public int indexOfKmerOnRead(ReadHeadInfo readHead, VKmer kmer) {
-        int index;
-        String read = readHead.getThisReadSequence().toString();
-        String stringKmer = kmer.toString();
-        index = read.toLowerCase().indexOf(stringKmer.toLowerCase());
-        return index;
+        return true;
     }
 
     //compute the rules , add new sentence in each step	
@@ -148,6 +140,15 @@ public class RayVertex extends DeBruijnGraphCleanVertex<ScaffoldingVertexValueWr
     public void readWalkInfoAndSendOffsetFromOneKmer(Iterator<RayScaffoldingMessage> msgIterator) {
         RayScaffoldingMessage incomingMsg;
         //outgoingMsg.reset();
+        ReadHeadSet readIds;
+        if (getVertexValue().flipFalg) {
+            readIds = getVertexValue().getFlippedReadIds();
+        } else {
+            readIds = getVertexValue().getUnflippedReadIds();
+        }
+        SortedSet<ReadHeadInfo> validReads = readIds.getOffSetRange(getVertexValue().getKmerLength() - readLength + 1,
+                getVertexValue().getKmerLength(), false);
+
         while (msgIterator.hasNext()) {
             incomingMsg = msgIterator.next();
             if (incomingMsg.getComputeFlag()) {
@@ -160,7 +161,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<ScaffoldingVertexValueWr
                 outgoingMsg.setEdgeType(incomingMsg.getEdgeType());
                 outgoingMsg.setWalkSize(incomingMsg.getWalkSize());
                 getVertexValue().walkSize = incomingMsg.getWalkSize();
-                outgoingMsg.setOffset(offset(incomingMsg.getKmer()));
+                outgoingMsg.setOffset(vote(validReads, incomingMsg.getKmer()));
                 outgoingMsg.setIndex(incomingMsg.getIndex());
 
                 sendMsg(incomingMsg.getKmer(), outgoingMsg);
