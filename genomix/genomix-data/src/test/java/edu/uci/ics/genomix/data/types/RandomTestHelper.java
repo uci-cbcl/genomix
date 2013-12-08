@@ -2,7 +2,7 @@ package edu.uci.ics.genomix.data.types;
 
 import java.util.Random;
 
-public class RandomDataGenHelper {
+public class RandomTestHelper {
     private static final char[] symbols = new char[4];
     static {
         symbols[0] = 'A';
