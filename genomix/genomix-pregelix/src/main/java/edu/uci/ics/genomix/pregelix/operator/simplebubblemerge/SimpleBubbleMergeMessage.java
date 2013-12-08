@@ -217,4 +217,9 @@ public class SimpleBubbleMergeMessage extends MessageWritable {
         boolean sameOrientation = sameOrientation(other);
         return this.getNode().getInternalKmer().fracDissimilar(sameOrientation, other.getNode().getInternalKmer());
     }
+    
+    public float editDistance(SimpleBubbleMergeMessage other) {
+        boolean sameOrientation = sameOrientation(other);
+        return this.getNode().getInternalKmer().editDistance(sameOrientation, other.getNode().getInternalKmer());
+    }
 }
