@@ -102,8 +102,13 @@ public class RayVertex extends DeBruijnGraphCleanVertex<ScaffoldingVertexValueWr
         //How to work with a read?
         //int neighborPositionOnRead = getVertexValue().walk.size() - getVertexValue().index  + 1;
         int neighborPositionOnRead = getVertexValue().walkSize - getVertexValue().index;
-        return readHead.getThisReadSequence().getGeneCodeAtPosition(neighborPositionOnRead) == neighbor
-                .getGeneCodeAtPosition(kmerSize - 1);
+        for (int i = 0; i < kmerSize; i++) {
+            if (readHead.getThisReadSequence().getGeneCodeAtPosition(neighborPositionOnRead + i) != neighbor
+                    .getGeneCodeAtPosition(i)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     //compute the rules , add new sentence in each step	
