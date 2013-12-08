@@ -16,8 +16,8 @@ public class ReadHeadSet extends ExternalableTreeSet<ReadHeadInfo> {
         super();
     }
 
-    public void add(byte mateId, long readId, int offset, VKmer thisReadSequence, VKmer thatReadSequence) {
-        super.add(new ReadHeadInfo(mateId, readId, offset, thisReadSequence, thatReadSequence));
+    public void add(byte mateId, byte libraryId, long readId, int offset, VKmer thisReadSequence, VKmer thatReadSequence) {
+        super.add(new ReadHeadInfo(mateId, libraryId, readId, offset, thisReadSequence, thatReadSequence));
     }
 
     // Change the primary key.
@@ -76,7 +76,7 @@ public class ReadHeadSet extends ExternalableTreeSet<ReadHeadInfo> {
     public void unionUpdate(ReadHeadSet readIds, float lengthFactor, boolean flipOffset, int otherLength) {
         if (!flipOffset) {
             for (ReadHeadInfo p : readIds.inMemorySet) {
-                this.add(p.getMateId(), p.getReadId(), (int) ((p.getOffset() + 1) * lengthFactor - lengthFactor),
+                this.add(p.getMateId(), p.getLibraryId(), p.getReadId(), (int) ((p.getOffset() + 1) * lengthFactor - lengthFactor),
                         p.getThisReadSequence(), p.getMateReadSequence());
             }
         } else {
@@ -84,7 +84,7 @@ public class ReadHeadSet extends ExternalableTreeSet<ReadHeadInfo> {
             // stream theirs in, offset and flipped
             for (ReadHeadInfo p : readIds.inMemorySet) {
                 int newPOffset = otherLength - 1 - p.getOffset();
-                this.add(p.getMateId(), p.getReadId(), (int) ((newPOffset + 1) * lengthFactor - lengthFactor),
+                this.add(p.getMateId(), p.getLibraryId(), p.getReadId(), (int) ((newPOffset + 1) * lengthFactor - lengthFactor),
                         p.getThisReadSequence(), p.getMateReadSequence());
             }
         }

@@ -37,8 +37,11 @@ import edu.uci.ics.genomix.data.utils.GenerateGraphViz.GRAPH_TYPE;
 @SuppressWarnings("deprecation")
 public class GenomixJobConf extends JobConf {
 
-    public static boolean debug = false;
+    public static boolean debug;
     public static ArrayList<VKmer> debugKmers;
+    
+    public static HashMap<Byte, Integer> outerDistanceMeans;
+    public static HashMap<Byte, Integer> outerDistanceStdDevs;
 
     private static Map<String, Long> tickTimes = new HashMap<String, Long>();
 
@@ -61,6 +64,18 @@ public class GenomixJobConf extends JobConf {
         @Option(name = "-pipelineOrder", usage = "Specify the order of the graph cleaning process", required = false)
         private String pipelineOrder;
 
+        @Option(name = "-singleEndFastqs", usage = "One or more local fastq files as inputs to graphbuild. Treated as single-ends reads.", required = false)
+        private String[] singleEndFastqs;
+        
+        @Option(name = "-pairedEndFastqs", usage = "Two or more local fastq files as inputs to graphbuild. Treated as paired-end reads. See also, -outerDistMean and -outerDistStdDev", required = false)
+        private String[] pairedEndFastqs;
+        
+        @Option(name = "-outerDistMeans", usage = "Average outer distances (from A to B:  A==>    <==B)  for paired-end libraries", required = false)
+        private String[] outerDistMeans;
+        
+        @Option(name = "-outerDistStdDevs", usage = "Standard deviations of outer distances (from A to B:  A==>    <==B)  for paired-end libraries", required = false)
+        private String[] outerDistStdDevs;
+        
         @Option(name = "-localInput", usage = "Local directory containing input for the first pipeline step", required = false)
         private String localInput;
 
@@ -257,6 +272,10 @@ public class GenomixJobConf extends JobConf {
     public static final String READ_LENGTH = "genomix.conf.readLength";
     public static final String LINES_PERMAP = "genomix.conf.linesPerMap";
     public static final String PIPELINE_ORDER = "genomix.conf.pipelineOrder";
+    public static final String SINGLE_END_FASTQ_INPUTS = "genomix.conf.singleEndFastqInputs";
+    public static final String PAIRED_END_FASTQ_INPUTS = "genomix.conf.pairedEndFastqInputs";
+    private static final String OUTER_DISTANCE_MEANS = "genomix.conf.outerDistanceMeans";
+    private static final String OUTER_DISTANCE_STD_DEVS = "genomix.conf.outerDistanceStdDevs";
     public static final String INITIAL_HDFS_INPUT_DIR = "genomix.conf.initialHDFSInputDir";
     public static final String FINAL_HDFS_OUTPUT_DIR = "genomix.conf.finalHDFSOutputDir";
     public static final String LOCAL_INPUT_DIR = "genomix.conf.initialLocalInputDir";
@@ -478,15 +497,43 @@ public class GenomixJobConf extends JobConf {
 
         if (opts.plotSubgraph_verbosity != -1)
             set(PLOT_SUBGRAPH_GRAPH_VERBOSITY, GRAPH_TYPE.getFromInt(opts.plotSubgraph_verbosity).toString());
-
-        if (opts.localInput != null && opts.hdfsInput != null)
-            throw new IllegalArgumentException("Please set either -localInput or -hdfsInput, but NOT BOTH!");
-        if (opts.localInput == null && opts.hdfsInput == null)
-            throw new IllegalArgumentException("Please specify an input via -localInput or -hdfsInput!");
-        if (opts.hdfsInput != null)
-            set(INITIAL_HDFS_INPUT_DIR, opts.hdfsInput);
+        
+        boolean inputFastq = opts.singleEndFastqs != null || opts.pairedEndFastqs != null;
+        boolean inputLocalDir = opts.localInput != null;
+        boolean inputHdfsDir = opts.hdfsInput != null;
+        if (!inputFastq && !inputHdfsDir && !inputLocalDir) {
+            throw new IllegalArgumentException("At least one input (-localInput, -hdfsInput, or -*EndFastq) must be specified");
+        }
+        if (! ((inputFastq && !inputHdfsDir && !inputLocalDir) 
+                || (!inputFastq && inputHdfsDir && !inputLocalDir)
+                || (!inputFastq && !inputHdfsDir && inputLocalDir))) {
+            throw new IllegalArgumentException("Only one of -localInput, -hdfsInput, or -*EndFastq may be specified");
+        }
+        if (opts.singleEndFastqs != null)
+            set(SINGLE_END_FASTQ_INPUTS, StringUtils.join(opts.singleEndFastqs, ","));
+        if (opts.pairedEndFastqs != null) {
+            if ((opts.pairedEndFastqs.length % 2) != 0)
+                throw new IllegalArgumentException("The number of fastq files for -pairedEndFastqs must be even!");
+            if (opts.outerDistMeans == null)
+                throw new IllegalArgumentException("For paired-end reads, you must specify the outer distances of the libraries! (Missing -outerDistMeans)");
+            if (opts.outerDistMeans.length != opts.pairedEndFastqs.length / 2)
+                throw new IllegalArgumentException("For paired-end reads, you must specify the outer distance of each library! (saw " + opts.pairedEndFastqs.length / 2 + " libraries but had " + opts.outerDistMeans.length + " outerDistMeans specified");
+            
+            if (opts.outerDistStdDevs == null)
+                throw new IllegalArgumentException("For paired-end reads, you must specify the outer distances of the libraries! (Missing -outerDistStdDevs)");
+            if (opts.outerDistStdDevs.length != opts.pairedEndFastqs.length / 2)
+                throw new IllegalArgumentException("For paired-end reads, you must specify the outer distance of each library! (saw " + opts.pairedEndFastqs.length / 2 + " libraries but had " + opts.outerDistStdDevs.length + " outerDistStdDevs specified");
+            set(PAIRED_END_FASTQ_INPUTS, StringUtils.join(opts.pairedEndFastqs, ","));
+        }
+        // the distances can still be specified when we're using an intermediate output
+        if (opts.outerDistMeans != null)
+            set(OUTER_DISTANCE_MEANS, StringUtils.join(opts.outerDistMeans, ","));
+        if (opts.outerDistStdDevs != null)
+            set(OUTER_DISTANCE_STD_DEVS, StringUtils.join(opts.outerDistStdDevs, ","));
         if (opts.localInput != null)
             set(LOCAL_INPUT_DIR, opts.localInput);
+        if (opts.hdfsInput != null)
+            set(INITIAL_HDFS_INPUT_DIR, opts.hdfsInput);
         if (opts.hdfsOutput != null)
             set(FINAL_HDFS_OUTPUT_DIR, opts.hdfsOutput);
         if (opts.localOutput != null)
@@ -559,8 +606,23 @@ public class GenomixJobConf extends JobConf {
     }
 
     public static void setGlobalStaticConstants(Configuration conf) throws IOException {
-        Kmer.setGlobalKmerLength(Integer.parseInt(conf.get(GenomixJobConf.KMER_LENGTH)));
+        Kmer.setGlobalKmerLength(Integer.parseInt(conf.get(KMER_LENGTH)));
         ExternalableTreeSet.setupManager(conf, new Path(conf.get("hadoop.tmp.dir", "/tmp")));
+        ExternalableTreeSet.setCountLimit(1000);
+        
+        Byte libraryId = 0;
+        if (conf.get(OUTER_DISTANCE_MEANS) != null) {
+            for (String mean : conf.get(OUTER_DISTANCE_MEANS).split(",")) {
+                outerDistanceMeans.put(libraryId++, Integer.valueOf(mean));
+            }
+        }
+        libraryId = 0;
+        if (conf.get(OUTER_DISTANCE_STD_DEVS) != null) {
+            for (String stddev : conf.get(OUTER_DISTANCE_STD_DEVS).split(",")) {
+                outerDistanceStdDevs.put(libraryId++, Integer.valueOf(stddev));
+            }
+        }
+        
         //        EdgeWritable.MAX_READ_IDS_PER_EDGE = Integer.parseInt(conf.get(GenomixJobConf.MAX_READIDS_PER_EDGE));
         debug = conf.get(GenomixJobConf.DEBUG_KMERS) != null;
         if (debugKmers == null) {

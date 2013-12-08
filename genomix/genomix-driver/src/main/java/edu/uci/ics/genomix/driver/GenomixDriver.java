@@ -15,15 +15,26 @@
 
 package edu.uci.ics.genomix.driver;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.io.Reader;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.logging.Logger;
+import java.util.zip.GZIPInputStream;
 
+import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.Counters;
@@ -315,24 +326,17 @@ public class GenomixDriver {
         GenomixJobConf.tick("runGenomix");
 
         initGenomix(conf);
-        String localInput = conf.get(GenomixJobConf.LOCAL_INPUT_DIR);
-        if (localInput != null) {
-            conf.set(GenomixJobConf.INITIAL_HDFS_INPUT_DIR, conf.get(GenomixJobConf.HDFS_WORK_PATH) + File.separator
-                    + "00-initial-input-from-genomix-driver");
-            GenomixClusterManager.copyLocalToHDFS(conf, localInput, conf.get(GenomixJobConf.INITIAL_HDFS_INPUT_DIR));
-        }
-        curOutput = conf.get(GenomixJobConf.INITIAL_HDFS_INPUT_DIR);
-
+        setupHDFSInput(conf);
         // currently, we just iterate over the jobs set in conf[PIPELINE_ORDER].  In the future, we may want more logic to iterate multiple times, etc
         String pipelineSteps = conf.get(GenomixJobConf.PIPELINE_ORDER);
         List<Patterns> allPatterns = new ArrayList<>(Arrays.asList(Patterns.arrayFromString(pipelineSteps)));
         if (Boolean.parseBoolean(conf.get(GenomixJobConf.RUN_ALL_STATS))) {
             // insert a STATS step between all jobs that mutate the graph
-            for (int i=0; i < allPatterns.size(); i++) {
-               if (Patterns.mutatingJobs.contains(allPatterns.get(i))) {
-                   allPatterns.add(i + 1, Patterns.STATS);
-                   i++; // skip the STATS job we just added
-               }
+            for (int i = 0; i < allPatterns.size(); i++) {
+                if (Patterns.mutatingJobs.contains(allPatterns.get(i))) {
+                    allPatterns.add(i + 1, Patterns.STATS);
+                    i++; // skip the STATS job we just added
+                }
             }
         }
         for (Patterns step : allPatterns) {
@@ -354,6 +358,121 @@ public class GenomixDriver {
         if (!Boolean.parseBoolean(conf.get(GenomixJobConf.USE_EXISTING_CLUSTER))) {
             manager.stopCluster(); // shut down any existing NCs and CCs
         }
+    }
+
+    private void setupHDFSInput(GenomixJobConf conf) throws IOException {
+        boolean hasLocalInput = false;
+        String HDFSInputFromLocalDir = conf.get(GenomixJobConf.HDFS_WORK_PATH) + File.separator
+                + "00-initial-input-from-genomix-driver";
+
+        int libraryId = 0;
+        String pairedEndInputs = conf.get(GenomixJobConf.PAIRED_END_FASTQ_INPUTS);
+        if (pairedEndInputs != null) {
+            String[] inputs = pairedEndInputs.split(",");
+            for (int i = 0; i < inputs.length; i += 2) {
+                convertAndUploadFastqToHDFS(inputs[i], inputs[i + 1], libraryId, conf, HDFSInputFromLocalDir);
+                libraryId++;
+                hasLocalInput = true;
+            }
+        }
+        String singleEndInputs = conf.get(GenomixJobConf.SINGLE_END_FASTQ_INPUTS);
+        if (singleEndInputs != null) {
+            for (String input : singleEndInputs.split(",")) {
+                convertAndUploadFastqToHDFS(input, null, libraryId, conf, HDFSInputFromLocalDir);
+                libraryId++;
+                hasLocalInput = true;
+            }
+        }
+        String localInputDir = conf.get(GenomixJobConf.LOCAL_INPUT_DIR);
+        if (localInputDir != null) {
+            hasLocalInput = true;
+            GenomixClusterManager.copyLocalToHDFS(conf, localInputDir, HDFSInputFromLocalDir);
+        }
+        if (hasLocalInput) {
+            conf.set(GenomixJobConf.INITIAL_HDFS_INPUT_DIR, HDFSInputFromLocalDir);
+        }
+        curOutput = conf.get(GenomixJobConf.INITIAL_HDFS_INPUT_DIR);
+    }
+
+    /** Convert the given fastq file(s) to readid format (mate1\tmate2\n)
+     * 
+     * @param mate1Fastq
+     * @param mate2Fastq
+     * @param libraryId
+     * @param conf
+     * @param outputDir
+     * @throws IOException
+     */
+    private void convertAndUploadFastqToHDFS(String mate1Fastq, String mate2Fastq, int libraryId, GenomixJobConf conf,
+            String outputDir) throws IOException {
+        FileSystem dfs = FileSystem.get(conf);
+        dfs.mkdirs(new Path(outputDir));
+        FSDataOutputStream outstream = dfs.create(new Path(outputDir + File.separator + "library-" + libraryId
+                + ".readids"), true);
+        PrintWriter writer = new PrintWriter(outstream);
+
+        int lineNumber = 0;
+        BufferedReader mate1Reader = openFile(mate1Fastq);
+        String mate1Line;
+        if (mate2Fastq != null) {
+            BufferedReader mate2Reader = openFile(mate2Fastq);
+            String mate2Line;
+            while (true) {
+                mate1Line = mate1Reader.readLine();
+                mate2Line = mate2Reader.readLine();
+                if (mate1Line == null && mate2Line == null) {
+                    break;
+                } else if (mate1Line == null || mate2Line == null) {
+                    throw new IOException("Fastq files " + mate1Fastq + " and " + mate2Fastq
+                            + " didn't have the same number of lines! (reached line " + lineNumber
+                            + ", last readings: \"" + mate1Line + "\" and " + mate2Line + "\".");
+                } else {
+                    if ((lineNumber++ % 4) == 1) {
+                        writer.print(lineNumber);
+                        writer.print('\t');
+                        writer.print(mate1Line.trim());
+                        writer.print('\t');
+                        writer.print(mate2Line.trim());
+                        writer.print('\n');
+                    }
+                }
+            }
+            mate2Reader.close();
+        } else {
+            while ((mate1Line = mate1Reader.readLine()) != null) {
+                if (lineNumber++ % 4 == 1) {
+                    writer.print(lineNumber);
+                    writer.print('\t');
+                    writer.print(mate1Line.trim());
+                    writer.print('\n');
+                }
+            }
+        }
+
+        // Done with the file
+        mate1Reader.close();
+        writer.close();
+    }
+
+    /**
+     * return a BufferedReader ready to handle file contents.
+     * If the filename ends with ".gz", the file is assumed to be in gzip format.
+     * The caller is responsible for closing the returned BufferedReader.
+     * 
+     * @throws IOException
+     */
+    private static BufferedReader openFile(String filename) throws IOException {
+        FileInputStream fis = new FileInputStream(filename);
+        BufferedReader br;
+        if (filename.endsWith(".gz")) {
+            InputStream gzipStream = new GZIPInputStream(fis); // do I need to explicitly close this reader?  Or will it be closed when the containing BufferedReader is closed?
+            Reader decoder = new InputStreamReader(gzipStream, Charset.forName("UTF-8"));
+            br = new BufferedReader(decoder);
+        } else {
+            Reader decoder = new InputStreamReader(fis, Charset.forName("UTF-8"));
+            br = new BufferedReader(decoder);
+        }
+        return br;
     }
 
     public static void main(String[] args) throws NumberFormatException, HyracksException, Exception {
