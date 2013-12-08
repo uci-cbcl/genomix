@@ -10,8 +10,6 @@ public class KmerFactoryRandomTest {
     
     public static int strMaxLength;
     public static int strMinLength;
-    public static int kmerDiffMax;
-    public static int kmerDiffMin;
     
     @Before
     public void setUp(){
@@ -175,7 +173,7 @@ public class KmerFactoryRandomTest {
     }
     
     @Test
-    public void TestShift() {
+    public void TestShiftWithNextCode() {
         
         VKmer vkmer = new VKmer();
         int strLength = RandomTestHelper.genRandomInt(strMinLength, strMaxLength);
@@ -199,10 +197,44 @@ public class KmerFactoryRandomTest {
         expectedKmer = expectedKmer.substring(1) + "T";
         Assert.assertEquals(expectedKmer, kmerForward.toString());
     }
+    
+    @Test
+    public void TestShiftWithPreCode() {
+        
+        VKmer vkmer = new VKmer();
+        int strLength = RandomTestHelper.genRandomInt(strMinLength, strMaxLength);
+        String input = RandomTestHelper.generateString(strLength);
+        int kmerSize = RandomTestHelper.genRandomInt(1,strLength);
+        vkmer.setFromStringBytes(kmerSize, input.getBytes(), 0);
+        String expectedKmer = input.substring(0, kmerSize);
+        Assert.assertEquals(expectedKmer, vkmer.toString());
+        
+        KmerFactory kmerFactory = new KmerFactory(kmerSize);
+        VKmer kmerForward = kmerFactory.shiftKmerWithPreCode(vkmer, GeneCode.A);
+        expectedKmer = "A" + expectedKmer.substring(0, kmerSize - 1);
+        Assert.assertEquals(expectedKmer, kmerForward.toString());
+        kmerForward = kmerFactory.shiftKmerWithPreCode(kmerForward, GeneCode.C);
+        expectedKmer = "C" + expectedKmer.substring(0, kmerSize - 1);
+        Assert.assertEquals(expectedKmer, kmerForward.toString());
+        kmerForward = kmerFactory.shiftKmerWithPreCode(kmerForward, GeneCode.G);
+        expectedKmer = "G" + expectedKmer.substring(0, kmerSize - 1);
+        Assert.assertEquals(expectedKmer, kmerForward.toString());
+        kmerForward = kmerFactory.shiftKmerWithPreCode(kmerForward, GeneCode.T);
+        expectedKmer = "T" + expectedKmer.substring(0, kmerSize - 1);
+        Assert.assertEquals(expectedKmer, kmerForward.toString());
+    }
 
     @Test
     public void TestReverseKmer() {
         VKmer vkmer = new VKmer();
-        
+        int strLength = RandomTestHelper.genRandomInt(strMinLength, strMaxLength);
+        String input = RandomTestHelper.generateString(strLength);
+        int kmerSize = RandomTestHelper.genRandomInt(1,strLength);
+        vkmer.setFromStringBytes(kmerSize, input.getBytes(), 0);
+        Assert.assertEquals(input.substring(0, kmerSize), vkmer.toString());
+        KmerFactory kmerFactory = new KmerFactory(kmerSize);
+        VKmer reversed = kmerFactory.reverse(vkmer);
+        StringBuilder sb = new StringBuilder(input.substring(0, kmerSize));
+        Assert.assertEquals(sb.reverse().toString(), reversed.toString());
     }
 }
