@@ -58,6 +58,16 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
 
     public static final Logger LOG = Logger.getLogger(GraphStatistics.class.getName());
     private Reporter reporter;
+    
+    @Override
+    public void configure(JobConf job) {
+        super.configure(job);
+        try {
+            GenomixJobConf.setGlobalStaticConstants(job);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     @Override
     public void map(VKmer key, Node value, OutputCollector<Text, LongWritable> output, Reporter reporter)
