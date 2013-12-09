@@ -8,7 +8,6 @@ import edu.uci.ics.genomix.pregelix.base.DeBruijnGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.base.MessageWritable;
 import edu.uci.ics.genomix.pregelix.base.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.base.VertexValueWritable.State;
-import edu.uci.ics.genomix.pregelix.types.GraphMutations;
 
 /**
  * Graph clean pattern: Remove Lowcoverage

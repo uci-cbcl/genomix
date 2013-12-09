@@ -12,6 +12,7 @@ import edu.uci.ics.genomix.pregelix.base.DeBruijnGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.base.MessageWritable;
 import edu.uci.ics.genomix.pregelix.base.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.operator.complexbubblemerge.BubbleMergeWithSearchVertexValueWritable.BubbleMergeWithSearchState;
+import edu.uci.ics.genomix.pregelix.operator.complexbubblemerge.BubbleMergeWithSearchVertexValueWritable.EdgeTypeList;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 
 /**

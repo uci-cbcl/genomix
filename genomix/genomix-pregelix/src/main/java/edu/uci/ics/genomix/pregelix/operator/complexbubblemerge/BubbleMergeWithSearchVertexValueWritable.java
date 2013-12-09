@@ -5,6 +5,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import edu.uci.ics.genomix.data.types.EDGETYPE;
 import edu.uci.ics.genomix.data.types.VKmer;
 import edu.uci.ics.genomix.data.types.VKmerList;
 import edu.uci.ics.genomix.pregelix.base.VertexValueWritable;
@@ -15,7 +16,24 @@ public class BubbleMergeWithSearchVertexValueWritable extends VertexValueWritabl
      * 
      */
     private static final long serialVersionUID = 1L;
+    
+    public static class EdgeTypeList extends MashToByte<EDGETYPE> {
+        /**
+         * 
+         */
+        private static final long serialVersionUID = 1L;
 
+        @Override
+        byte getByte(EDGETYPE val) {
+            return val.get();
+        }
+
+        @Override
+        EDGETYPE get(byte val) {
+            return EDGETYPE.fromByte(val);
+        }
+    }
+        
     public static class BubbleMergeWithSearchState extends State {
 
         // mark if BFS passes this vertex in bubbleMergeWithSearch
