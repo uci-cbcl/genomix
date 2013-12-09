@@ -101,7 +101,7 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
             throw new IllegalArgumentException("byte specified for libraryId will lose some of its bits when saved! (was: " + libraryId + " but only allowed " + bitsForLibrary + " bits!");
         if (readId != (readId & ~(-1 << bitsForReadId)))
             throw new IllegalArgumentException("byte specified for readId will lose some of its bits when saved! (was: " + readId + " but only allowed " + bitsForReadId + " bits!");
-        if (offset != (offset & ~(-1 << bitsForLibrary)))
+        if (offset != (offset & ~(-1 << bitsForOffset)))
             throw new IllegalArgumentException("byte specified for offset will lose some of its bits when saved! (was: " + offset + " but only allowed " + offset + " bits!");
         
         return ((mateId << mateIdShift) + (libraryId << libraryIdShift) + (readId << readIdShift) + (offset << offsetShift));
