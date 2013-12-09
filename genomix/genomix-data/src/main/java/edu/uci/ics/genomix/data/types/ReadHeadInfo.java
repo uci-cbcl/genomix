@@ -19,12 +19,18 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
     private static final int readIdShift = bitsForPosition + bitsForMate;
     private static final int positionIdShift = bitsForMate;
 
-    protected static ReadHeadInfo getLowerBoundInfo(long readid) {
-        return new ReadHeadInfo((byte) 0, readid, 0, null, null);
+    protected static ReadHeadInfo getLowerBoundInfo(int offset, boolean mate) {
+        if (mate) {
+            return new ReadHeadInfo((byte) 1, 0l, offset, null, null);
+        }
+        return new ReadHeadInfo((byte) 0, 0l, offset, null, null);
     }
 
-    protected static ReadHeadInfo getUpperBoundInfo(long readid) {
-        return new ReadHeadInfo((byte) 1, readid, 0xFFFF, null, null);
+    protected static ReadHeadInfo getUpperBoundInfo(int offset, boolean mate) {
+        if (mate) {
+            return new ReadHeadInfo((byte) 1, Long.MAX_VALUE, offset, null, null);
+        }
+        return new ReadHeadInfo((byte) 0, Long.MAX_VALUE, offset, null, null);
     }
 
     private long value;
@@ -107,7 +113,7 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
     }
 
     public VKmer getThisReadSequence() {
-        if(this.thisReadSequence == null){
+        if (this.thisReadSequence == null) {
             this.thisReadSequence = new VKmer();
         }
         return this.thisReadSequence;
@@ -201,13 +207,13 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
      */
     @Override
     public int compareTo(ReadHeadInfo o) {
-        if (this.getReadId() == o.getReadId()) {
-            if (this.getMateId() == o.getMateId()) {
-                return this.getOffset() - o.getOffset();
+        if (this.getMateId() == o.getMateId()) {
+            if (this.getOffset() == o.getOffset()) {
+                return Long.compare(this.getReadId(), o.getReadId());
             }
-            return this.getMateId() - o.getMateId();
+            return Integer.compare(this.getOffset(), o.getOffset());
         }
-        return Long.compare(this.getReadId(), o.getReadId());
+        return Byte.compare(this.getMateId(), o.getMateId());
     }
 
 }

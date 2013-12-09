@@ -119,7 +119,6 @@ public class Node implements Writable, Serializable {
     }
 
     private static final long serialVersionUID = 1L;
-    private static final int INITIAL_BYTE_ARRAY_SIZE = 150;
 
     private VKmerList[] allEdges;
     private ReadHeadSet unflippedReadIds; // first Kmer in read
@@ -334,7 +333,7 @@ public class Node implements Writable, Serializable {
         return baos.toByteArray();
     }
 
-    public int setAsCopy(byte[] data, int offset) throws IOException{
+    public int setAsCopy(byte[] data, int offset) throws IOException {
         reset();
         byte activeFields = data[offset];
         offset += 1;

@@ -68,6 +68,7 @@ public abstract class DeBruijnGraphCleanVertex<V extends VertexValueWritable, M 
 
     public static int kmerSize = -1;
     public static int maxIteration = -1;
+    public static int readLength = -1;
 
     public static Object lock = new Object();
     public static boolean fakeVertexExist = false;

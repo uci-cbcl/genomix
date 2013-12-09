@@ -256,6 +256,7 @@ public class GenomixJobConf extends JobConf {
 
     // Global config
     public static final String KMER_LENGTH = "genomix.conf.kmerLength";
+    public static final String READ_LENGTH = "genomix.conf.readLength";
     public static final String LINES_PERMAP = "genomix.conf.linesPerMap";
     public static final String PIPELINE_ORDER = "genomix.conf.pipelineOrder";
     public static final String INITIAL_HDFS_INPUT_DIR = "genomix.conf.initialHDFSInputDir";
@@ -388,6 +389,8 @@ public class GenomixJobConf extends JobConf {
     private void fillMissingDefaults() {
         // Global config
         int kmerLength = getInt(KMER_LENGTH, -1);
+
+        setInt(READ_LENGTH, getInt(READ_LENGTH, -1));
 
         // Graph cleaning
         if (getInt(BRIDGE_REMOVE_MAX_LENGTH, -1) == -1 && kmerLength != -1)

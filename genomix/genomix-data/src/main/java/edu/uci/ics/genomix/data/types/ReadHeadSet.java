@@ -6,10 +6,10 @@ import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
+import java.util.SortedSet;
 
-public class ReadHeadSet extends ExternalableTreeSet<ReadHeadInfo> implements Iterable<ReadHeadInfo> {
+public class ReadHeadSet extends ExternalableTreeSet<ReadHeadInfo> {
     private static final long serialVersionUID = 1L;
 
     public ReadHeadSet() {
@@ -20,15 +20,16 @@ public class ReadHeadSet extends ExternalableTreeSet<ReadHeadInfo> implements It
         super.add(new ReadHeadInfo(mateId, readId, offset, thisReadSequence, thatReadSequence));
     }
 
-    public int getOffsetFromReadId(long readId) {
-        ReadHeadInfo lowKey = ReadHeadInfo.getLowerBoundInfo(readId);
-        ReadHeadInfo hit = super.inMemorySet.ceiling(lowKey);
-        if (hit != null && hit.getReadId() == readId){
-            return hit.getOffset();
-        }
-        throw new IllegalArgumentException("The input parameter readId " + readId
-                + " should exist in this ReadHeadSet, but not here!");
-    }
+    // Change the primary key.
+    //    public int getOffsetFromReadId(long readId) {
+    //        ReadHeadInfo lowKey = ReadHeadInfo.getLowerBoundInfo(readId);
+    //        ReadHeadInfo hit = super.inMemorySet.ceiling(lowKey);
+    //        if (hit != null && hit.getReadId() == readId){
+    //            return hit.getOffset();
+    //        }
+    //        throw new IllegalArgumentException("The input parameter readId " + readId
+    //                + " should exist in this ReadHeadSet, but not here!");
+    //    }
 
     /**
      * @param data
@@ -74,14 +75,14 @@ public class ReadHeadSet extends ExternalableTreeSet<ReadHeadInfo> implements It
 
     public void unionUpdate(ReadHeadSet readIds, float lengthFactor, boolean flipOffset, int otherLength) {
         if (!flipOffset) {
-            for (ReadHeadInfo p : readIds) {
+            for (ReadHeadInfo p : readIds.inMemorySet) {
                 this.add(p.getMateId(), p.getReadId(), (int) ((p.getOffset() + 1) * lengthFactor - lengthFactor),
                         p.getThisReadSequence(), p.getMateReadSequence());
             }
         } else {
             // int newOtherOffset = (int) ((otherLength - 1) * lengthFactor);
             // stream theirs in, offset and flipped
-            for (ReadHeadInfo p : readIds) {
+            for (ReadHeadInfo p : readIds.inMemorySet) {
                 int newPOffset = otherLength - 1 - p.getOffset();
                 this.add(p.getMateId(), p.getReadId(), (int) ((newPOffset + 1) * lengthFactor - lengthFactor),
                         p.getThisReadSequence(), p.getMateReadSequence());
@@ -96,15 +97,19 @@ public class ReadHeadSet extends ExternalableTreeSet<ReadHeadInfo> implements It
         super.isChanged = true;
     }
 
-    public void unionUpdate(ReadHeadSet setB) {
-        super.union(setB);
-    }
-
     public void flipOffset(int newOtherOffset) {
         for (ReadHeadInfo p : super.inMemorySet) {
             p.resetOffset(newOtherOffset - p.getOffset());
         }
         super.isChanged = true;
+    }
+
+    public void unionUpdate(ReadHeadSet setB) {
+        super.union(setB);
+    }
+
+    public SortedSet<ReadHeadInfo> getOffSetRange(int lowOffset, int highOffset, boolean mate) {
+        return super.rangeSearch(ReadHeadInfo.getLowerBoundInfo(lowOffset,mate), ReadHeadInfo.getUpperBoundInfo(highOffset,mate));
     }
 
     public Set<Long> getReadIdSet() {
@@ -116,25 +121,15 @@ public class ReadHeadSet extends ExternalableTreeSet<ReadHeadInfo> implements It
     }
 
     @Override
-    public ReadHeadInfo readEachNonGenericElement(DataInput in) throws IOException {
+    public ReadHeadInfo readNonGenericElement(DataInput in) throws IOException {
         ReadHeadInfo info = new ReadHeadInfo();
         info.readFields(in);
         return info;
     }
 
     @Override
-    public void writeEachNonGenericElement(DataOutput out, ReadHeadInfo t) throws IOException {
+    public void writeNonGenericElement(DataOutput out, ReadHeadInfo t) throws IOException {
         t.write(out);
-    }
-
-    /**
-     * It supposed to be an read-only iterator.
-     * This is a temporary solution to make code compilable.
-     * We will hide this interface when the scaffolding code became stable.
-     */
-    @Override
-    public Iterator<ReadHeadInfo> iterator() {
-        return super.inMemorySet.iterator();
     }
 
 }
