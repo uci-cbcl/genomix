@@ -32,6 +32,16 @@ public class ConvertToFasta extends MapReduceBase implements Mapper<VKmer, Node,
 
     public static Text textKey = new Text();
     public static Text textValue = new Text();
+    
+    @Override
+    public void configure(JobConf job) {
+        super.configure(job);
+        try {
+            GenomixJobConf.setGlobalStaticConstants(job);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     @Override
     public void map(VKmer key, Node value, OutputCollector<Text, Text> output, Reporter reporter) throws IOException {
