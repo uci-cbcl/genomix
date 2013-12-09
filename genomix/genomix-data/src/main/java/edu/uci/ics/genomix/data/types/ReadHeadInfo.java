@@ -104,7 +104,7 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
         if (offset != (offset & ~(-1 << bitsForOffset)))
             throw new IllegalArgumentException("byte specified for offset will lose some of its bits when saved! (was: " + offset + " but only allowed " + offset + " bits!");
         
-        return ((mateId << mateIdShift) + (libraryId << libraryIdShift) + (readId << readIdShift) + (offset << offsetShift));
+        return ((offset << offsetShift) + (libraryId << libraryIdShift) + (mateId << mateIdShift) + (readId << readIdShift));
     }
 
     public void set(byte mateId, byte libraryId, long readId, int offset) {
