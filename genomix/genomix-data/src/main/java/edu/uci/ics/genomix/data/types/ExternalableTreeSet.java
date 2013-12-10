@@ -11,6 +11,7 @@ import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -46,9 +47,10 @@ public abstract class ExternalableTreeSet<T extends WritableComparable<T> & Seri
         countLimit = count;
     }
 
-    protected TreeSet<T> inMemorySet;
-    private Path path;
+    private TreeSet<T> inMemorySet;
+    protected Path path;
     protected boolean isChanged;
+    protected boolean isLoaded;
 
     public ExternalableTreeSet() {
         this(null);
@@ -58,9 +60,31 @@ public abstract class ExternalableTreeSet<T extends WritableComparable<T> & Seri
         inMemorySet = new TreeSet<T>();
         this.path = path;
         isChanged = false;
+        isLoaded = false;
+    }
+
+    /**
+     * A explicit load operation from path to inMemorySet.
+     * Every operation that visit the inMemorySet should call this function.
+     */
+    @SuppressWarnings("unchecked")
+    private void loadInMemorySetFromPath() {
+        if (!isLoaded && path != null) {
+            try {
+                inMemorySet = (TreeSet<T>) load(path);
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+                throw new RuntimeException(e);
+            } catch (IOException e) {
+                e.printStackTrace();
+                throw new RuntimeException(e);
+            }
+            isLoaded = true;
+        }
     }
 
     public boolean add(T t) {
+        loadInMemorySetFromPath();
         boolean contains = inMemorySet.add(t);
         if (contains) {
             isChanged = contains;
@@ -69,6 +93,7 @@ public abstract class ExternalableTreeSet<T extends WritableComparable<T> & Seri
     }
 
     public boolean remove(T t) {
+        loadInMemorySetFromPath();
         boolean contains = inMemorySet.remove(t);
         if (contains) {
             isChanged = contains;
@@ -77,10 +102,12 @@ public abstract class ExternalableTreeSet<T extends WritableComparable<T> & Seri
     }
 
     public boolean contains(T obj) {
+        loadInMemorySetFromPath();
         return inMemorySet.contains(obj);
     }
 
     public int size() {
+        loadInMemorySetFromPath();
         return inMemorySet.size();
     }
 
@@ -98,6 +125,7 @@ public abstract class ExternalableTreeSet<T extends WritableComparable<T> & Seri
      * @return
      */
     public SortedSet<T> rangeSearch(T lowKey, T highKey) {
+        loadInMemorySetFromPath();
         SortedSet<T> set = inMemorySet.subSet(lowKey, highKey);
         return set;
     }
@@ -109,6 +137,7 @@ public abstract class ExternalableTreeSet<T extends WritableComparable<T> & Seri
      * @param setB
      */
     public boolean union(ExternalableTreeSet<T> setB) {
+        loadInMemorySetFromPath();
         boolean changed = inMemorySet.addAll(setB.inMemorySet);
         if (changed) {
             isChanged = true;
@@ -121,6 +150,50 @@ public abstract class ExternalableTreeSet<T extends WritableComparable<T> & Seri
         this.inMemorySet.addAll(readSet.inMemorySet);
         this.path = readSet.path;
         this.isChanged = readSet.isChanged;
+        if (inMemorySet.size() > 0) {
+            this.isLoaded = true;
+        }
+    }
+
+    protected Iterator<T> resetableIterator() {
+        loadInMemorySetFromPath();
+        isChanged = true;
+        return inMemorySet.iterator();
+    }
+
+    protected class ReadIterator implements Iterator<T> {
+        private Iterator<T> iter;
+
+        public ReadIterator(Iterator<T> iter) {
+            this.iter = iter;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return iter.hasNext();
+        }
+
+        @Override
+        public T next() {
+            return iter.next();
+        }
+
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException();
+        }
+
+    }
+
+    /**
+     * You can actually still call the setting functions of T returned by this iterator,
+     * But we assume the client should not call those functions.
+     * 
+     * @return
+     */
+    protected ReadIterator readOnlyIterator() {
+        loadInMemorySetFromPath();
+        return new ReadIterator(inMemorySet.iterator());
     }
 
     protected static TreeSet<?> load(Path path) throws IOException, ClassNotFoundException {
@@ -142,7 +215,6 @@ public abstract class ExternalableTreeSet<T extends WritableComparable<T> & Seri
 
     public abstract void writeNonGenericElement(DataOutput out, T t) throws IOException;
 
-    @SuppressWarnings("unchecked")
     @Override
     public void readFields(DataInput in) throws IOException {
         int size = in.readInt();
@@ -154,11 +226,6 @@ public abstract class ExternalableTreeSet<T extends WritableComparable<T> & Seri
             }
         } else {
             path = new Path(in.readUTF());
-            try {
-                inMemorySet = (TreeSet<T>) load(path);
-            } catch (ClassNotFoundException e) {
-                throw new IOException(e);
-            }
         }
 
         isChanged = false;
@@ -167,6 +234,10 @@ public abstract class ExternalableTreeSet<T extends WritableComparable<T> & Seri
     @Override
     public void write(DataOutput out) throws IOException {
         out.writeInt(inMemorySet.size());
+        if (!isLoaded && path != null) {
+            out.writeUTF(path.toString());
+            return;
+        }
         if (inMemorySet.size() < countLimit) {
             for (T t : inMemorySet) {
                 writeNonGenericElement(out, t);
