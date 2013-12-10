@@ -53,9 +53,13 @@ public class ReadHeadSet extends ExternalableTreeSet<ReadHeadInfo> {
         return sbuilder.toString();
     }
 
-    public void unionUpdate(ReadHeadSet readIds, float lengthFactor, boolean flipOffset, int otherLength) {
+    public void unionUpdate(ReadHeadSet setB) {
+        super.union(setB);
+    }
+
+    public void unionUpdate(ReadHeadSet setB, float lengthFactor, boolean flipOffset, int otherLength) {
         if (!flipOffset) {
-            ReadIterator iter = super.readOnlyIterator();
+            ReadIterator iter = setB.readOnlyIterator();
             while (iter.hasNext()) {
                 ReadHeadInfo p = iter.next();
                 this.add(p.getMateId(), p.getReadId(), (int) ((p.getOffset() + 1) * lengthFactor - lengthFactor),
@@ -64,7 +68,7 @@ public class ReadHeadSet extends ExternalableTreeSet<ReadHeadInfo> {
         } else {
             // int newOtherOffset = (int) ((otherLength - 1) * lengthFactor);
             // stream theirs in, offset and flipped
-            ReadIterator iter = super.readOnlyIterator();
+            ReadIterator iter = setB.readOnlyIterator();
             while (iter.hasNext()) {
                 ReadHeadInfo p = iter.next();
                 int newPOffset = otherLength - 1 - p.getOffset();
@@ -88,10 +92,6 @@ public class ReadHeadSet extends ExternalableTreeSet<ReadHeadInfo> {
             ReadHeadInfo p = iter.next();
             p.resetOffset(newOtherOffset - p.getOffset());
         }
-    }
-
-    public void unionUpdate(ReadHeadSet setB) {
-        super.union(setB);
     }
 
     public SortedSet<ReadHeadInfo> getOffSetRange(int lowOffset, int highOffset, boolean mate) {

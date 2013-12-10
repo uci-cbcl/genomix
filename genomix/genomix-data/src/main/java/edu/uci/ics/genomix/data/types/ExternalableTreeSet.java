@@ -48,9 +48,9 @@ public abstract class ExternalableTreeSet<T extends WritableComparable<T> & Seri
     }
 
     private TreeSet<T> inMemorySet;
-    private Path path;
-    private boolean isChanged;
-    private boolean isLoaded;
+    protected Path path;
+    protected boolean isChanged;
+    protected boolean isLoaded;
 
     public ExternalableTreeSet() {
         this(null);
