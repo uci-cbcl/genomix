@@ -29,7 +29,7 @@ if [ "$PIPELINE_TESTS" == "true" ]; then
         pushd genomix-driver/target/genomix-driver-0.2.10-SNAPSHOT
         
         # simplified pipeline
-        cmd=( bin/genomix $RUN_LOCAL -kmerLength 55 -pipelineOrder BUILD_HYRACKS,MERGE,TIP_REMOVE,MERGE,BUBBLE,MERGE -localInput ../../src/test/resources/data/sequence/pathmerge/hg19.chr18.skip12K.first1K.1Kreads/ )
+        cmd=( bin/genomix $RUN_LOCAL -kmerLength 55 -pipelineOrder BUILD_HYRACKS,MERGE,TIP,MERGE,BUBBLE,MERGE -localInput ../../src/test/resources/data/sequence/pathmerge/hg19.chr18.skip12K.first1K.1Kreads/ )
         run_and_save_exit_code
         
         # default pipeline
@@ -37,7 +37,7 @@ if [ "$PIPELINE_TESTS" == "true" ]; then
         run_and_save_exit_code
         
         # pipeline that repeats steps
-        cmd=( bin/genomix $RUN_LOCAL -kmerLength 55 -pipelineOrder BUILD_HADOOP,LOW_COVERAGE,MERGE,TIP_REMOVE,MERGE,BUBBLE,MERGE,SPLIT_REPEAT,MERGE,TIP_REMOVE,MERGE,BUBBLE,MERGE,SPLIT_REPEAT,MERGE,BUBBLE,MERGE,SPLIT_REPEAT,MERGE,BUBBLE,MERGE,SPLIT_REPEAT,MERGE -localInput ../../src/test/resources/data/sequence/pathmerge/hg19.chr18.skip12K.first1K.1Kreads/ )
+        cmd=( bin/genomix $RUN_LOCAL -kmerLength 55 -pipelineOrder BUILD,LOW_COVERAGE,MERGE,TIP,MERGE,BUBBLE,MERGE,SPLIT_REPEAT,MERGE,TIP,MERGE,BUBBLE,MERGE,SPLIT_REPEAT,MERGE,BUBBLE,MERGE,SPLIT_REPEAT,MERGE,BUBBLE,MERGE,SPLIT_REPEAT,MERGE -localInput ../../src/test/resources/data/sequence/pathmerge/hg19.chr18.skip12K.first1K.1Kreads/ )
         run_and_save_exit_code
 
         popd

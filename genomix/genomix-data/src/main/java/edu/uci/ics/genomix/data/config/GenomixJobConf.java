@@ -90,7 +90,7 @@ public class GenomixJobConf extends JobConf {
         private float bubbleMerge_maxDissimilarity = -1;
         
         @Option(name = "-bubbleMerge_maxLength", usage = "The maximum length an internal node may be and still be considered a bubble", required = false)
-        private int bubbleMerge_maxLength;
+        private int bubbleMerge_maxLength = -1;
 
         @Option(name = "-bubbleMergewithsearch_maxLength", usage = "Maximum length can be searched", required = false)
         private int bubbleMergeWithSearch_maxLength = -1;
@@ -563,6 +563,7 @@ public class GenomixJobConf extends JobConf {
     public static void setGlobalStaticConstants(Configuration conf) throws IOException {
         Kmer.setGlobalKmerLength(Integer.parseInt(conf.get(GenomixJobConf.KMER_LENGTH)));
         ExternalableTreeSet.setupManager(conf, new Path(conf.get("hadoop.tmp.dir", "/tmp")));
+        ExternalableTreeSet.setCountLimit(1000);
         //        EdgeWritable.MAX_READ_IDS_PER_EDGE = Integer.parseInt(conf.get(GenomixJobConf.MAX_READIDS_PER_EDGE));
         debug = conf.get(GenomixJobConf.DEBUG_KMERS) != null;
         if (debugKmers == null) {

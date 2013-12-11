@@ -228,12 +228,6 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
     @Override
     public void compute(Iterator<PathMergeMessage> msgIterator) {
         initVertex();
-        if (Float.isInfinite(getVertexValue().getAverageCoverage()) || Float.isNaN(getVertexValue().getAverageCoverage())) {
-            System.out.println("Before: " + getVertexValue());
-        }
-        if (getVertexId().toString().equals("AGCGCAAGG")) {
-            System.out.println();
-        }
         if (verbose)
             LOG.fine("Iteration " + getSuperstep() + " for key " + getVertexId());
         if (getSuperstep() > maxIteration) { // TODO should we make sure the graph is complete or allow interruptions that will cause an asymmetric graph?
@@ -254,10 +248,6 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
         } else if (getSuperstep() % 2 == 1) {
             receiveUpdates(msgIterator);
             sendMergeMsg();
-        }
-        if (Float.isInfinite(getVertexValue().getAverageCoverage()) || Float.isNaN(getVertexValue().getAverageCoverage())) {
-            System.out.println("after: " + getVertexValue());
-            throw new RuntimeException(this.toString());
         }
     }
 
