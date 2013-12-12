@@ -131,12 +131,12 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
         return job.getCounters();
     }
 
-    public static float getMaxCoverage(Counters jobCounters){
-        float maxCoverage = 0;
+    public static double getMaxCoverage(Counters jobCounters){
+        double maxCoverage = 0;
         for (Group g : jobCounters) {
             if (g.getName().equals("coverage-bins")) {
                 for (Counter c : g) {
-                    float cov = Float.parseFloat(c.getName());
+                    double cov = Double.parseDouble(c.getName());
                     if (maxCoverage < cov)
                         maxCoverage = cov;
                 }
@@ -147,20 +147,20 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
     /**
      * run a map-reduce job on the given input graph and return an array of coverage
      */
-    public static float[] getCoverageStats(Counters jobCounters) {
-        ArrayList<Float> resultArrayList = new ArrayList<Float>();
+    public static double[] getCoverageStats(Counters jobCounters) {
+        ArrayList<Double> resultArrayList = new ArrayList<Double>();
         // get Coverage counter
         for (Group g : jobCounters) {
             if (g.getName().equals("coverage-bins")) {
                 for (Counter c : g) {
-                    float cov = Float.parseFloat(c.getName());
+                    double cov = Double.parseDouble(c.getName());
                     for (long i = 0; i < c.getValue(); i++) {
                         resultArrayList.add(cov);
                     }
                 }
             }
         }
-        float[] resultArray = new float[resultArrayList.size()];
+        double[] resultArray = new double[resultArrayList.size()];
         for(int i = 0; i < resultArrayList.size(); i++)
             resultArray[i] = resultArrayList.get(i);
         return resultArray;
