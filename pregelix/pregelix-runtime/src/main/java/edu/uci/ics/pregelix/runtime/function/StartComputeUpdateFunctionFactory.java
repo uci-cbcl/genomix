@@ -110,13 +110,15 @@ public class StartComputeUpdateFunctionFactory implements IUpdateFunctionFactory
             private final List<ArrayTupleBuilder> tbs = new ArrayList<ArrayTupleBuilder>();
             private Configuration conf;
             private boolean dynamicStateLength;
+            private boolean userConfigured;
 
             @Override
             public void open(IHyracksTaskContext ctx, RecordDescriptor rd, IFrameWriter... writers)
                     throws HyracksDataException {
                 this.conf = confFactory.createConfiguration(ctx);
                 //LSM index does not have in-place update
-                this.dynamicStateLength = BspUtils.getDynamicVertexValueSize(conf) || BspUtils.useLSM(conf);;
+                this.dynamicStateLength = BspUtils.getDynamicVertexValueSize(conf) || BspUtils.useLSM(conf);
+                this.userConfigured = false;
                 this.aggregators = BspUtils.createGlobalAggregators(conf);
                 for (int i = 0; i < aggregators.size(); i++) {
                     this.aggregators.get(i).init();
@@ -192,6 +194,10 @@ public class StartComputeUpdateFunctionFactory implements IUpdateFunctionFactory
                 }
 
                 try {
+                    if (!userConfigured) {
+                        vertex.configure(conf);
+                        userConfigured = true;
+                    }
                     vertex.open();
                     vertex.compute(msgIterator);
                     vertex.close();
