@@ -43,7 +43,7 @@ public class FittingMixture {
         return histData;
     }
 
-    public void drawHist(ArrayList<Double> array, String histType) throws IOException {
+    public static void drawHist(ArrayList<Double> array, String histType) throws IOException {
         XYSeries series = new XYSeries(histType);
         for (int i = 0; i < array.size(); i++) {
             series.add(i + 1, array.get(i));
@@ -84,15 +84,15 @@ public class FittingMixture {
         return likelihood;
     }
 
-    public static void fittingMixture(ArrayList<Integer> data, int numOfIterations) throws IOException {
+    public static double fittingMixture(ArrayList<Double> data, double max, int numOfIterations) throws IOException {
         double[] doubles = new double[data.size()];
-        for(int i = 0; i < data.size(); i++){
-            doubles[i] = (double)data.get(i).intValue();
+        for (int i = 0; i < data.size(); i++) {
+            doubles[i] = data.get(i).intValue();
         }
-        fittingMixture(doubles, numOfIterations);
+        return fittingMixture(doubles, max, numOfIterations);
     }
 
-    public static void fittingMixture(double[] data, int numOfIterations) throws IOException {
+    public static double fittingMixture(double[] data, double max, int numOfIterations) throws IOException {
         FittingMixture fm = new FittingMixture();
         ArrayList<Double> likelihoods = new ArrayList<Double>();
 
@@ -155,7 +155,7 @@ public class FittingMixture {
             }
 
             cur_normalStd = Math.sqrt(cur_normalStd / normal_overallSum);
-            if(cur_normalStd == 0)
+            if (cur_normalStd == 0)
                 cur_normalStd = 0.000000001;
             cur_normalDist = new NormalDistribution(cur_normalMean, cur_normalStd);
 
@@ -188,23 +188,32 @@ public class FittingMixture {
 
         // test final 
         double[] exp_randomSample = cur_expDist.sample(5000);
-        Map<Double, Long> exp_histData = fm.calcHistogram(exp_randomSample, 0, 100, 100);
+        Map<Double, Long> exp_histData = fm.calcHistogram(exp_randomSample, 0, max, (int) (max));
         fm.drawHist(exp_histData, "After-Exponential");
 
         double[] norm_randomSample = cur_normalDist.sample(5000);
-        Map<Double, Long> norm_histData = fm.calcHistogram(norm_randomSample, 0, 100, 100);
+        Map<Double, Long> norm_histData = fm.calcHistogram(norm_randomSample, 0, max, (int) (max));
         fm.drawHist(norm_histData, "After-Normal");
-        
+
         double[] combine_randomSample = fm.combineTwoDoubleArray(exp_randomSample, norm_randomSample);
-        Map<Double, Long> combine_histData = fm.calcHistogram(combine_randomSample, 0, 100, 100);
+        Map<Double, Long> combine_histData = fm.calcHistogram(combine_randomSample, 0, max, (int) (max));
         fm.drawHist(combine_histData, "Mixture");
-        
+
         // plot likelihood's change
         fm.drawHist(likelihoods, "Likelihood");
 
         /* one choice of threshold is when the probability of belonging to the normal distribution 
          is greater than the probability of belonging to the exponential distribution
          this happens when the ratio of norm to exponential is > 1 */
+        double prob_in_exp = 0;
+        double prob_in_normal = 0;
+        for (double cov = 1; cov < max; cov++) {
+            prob_in_exp = prob_Exp * cur_expDist.density(cov);
+            prob_in_normal = prob_Normal * cur_normalDist.density(cov);
+            if (prob_in_exp < prob_in_normal)
+                return cov;
+        }
+        return 0;
     }
 
     public double[] combineTwoDoubleArray(double[] array1, double[] array2) {

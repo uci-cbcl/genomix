@@ -88,7 +88,26 @@ public class GenomixDriver {
         FileInputFormat.setInputPaths(conf, new Path(prevOutput));
         FileOutputFormat.setOutputPath(conf, new Path(curOutput));
     }
-
+    
+    private void setCutoffCoverageByFittingMixture(GenomixJobConf conf) throws IOException{
+        Counters coverageCounters = GraphStatistics.run(curOutput, curOutput + "-cov-stats", conf);
+        GraphStatistics.drawCoverageStatistics(curOutput + "-cov-stats", coverageCounters, conf);
+        copyToLocalOutputDir(curOutput + "-cov-stats", conf);
+        
+        ArrayList<Double> coverageData = new ArrayList<Double>();
+        double maxCoverage = GraphStatistics.getCoverageStats(coverageCounters, coverageData);
+        if(maxCoverage == 0 || coverageData.size() == 0)
+            throw new IllegalStateException("No information for coverage!");
+        long cutoffCoverage = (long)FittingMixture.fittingMixture(coverageData, maxCoverage, 30);
+        
+        if(cutoffCoverage > 3.0f){
+            LOG.info("Set the cutoffCoverage to " + cutoffCoverage);
+            conf.setFloat(GenomixJobConf.REMOVE_LOW_COVERAGE_MAX_COVERAGE, cutoffCoverage);
+        } else{
+            LOG.info("The generated cutoffCoverage is " + cutoffCoverage + "! It's less than 3 and it's not set.");
+        }
+    }
+    
     private void addStep(GenomixJobConf conf, Patterns step) throws Exception {
         // oh, java, why do you pain me so?
         switch (step) {
@@ -96,9 +115,8 @@ public class GenomixDriver {
             case BUILD_HYRACKS:
                 flushPendingJobs(conf);
                 buildGraphWithHyracks(conf);
-                Counters coverageCounters = GraphStatistics.run(curOutput, curOutput + "-cov-stats", conf);
-                ArrayList<Integer> coverageData = GraphStatistics.getCoverageStats(coverageCounters);
-                FittingMixture.fittingMixture(coverageData, 10);
+                if(Boolean.parseBoolean(conf.get(GenomixJobConf.SET_CUTOFF_COVERAGE)))
+                    setCutoffCoverageByFittingMixture(conf);
                 break;
             case BUILD_HADOOP:
                 flushPendingJobs(conf);
