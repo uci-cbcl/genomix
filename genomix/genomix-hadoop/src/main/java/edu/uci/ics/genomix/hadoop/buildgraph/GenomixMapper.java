@@ -93,9 +93,9 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
                 thisReadSequence.setAsCopy(mate0GeneLine);
                 if (mate1GeneLine != null) {
                     mateReadSequence.setAsCopy(mate1GeneLine);
-                    readHeadInfo.set((byte) 0, readID, 0, thisReadSequence, mateReadSequence);
+                    readHeadInfo.set((byte) 0, (byte) 0, readID, 0, thisReadSequence, mateReadSequence); // FIXME Hadoop version doesn't record the library
                 } else {
-                    readHeadInfo.set((byte) 0, readID, 0, thisReadSequence, null);
+                    readHeadInfo.set((byte) 0, (byte) 0, readID, 0, thisReadSequence, null); // FIXME Hadoop version doesn't record the library
                 }
                 SplitReads(readID, mate0GeneLine.getBytes(), output);
             }
@@ -107,7 +107,7 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
             if (geneMatcher.matches()) {
                 thisReadSequence.setAsCopy(mate1GeneLine);
                 mateReadSequence.setAsCopy(mate0GeneLine);
-                readHeadInfo.set((byte) 1, readID, 0, thisReadSequence, mateReadSequence);
+                readHeadInfo.set((byte) 1, (byte) 0, readID, 0, thisReadSequence, mateReadSequence); // FIXME Hadoop version doesn't record the library
                 SplitReads(readID, mate1GeneLine.getBytes(), output);
             }
         }

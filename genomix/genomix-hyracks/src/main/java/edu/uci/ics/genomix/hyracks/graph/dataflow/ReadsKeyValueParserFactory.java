@@ -55,6 +55,7 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
     public static final RecordDescriptor readKmerOutputRec = new RecordDescriptor(new ISerializerDeserializer[2]);
 
     private static final Pattern genePattern = Pattern.compile("[AGCT]+");
+    private static final Pattern libraryPattern = Pattern.compile("library-(\\d+).readids");
 
     public ReadsKeyValueParserFactory(JobConf conf) throws HyracksDataException {
         confFactory = new ConfFactory(conf);
@@ -91,6 +92,7 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
 
             @Override
             public void parse(LongWritable key, Text value, IFrameWriter writer, String filename) {
+                byte libraryId = Byte.valueOf(libraryPattern.matcher(filename).group(0));
                 long readID = 0;
                 String mate0GeneLine = null;
                 String mate1GeneLine = null;
@@ -116,9 +118,9 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                         thisReadSequence.setAsCopy(mate0GeneLine);
                         if (mate1GeneLine != null) {
                             mateReadSequence.setAsCopy(mate1GeneLine);
-                            readHeadInfo.set((byte) 0, readID, 0, thisReadSequence, mateReadSequence);
+                            readHeadInfo.set((byte) 0, libraryId, readID, 0, thisReadSequence, mateReadSequence);
                         } else {
-                            readHeadInfo.set((byte) 0, readID, 0, thisReadSequence, null);
+                            readHeadInfo.set((byte) 0, libraryId, readID, 0, thisReadSequence, null);
                         }
                         SplitReads(readID, mate0GeneLine.getBytes(), writer);
                     }
@@ -128,7 +130,7 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                     if (geneMatcher.matches()) {
                         thisReadSequence.setAsCopy(mate1GeneLine);
                         mateReadSequence.setAsCopy(mate0GeneLine);
-                        readHeadInfo.set((byte) 1, readID, 0, thisReadSequence, mateReadSequence);
+                        readHeadInfo.set((byte) 1, libraryId, readID, 0, thisReadSequence, mateReadSequence);
                         SplitReads(readID, mate1GeneLine.getBytes(), writer);
                     }
                 }
