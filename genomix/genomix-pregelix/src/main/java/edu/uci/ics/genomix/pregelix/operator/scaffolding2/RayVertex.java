@@ -138,7 +138,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
             sendMsg(next.kmer, msg);
         } else {
             // 2+ neighbors -> start evaluating candidates via a REQUEST_KMER msg
-            msg.setType(RayMessageType.REQUEST_KMER);
+            msg.setMessageType(RayMessageType.REQUEST_KMER);
             for (EDGETYPE et : nextDir.edgeTypes()) {
                 for (VKmer next : vertex.getEdges(et)) {
                     msg.setEdgeTypeBackToFrontier(et.mirror());
@@ -164,13 +164,13 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         if (vertex.visited) {
             vertex.intersection = true;
             outgoingMsg.reset();
-            outgoingMsg.setType(RayMessageType.STOP);
+            outgoingMsg.setMessageType(RayMessageType.STOP);
             sendMsg(msg.getSourceVertexId(), outgoingMsg);
             return;
         }
 
         outgoingMsg.reset();
-        outgoingMsg.setType(RayMessageType.REQUEST_SCORE);
+        outgoingMsg.setMessageType(RayMessageType.REQUEST_SCORE);
         outgoingMsg.setSourceVertexId(msg.getSourceVertexId()); // frontier node
         outgoingMsg.setToScoreId(id); // candidate node (me)
         outgoingMsg.setToScoreKmer(vertex.getInternalKmer());
@@ -208,7 +208,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
                 // special case: I am the frontier node. Send an empty note just in case no 
                 // other nodes in the walk report back
                 outgoingMsg.reset();
-                outgoingMsg.setType(RayMessageType.AGGREGATE_SCORE);
+                outgoingMsg.setMessageType(RayMessageType.AGGREGATE_SCORE);
                 sendMsg(frontierNode, outgoingMsg);
             }
             return;
@@ -225,7 +225,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         RayScores pairedEndScores = voteFromReads(false, vertex, msgs, myOffset, walkLength, minLength);
 
         outgoingMsg.reset();
-        outgoingMsg.setType(RayMessageType.AGGREGATE_SCORE);
+        outgoingMsg.setMessageType(RayMessageType.AGGREGATE_SCORE);
         outgoingMsg.setSingleEndScores(singleEndScores);
         outgoingMsg.setPairedEndScores(pairedEndScores);
         sendMsg(frontierNode, outgoingMsg);

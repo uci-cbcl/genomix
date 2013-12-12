@@ -15,35 +15,13 @@ public class RayMessage extends MessageWritable {
     
     private RayMessageType messageType;
     public enum RayMessageType {
-        REQUEST_KMER(0),
-        REQUEST_SCORE(1),
-        AGGREGATE_SCORE(2),
-        PRUNE_EDGE(3),
-        CONTINUE_WALK(4),
-        STOP(5);
-        
-        private byte val;
-        RayMessageType(int val) {
-            this.val = (byte)val;
-        }
-        public byte get() {
-            return val;
-        }
-        public static RayMessageType fromByte(byte val) {
-            if (val == REQUEST_KMER.val)
-                return REQUEST_KMER;
-            if (val == REQUEST_SCORE.val)
-                return REQUEST_SCORE;
-            if (val == AGGREGATE_SCORE.val)
-                return AGGREGATE_SCORE;
-            if (val == PRUNE_EDGE.val)
-                return PRUNE_EDGE;
-            if (val == CONTINUE_WALK.val)
-                return CONTINUE_WALK;
-            if (val == STOP.val)
-                return STOP;
-            throw new IllegalArgumentException("Invalid byte value! " + val);
-        }
+        REQUEST_KMER,
+        REQUEST_SCORE,
+        AGGREGATE_SCORE,
+        PRUNE_EDGE,
+        CONTINUE_WALK,
+        STOP;
+        public static final RayMessageType[] values = values();
     }
 
     /** for REQUEST_KMER, REQUEST_SCORE, AGGREGATE_SCORE, CONTINUE_WALK */
@@ -113,7 +91,7 @@ public class RayMessage extends MessageWritable {
     @Override
     public void readFields(DataInput in) throws IOException {
         super.readFields(in);
-        messageType = RayMessageType.fromByte(in.readByte());
+        messageType = RayMessageType.values[in.readByte()];
         if ((messageFields & FIELDS.WALK) != 0) {
             getWalkIds().readFields(in);
             readWalkOffsets(in);
@@ -136,6 +114,7 @@ public class RayMessage extends MessageWritable {
     @Override
     public void write(DataOutput out) throws IOException {
         super.write(out);
+        out.writeByte((byte) messageType.ordinal());
         if (walkIds != null && walkIds.size() > 0) {
             walkIds.write(out);
             writeWalkOffsets(out);
@@ -206,7 +185,7 @@ public class RayMessage extends MessageWritable {
         return messageType;
     }
 
-    public void setType(RayMessageType type) {
+    public void setMessageType(RayMessageType type) {
         this.messageType = type;
     }
 
