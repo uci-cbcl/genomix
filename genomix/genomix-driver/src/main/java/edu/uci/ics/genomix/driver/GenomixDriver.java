@@ -111,11 +111,11 @@ public class GenomixDriver {
             throw new IllegalStateException("No information for coverage!");
         long cutoffCoverage = (long)FittingMixture.fittingMixture(coverageData, maxCoverage, 30);
         
-        if(cutoffCoverage > 3.0f){
+        if(cutoffCoverage != 0){
             LOG.info("Set the cutoffCoverage to " + cutoffCoverage);
             conf.setFloat(GenomixJobConf.REMOVE_LOW_COVERAGE_MAX_COVERAGE, cutoffCoverage);
         } else{
-            LOG.info("The generated cutoffCoverage is " + cutoffCoverage + "! It's less than 3 and it's not set.");
+            LOG.info("The generated cutoffCoverage is " + cutoffCoverage + "! It's not set.");
         }
     }
     
