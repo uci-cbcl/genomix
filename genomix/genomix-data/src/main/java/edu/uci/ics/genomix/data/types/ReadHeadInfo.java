@@ -13,24 +13,31 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
     private static final long serialVersionUID = 1L;
     public static final int ITEM_SIZE = 8;
 
+    // the internal long is divided up into several pieces:
     public static final int totalBits = 64;
     private static final int bitsForMate = 1;
-    private static final int bitsForPosition = 16;
-    private static final int readIdShift = bitsForPosition + bitsForMate;
-    private static final int positionIdShift = bitsForMate;
+    private static final int bitsForLibrary = 4;
+    private static final int bitsForOffset = 24;
+    private static final int bitsForReadId = totalBits - bitsForOffset - bitsForLibrary - bitsForMate;
+    // the offset (position) covers the leading bits, followed by the library, then mate, and finally, the readid
+    // to recover each value, >>> by:
+    private static final int offsetShift = bitsForLibrary + bitsForMate + bitsForReadId;
+    private static final int libraryIdShift = bitsForMate + bitsForReadId;
+    private static final int mateIdShift = bitsForReadId;
+    private static final int readIdShift = 0;
 
     protected static ReadHeadInfo getLowerBoundInfo(int offset, boolean mate) {
         if (mate) {
-            return new ReadHeadInfo((byte) 1, 0l, offset, null, null);
+            return new ReadHeadInfo((byte) 1, (byte) 0, 0l, offset, null, null);
         }
-        return new ReadHeadInfo((byte) 0, 0l, offset, null, null);
+        return new ReadHeadInfo((byte) 0, (byte) 0, 0l, offset, null, null);
     }
 
     protected static ReadHeadInfo getUpperBoundInfo(int offset, boolean mate) {
         if (mate) {
-            return new ReadHeadInfo((byte) 1, Long.MAX_VALUE, offset, null, null);
+            return new ReadHeadInfo((byte) 1, (byte) Byte.MAX_VALUE, Long.MAX_VALUE, offset, null, null);
         }
-        return new ReadHeadInfo((byte) 0, Long.MAX_VALUE, offset, null, null);
+        return new ReadHeadInfo((byte) 0, (byte) Byte.MAX_VALUE, Long.MAX_VALUE, offset, null, null);
     }
 
     private long value;
@@ -43,8 +50,8 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
         this.mateReadSequence = null;
     }
 
-    public ReadHeadInfo(byte mateId, long readId, int offset, VKmer thisReadSequence, VKmer mateReadSequence) {
-        set(mateId, readId, offset, thisReadSequence, mateReadSequence);
+    public ReadHeadInfo(byte mateId, byte libraryId, long readId, int offset, VKmer thisReadSequence, VKmer mateReadSequence) {
+        set(mateId, libraryId, readId, offset, thisReadSequence, mateReadSequence);
     }
 
     public ReadHeadInfo(ReadHeadInfo other) {
@@ -86,30 +93,31 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
         value = uuid;
     }
 
-    public static long makeUUID(byte mateId, long readId, int posId) {
-        return (readId << 17) + ((posId & 0xFFFF) << 1) + (mateId & 0b1);
+    public static long makeUUID(byte mateId, byte libraryId, long readId, int offset) {
+        // check to make sure we aren't losing any information
+        if (mateId != (mateId & ~(-1 << bitsForMate)))
+            throw new IllegalArgumentException("byte specified for mateId will lose some of its bits when saved! (was: " + mateId + " but only allowed " + bitsForMate + " bits!");
+        if (libraryId != (libraryId & ~(-1 << bitsForLibrary)))
+            throw new IllegalArgumentException("byte specified for libraryId will lose some of its bits when saved! (was: " + libraryId + " but only allowed " + bitsForLibrary + " bits!");
+        if (readId != (readId & ~(-1 << bitsForReadId)))
+            throw new IllegalArgumentException("byte specified for readId will lose some of its bits when saved! (was: " + readId + " but only allowed " + bitsForReadId + " bits!");
+        if (offset != (offset & ~(-1 << bitsForOffset)))
+            throw new IllegalArgumentException("byte specified for offset will lose some of its bits when saved! (was: " + offset + " but only allowed " + offset + " bits!");
+        
+        return ((offset << offsetShift) + (libraryId << libraryIdShift) + (mateId << mateIdShift) + (readId << readIdShift));
     }
 
-    public void set(byte mateId, long readId, int posId) {
-        value = makeUUID(mateId, readId, posId);
+    public void set(byte mateId, byte libraryId, long readId, int offset) {
+        value = makeUUID(mateId, libraryId, readId, offset);
     }
 
-    public void set(byte mateId, long readId, int posId, VKmer thisReadSequence, VKmer thatReadSequence) {
-        value = makeUUID(mateId, readId, posId);
+    public void set(byte mateId, byte libraryId, long readId, int offset, VKmer thisReadSequence, VKmer thatReadSequence) {
+        value = makeUUID(mateId, libraryId, readId, offset);
         set(value, thisReadSequence, thatReadSequence);
     }
 
     public void set(ReadHeadInfo head) {
         set(head.value, head.thisReadSequence, head.mateReadSequence);
-    }
-
-    public int getLengthInBytes() {
-        int totalBytes = 0;
-        totalBytes += 1; // for the activeField
-        totalBytes += ReadHeadInfo.ITEM_SIZE;
-        totalBytes += thisReadSequence != null ? thisReadSequence.getLength() : 0;
-        totalBytes += mateReadSequence != null ? mateReadSequence.getLength() : 0;
-        return totalBytes;
     }
 
     public VKmer getThisReadSequence() {
@@ -127,19 +135,23 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
     }
 
     public byte getMateId() {
-        return (byte) (value & 0b1);
+        return (byte) ((value & ~(-1 << (mateIdShift + bitsForMate))) >>> mateIdShift); // clear leading bits, then shift back to place
+    }
+    
+    public byte getLibraryId() {
+        return (byte) ((value & ~(-1 << (libraryIdShift + bitsForLibrary))) >>> libraryIdShift);
     }
 
     public long getReadId() {
-        return value >>> readIdShift;
+        return ((value & ~(-1 << (readIdShift + bitsForReadId))) >>> readIdShift);
     }
 
     public int getOffset() {
-        return (int) ((value >>> positionIdShift) & 0xffff);
+        return (int) ((value & ~(-1 << (offsetShift + bitsForOffset))) >>> offsetShift);
     }
 
-    public void resetOffset(int pos) {
-        value = makeUUID(getMateId(), getReadId(), pos);
+    public void resetOffset(int offset) {
+        value = makeUUID(getMateId(), getLibraryId(), getReadId(), offset);
     }
 
     protected static class READHEADINFO_FIELDS {
@@ -193,27 +205,21 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
     }
 
     /*
-     * String of form "(readId-posID_mate)" where mate is _0 or _1
+     * String of form "(readId-offset_mate)" where mate is _0 or _1
      */
     @Override
     public String toString() {
-        return this.getReadId() + "-" + this.getOffset() + "_" + (this.getMateId()) + " " + "readSeq: "
+        return this.getReadId() + "-" + this.getOffset() + "_" + this.getMateId() + "-" + this.getLibraryId() + " " + "readSeq: "
                 + (this.thisReadSequence != null ? this.thisReadSequence.toString() : "null") + " " + "mateReadSeq: "
                 + (this.mateReadSequence != null ? this.mateReadSequence.toString() : "null");
     }
 
     /**
-     * sort by readId, then mateId, then offset
+     * sort by bit significance:
+     *   offset, library, mate, then readid 
      */
     @Override
     public int compareTo(ReadHeadInfo o) {
-        if (this.getMateId() == o.getMateId()) {
-            if (this.getOffset() == o.getOffset()) {
-                return Long.compare(this.getReadId(), o.getReadId());
-            }
-            return Integer.compare(this.getOffset(), o.getOffset());
-        }
-        return Byte.compare(this.getMateId(), o.getMateId());
+        return Long.compare(this.value, o.value);
     }
-
 }
