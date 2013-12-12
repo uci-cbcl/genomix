@@ -146,9 +146,9 @@ public class RayVertex extends DeBruijnGraphCleanVertex<ScaffoldingVertexValueWr
         } else {
             readIds = getVertexValue().getUnflippedReadIds();
         }
-        SortedSet<ReadHeadInfo> validReads = readIds.getOffSetRange(getVertexValue().getKmerLength() - readLength + 1,
-                getVertexValue().getKmerLength(), false);
-
+        SortedSet<ReadHeadInfo> validReads = readIds.getOffSetRange(Math.max(0, getVertexValue().getKmerLength() - readLength + 1),
+                getVertexValue().getKmerLength());
+        //Set<ReadHeadInfo> validReads = readIds.getReadSet();
         while (msgIterator.hasNext()) {
             incomingMsg = msgIterator.next();
             if (incomingMsg.getComputeFlag()) {

@@ -742,6 +742,50 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
         return editDistance(this, other);
     }
 
+    /**
+     * @return true iff kmer1 (starting at offset1) matches the letters of kmer2 (starting at offset2) for length letters
+     */
+    public static boolean matchesExactly(VKmer kmer1, int offset1, VKmer kmer2, int offset2, int length) {
+        if (length < 0)
+            throw new IllegalArgumentException("invalid length " + length + " provided to matchesExactly " + kmer1
+                    + " " + kmer2);
+        // length mismatches will never match exactly
+        if (kmer1.getKmerLetterLength() < offset1 + length)
+            return false;
+        if (kmer2.getKmerLetterLength() < offset2 + length)
+            return false;
+
+        // check each letter
+        for (int i = 0; i < length; i++) {
+            if (kmer1.getGeneCodeAtPosition(offset1 + i) != kmer2.getGeneCodeAtPosition(offset2 + i)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public boolean matchesExactly(int thisOffset, VKmer otherKmer, int otherOffset, int length) {
+        return matchesExactly(this, thisOffset, otherKmer, otherOffset, length);
+    }
+
+    /**
+     * Search for queryKmer (starting at queryOffset and running kmerLength letters) within targetKmer, from targetStart to targetEnd.
+     * 
+     * @return true if queryKmer was found within the given range of targetKmer
+     */
+    public boolean matchesInRange(VKmer targetKmer, int targetStart, int targetEnd, VKmer queryKmer, int queryOffset,
+            int kmerLength) {
+        targetStart = Math.max(0, targetStart);
+        targetEnd = Math.min(targetKmer.getKmerLetterLength(), targetEnd);
+
+        // TODO finish this using Nan's method?
+        return false;
+    }
+
+    public boolean matchesInRange(int targetStart, int targetEnd, VKmer queryKmer, int queryOffset, int kmerLength) {
+        return matchesInRange(this, targetStart, targetEnd, queryKmer, queryOffset, kmerLength);
+    }
+
     public int indexOf(VKmer pattern) {
         return indexOf(this, pattern);
     }
@@ -820,7 +864,7 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
             return fracDissimilar(this, reverseKmer);
         }
     }
-    
+
     public float editDistance(boolean sameOrientation, VKmer other) {
         if (sameOrientation)
             return editDistance(this, other);
@@ -842,14 +886,14 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
         }
         return c.compare(getBlockBytes(), getBlockOffset(), getLength(), other.getBytes(), 0, other.getLength());
     }
-    
-    public static VKmer reverse(VKmer other){
+
+    public static VKmer reverse(VKmer other) {
         String reverse = other.toString(); // TODO don't use toString here (something more efficient?)
         VKmer reverseKmer = new VKmer();
         reverseKmer.setReversedFromStringBytes(reverse.length(), reverse.getBytes(), 0);
         return reverseKmer;
-    }   
-    
+    }
+
     public VKmer reverse() {
         return reverse(this);
     }

@@ -19,18 +19,12 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
     private static final int readIdShift = bitsForPosition + bitsForMate;
     private static final int positionIdShift = bitsForMate;
 
-    protected static ReadHeadInfo getLowerBoundInfo(int offset, boolean mate) {
-        if (mate) {
-            return new ReadHeadInfo((byte) 1, 0l, offset, null, null);
-        }
+    protected static ReadHeadInfo getLowerBoundInfo(int offset) {
         return new ReadHeadInfo((byte) 0, 0l, offset, null, null);
     }
 
-    protected static ReadHeadInfo getUpperBoundInfo(int offset, boolean mate) {
-        if (mate) {
-            return new ReadHeadInfo((byte) 1, Long.MAX_VALUE, offset, null, null);
-        }
-        return new ReadHeadInfo((byte) 0, Long.MAX_VALUE, offset, null, null);
+    protected static ReadHeadInfo getUpperBoundInfo(int offset) {
+        return new ReadHeadInfo((byte) Byte.MAX_VALUE, Long.MAX_VALUE, offset, null, null);
     }
 
     private long value;
@@ -72,9 +66,11 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
     public void set(long uuid, VKmer thisReadSequence, VKmer mateReadSequence) {
         value = uuid;
         if (thisReadSequence == null) {
-            throw new IllegalArgumentException("thisReadSequence can not be null!");
+            // throw new
+            // IllegalArgumentException("thisReadSequence can not be null!");
+        } else {
+            getThisReadSequence().setAsCopy(thisReadSequence);
         }
-        getThisReadSequence().setAsCopy(thisReadSequence);
         if (mateReadSequence == null) {
             this.mateReadSequence = null;
         } else {
@@ -215,5 +211,4 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
         }
         return Byte.compare(this.getMateId(), o.getMateId());
     }
-
 }

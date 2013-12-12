@@ -94,9 +94,9 @@ public class ReadHeadSet extends ExternalableTreeSet<ReadHeadInfo> {
         }
     }
 
-    public SortedSet<ReadHeadInfo> getOffSetRange(int lowOffset, int highOffset, boolean mate) {
-        return super.rangeSearch(ReadHeadInfo.getLowerBoundInfo(lowOffset, mate),
-                ReadHeadInfo.getUpperBoundInfo(highOffset, mate));
+    public SortedSet<ReadHeadInfo> getOffSetRange(int lowOffset, int highOffset) {
+        return super.rangeSearch(ReadHeadInfo.getLowerBoundInfo(lowOffset),
+                ReadHeadInfo.getUpperBoundInfo(highOffset));
     }
 
     public Set<Long> getReadIdSet() {
