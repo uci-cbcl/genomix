@@ -132,6 +132,23 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
     }
 
     /**
+     * run a map-reduce job on the given input graph and return an array of coverage
+     */
+    public static ArrayList<Integer> getCoverageStats(Counters jobCounters){
+        ArrayList<Integer> result = new ArrayList<Integer>();
+        // get Coverage counter
+        for (Group g : jobCounters) {
+            if (g.getName().equals("coverage-bins")) {
+                for (Counter c : g) {
+                    for(long i = 0; i < c.getValue(); i++)
+                        result.add(Integer.parseInt(c.getName()));
+                }
+            }
+        }
+        return result;
+    }
+    
+    /**
      * run a map-reduce job on the given input graph and save a simple text file of the relevant counters
      */
     public static void saveGraphStats(String outputDir, Counters jobCounters, GenomixJobConf conf) throws IOException {

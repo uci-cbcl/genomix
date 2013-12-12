@@ -79,12 +79,21 @@ public class FittingMixture {
             double[] prob_normalMembership) {
         double likelihood = 0;
         for (int i = 0; i < data.length; i++)
-            likelihood += Math.log(prob_Exp * prob_expMembership[i]) + Math.log(prob_Normal * prob_normalMembership[i]);
+            likelihood += Math.log(prob_Exp * prob_expMembership[i] + prob_Normal * prob_normalMembership[i]);
         System.out.println(likelihood);
         return likelihood;
     }
 
-    public void fittingMixture(double[] data, int numOfIterations) throws IOException {
+    public static void fittingMixture(ArrayList<Integer> data, int numOfIterations) throws IOException {
+        double[] doubles = new double[data.size()];
+        for(int i = 0; i < data.size(); i++){
+            doubles[i] = (double)data.get(i).intValue();
+        }
+        fittingMixture(doubles, numOfIterations);
+    }
+
+    public static void fittingMixture(double[] data, int numOfIterations) throws IOException {
+        FittingMixture fm = new FittingMixture();
         ArrayList<Double> likelihoods = new ArrayList<Double>();
 
         /* initial guess at parameters */
@@ -142,9 +151,12 @@ public class FittingMixture {
             cur_expDist = new ExponentialDistribution(cur_expMean);
             cur_normalMean = cur_normalMean / normal_overallSum;
             for (int i = 0; i < data.length; i++) {
-                cur_normalStd += Math.sqrt(prob_normalMembership[i] * Math.pow(data[i] - cur_normalMean, 2));
+                cur_normalStd += prob_normalMembership[i] * Math.pow(data[i] - cur_normalMean, 2);
             }
-            cur_normalStd = (cur_normalStd / normal_overallSum);
+
+            cur_normalStd = Math.sqrt(cur_normalStd / normal_overallSum);
+            if(cur_normalStd == 0)
+                cur_normalStd = 0.000000001;
             cur_normalDist = new NormalDistribution(cur_normalMean, cur_normalStd);
 
             /* Given a fixed set of parameters, it chooses the probability distribution 
@@ -170,12 +182,11 @@ public class FittingMixture {
             prob_Exp = exp_overallSum / overallSum;
             prob_Normal = normal_overallSum / overallSum;
 
-            likelihoods.add(computeLikelihood(data, prob_Exp, prob_Normal, prob_expMembership, prob_normalMembership));
+            likelihoods.add(fm
+                    .computeLikelihood(data, prob_Exp, prob_Normal, prob_expMembership, prob_normalMembership));
         }
 
         // test final 
-        FittingMixture fm = new FittingMixture();
-
         double[] exp_randomSample = cur_expDist.sample(5000);
         Map<Double, Long> exp_histData = fm.calcHistogram(exp_randomSample, 0, 100, 100);
         fm.drawHist(exp_histData, "After-Exponential");
@@ -183,9 +194,17 @@ public class FittingMixture {
         double[] norm_randomSample = cur_normalDist.sample(5000);
         Map<Double, Long> norm_histData = fm.calcHistogram(norm_randomSample, 0, 100, 100);
         fm.drawHist(norm_histData, "After-Normal");
-
+        
+        double[] combine_randomSample = fm.combineTwoDoubleArray(exp_randomSample, norm_randomSample);
+        Map<Double, Long> combine_histData = fm.calcHistogram(combine_randomSample, 0, 100, 100);
+        fm.drawHist(combine_histData, "Mixture");
+        
         // plot likelihood's change
-        drawHist(likelihoods, "Likelihood");
+        fm.drawHist(likelihoods, "Likelihood");
+
+        /* one choice of threshold is when the probability of belonging to the normal distribution 
+         is greater than the probability of belonging to the exponential distribution
+         this happens when the ratio of norm to exponential is > 1 */
     }
 
     public double[] combineTwoDoubleArray(double[] array1, double[] array2) {
@@ -217,7 +236,7 @@ public class FittingMixture {
         Map<Double, Long> combine_histData = fm.calcHistogram(combine_randomSample, 0, 100, 100);
         fm.drawHist(combine_histData, "Mixture");
 
-        fm.fittingMixture(combine_randomSample, 10);
+        //        fm.fittingMixture(combine_randomSample, 10);
     }
 
 }

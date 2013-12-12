@@ -43,6 +43,7 @@ import edu.uci.ics.genomix.hadoop.utils.ConvertToFasta;
 import edu.uci.ics.genomix.hadoop.utils.GraphStatistics;
 import edu.uci.ics.genomix.hyracks.graph.driver.GenomixHyracksDriver;
 import edu.uci.ics.genomix.hyracks.graph.driver.GenomixHyracksDriver.Plan;
+import edu.uci.ics.genomix.mixture.model.FittingMixture;
 import edu.uci.ics.genomix.pregelix.operator.bridgeremove.BridgeRemoveVertex;
 import edu.uci.ics.genomix.pregelix.operator.extractsubgraph.ExtractSubgraphVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.P1ForPathMergeVertex;
@@ -95,6 +96,9 @@ public class GenomixDriver {
             case BUILD_HYRACKS:
                 flushPendingJobs(conf);
                 buildGraphWithHyracks(conf);
+                Counters coverageCounters = GraphStatistics.run(curOutput, curOutput + "-cov-stats", conf);
+                ArrayList<Integer> coverageData = GraphStatistics.getCoverageStats(coverageCounters);
+                FittingMixture.fittingMixture(coverageData, 10);
                 break;
             case BUILD_HADOOP:
                 flushPendingJobs(conf);
