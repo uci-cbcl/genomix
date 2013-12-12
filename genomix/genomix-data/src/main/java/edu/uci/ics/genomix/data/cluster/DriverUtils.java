@@ -15,11 +15,9 @@
 
 package edu.uci.ics.genomix.data.cluster;
 
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Properties;
 import java.util.logging.Logger;
@@ -88,7 +86,7 @@ public class DriverUtils {
         LOG.info("Dumping graph to fasta...");
         GenomixJobConf.tick("dumpGraph");
         FileSystem dfs = FileSystem.get(conf);
-        
+
         dfs.delete(new Path(outputDir), true);
         dfs.mkdirs(new Path(outputDir));
         String outputFasta = outputDir + File.separator + "genomix-scaffolds.fasta";
@@ -112,7 +110,8 @@ public class DriverUtils {
                         if (key == null || value == null)
                             break;
                         fastaOut.writeBytes(">node_" + key.toString() + "\n");
-                        fastaOut.writeBytes(value.getInternalKmer().getKmerLetterLength() > 0 ? value.getInternalKmer().toString() : key.toString());
+                        fastaOut.writeBytes(value.getInternalKmer().getKmerLetterLength() > 0 ? value.getInternalKmer()
+                                .toString() : key.toString());
                         fastaOut.writeBytes("\n");
                     }
                 } catch (Exception e) {

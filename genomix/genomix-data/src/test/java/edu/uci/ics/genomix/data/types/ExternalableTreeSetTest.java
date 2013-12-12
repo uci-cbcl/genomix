@@ -99,8 +99,9 @@ public class ExternalableTreeSetTest implements Serializable {
         }
 
         int i = 0;
-        for (TestIntWritable it : eSet.inMemorySet) {
-            Assert.assertEquals(i++, it.get());
+        Iterator<TestIntWritable> it = eSet.readOnlyIterator();
+        while (it.hasNext()) {
+            Assert.assertEquals(i++, it.next().get());
         }
     }
 
@@ -113,12 +114,14 @@ public class ExternalableTreeSetTest implements Serializable {
             eSet.add(new TestIntWritable(i));
         }
 
-        for (TestIntWritable it : eSet.inMemorySet) {
-            it.set(42);
+        Iterator<TestIntWritable> it = eSet.resetableIterator();
+        while (it.hasNext()) {
+            it.next().set(42);
         }
 
-        for (TestIntWritable it : eSet.inMemorySet) {
-            Assert.assertEquals(42, it.get());
+        Iterator<TestIntWritable> it2 = eSet.readOnlyIterator();
+        while (it2.hasNext()){
+            Assert.assertEquals(42, it2.next().get());
         }
     }
 
@@ -146,8 +149,8 @@ public class ExternalableTreeSetTest implements Serializable {
             Assert.fail(e.getMessage());
         }
 
-        Iterator<TestIntWritable> itA = eSetA.inMemorySet.iterator();
-        Iterator<TestIntWritable> itB = eSetB.inMemorySet.iterator();
+        Iterator<TestIntWritable> itA = eSetA.readOnlyIterator();
+        Iterator<TestIntWritable> itB = eSetB.readOnlyIterator();
         for (int i = 0; i <= limit; i++) {
             Assert.assertEquals(itA.next().get(), itB.next().get());
         }

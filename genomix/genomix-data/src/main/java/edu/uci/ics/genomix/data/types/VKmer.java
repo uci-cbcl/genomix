@@ -820,6 +820,17 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
             return fracDissimilar(this, reverseKmer);
         }
     }
+    
+    public float editDistance(boolean sameOrientation, VKmer other) {
+        if (sameOrientation)
+            return editDistance(this, other);
+        else {
+            String reverse = other.toString(); // TODO don't use toString here (something more efficient?)
+            VKmer reverseKmer = new VKmer();
+            reverseKmer.setReversedFromStringBytes(reverse.length(), reverse.getBytes(), 0);
+            return editDistance(this, reverseKmer);
+        }
+    }
 
     @Override
     public int compareTo(BinaryComparable other) {
@@ -831,5 +842,15 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
         }
         return c.compare(getBlockBytes(), getBlockOffset(), getLength(), other.getBytes(), 0, other.getLength());
     }
-
+    
+    public static VKmer reverse(VKmer other){
+        String reverse = other.toString(); // TODO don't use toString here (something more efficient?)
+        VKmer reverseKmer = new VKmer();
+        reverseKmer.setReversedFromStringBytes(reverse.length(), reverse.getBytes(), 0);
+        return reverseKmer;
+    }   
+    
+    public VKmer reverse() {
+        return reverse(this);
+    }
 }

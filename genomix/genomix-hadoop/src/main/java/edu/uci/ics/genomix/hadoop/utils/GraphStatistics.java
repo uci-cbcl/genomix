@@ -146,9 +146,9 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
             }
         }
 
-        FileSystem dfs = FileSystem.get(conf);
-        dfs.mkdirs(new Path(outputDir));
-        FSDataOutputStream outstream = dfs.create(new Path(outputDir + File.separator + "stats.txt"), true);
+        FileSystem fileSys = FileSystem.get(conf);
+        fileSys.mkdirs(new Path(outputDir));
+        FSDataOutputStream outstream = fileSys.create(new Path(outputDir + File.separator + "stats.txt"), true);
         PrintWriter writer = new PrintWriter(outstream);
         for (Entry<String, Long> e : sortedCounters.entrySet()) {
             writer.println(e.getKey() + " = " + e.getValue());
@@ -196,9 +196,9 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
             JFreeChart chart = ChartFactory.createXYBarChart(graphType, graphType, false, "Count", xyDataset,
                     PlotOrientation.VERTICAL, true, true, false);
             // Write the data to the output stream:
-            FileSystem dfs = FileSystem.get(conf);
-            FSDataOutputStream outstream = dfs.create(new Path(outputDir + File.separator + graphType + "-hist.png"),
-                    true);
+            FileSystem fileSys = FileSystem.get(conf);
+            FSDataOutputStream outstream = fileSys.create(
+                    new Path(outputDir + File.separator + graphType + "-hist.png"), true);
             ChartUtilities.writeChartAsPNG(outstream, chart, 800, 600);
             outstream.close();
         }
@@ -368,10 +368,10 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
 
     }
 
-    public static void saveJobCounters(String outputDir, PregelixJob lastJob, Configuration conf) throws IOException {
-        org.apache.hadoop.mapreduce.Counters lastJobCounters;
+    public static void saveJobCounters(String outputDir, PregelixJob lastJob, GenomixJobConf conf) throws IOException {
+        org.apache.hadoop.mapreduce.Counters newC;
         try {
-            lastJobCounters = BspUtils.getCounters(lastJob);
+            newC = BspUtils.getCounters(lastJob);
         } catch (HyracksDataException e) {
             e.printStackTrace();
             LOG.info("No counters available for job" + lastJob);
@@ -379,9 +379,13 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
         }
         FileSystem dfs = FileSystem.get(conf);
         dfs.mkdirs(new Path(outputDir));
-        FSDataOutputStream outstream = dfs.create(new Path(outputDir + File.separator + "counters.txt"), true);
-        PrintWriter writer = new PrintWriter(outstream);
-        writer.print(lastJobCounters.toString());
-        writer.close();
+        org.apache.hadoop.mapred.Counters oldC = new org.apache.hadoop.mapred.Counters();
+        for (String g : newC.getGroupNames()) {
+            for (org.apache.hadoop.mapreduce.Counter c : newC.getGroup(g)) {
+                oldC.findCounter(g, c.getName()).increment(c.getValue());
+            }
+        }
+        GraphStatistics.saveGraphStats(outputDir + File.separator + "counters", oldC, conf);
+        GraphStatistics.drawStatistics(outputDir + File.separator + "counters", oldC, conf);
     }
 }

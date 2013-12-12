@@ -127,8 +127,8 @@ public class GenerateGraphViz {
                     if (value.isUnflippedOrFlippedReadIds())
                         fillColor = "fillcolor=\"grey\", style=\"filled\",";
                     outputNode += " [shape=record, " + fillColor + " label = \"<f0> " + key.toString() + "|<f1> "
-                            + "5':" + value.getUnflippedReadIds().toReadIdString() + "|<f2> " + "~5':"
-                            + value.getFlippedReadIds().toReadIdString() + "|<f3> " + value.getAverageCoverage()
+                            + "5':" + value.getUnflippedReadIds().toString() + "|<f2> " + "~5':"
+                            + value.getFlippedReadIds().toString() + "|<f3> " + value.getAverageCoverage()
                             + "|<f4> " + value.getInternalKmer() + "\"]\n";
                 }
                 gv.addln(outputNode);

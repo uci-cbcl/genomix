@@ -186,7 +186,9 @@ public class GenomixJobConf extends JobConf {
 
         @Option(name = "-runAllStats", usage = "Whether or not to run a STATS job after each normal job")
         private boolean runAllStats = false;
-
+        
+        @Option(name = "-logBubbleInfo", usage = "Whether or not to log bubble info on simple bubble merge")
+        private boolean logBubbleInfo = false;
     }
 
     /**
