@@ -91,13 +91,13 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
 
     public static long makeUUID(byte mateId, byte libraryId, long readId, int offset) {
         // check to make sure we aren't losing any information
-        if (mateId != (mateId & ~(-1 << bitsForMate)))
+        if (mateId != (mateId & ~(-1 << (totalBits - bitsForMate))))
             throw new IllegalArgumentException("byte specified for mateId will lose some of its bits when saved! (was: " + mateId + " but only allowed " + bitsForMate + " bits!");
-        if (libraryId != (libraryId & ~(-1 << bitsForLibrary)))
+        if (libraryId != (libraryId & ~(-1 << (totalBits - bitsForLibrary))))
             throw new IllegalArgumentException("byte specified for libraryId will lose some of its bits when saved! (was: " + libraryId + " but only allowed " + bitsForLibrary + " bits!");
-        if (readId != (readId & ~(-1 << bitsForReadId)))
+        if (readId != (readId & ~(-1 << (totalBits - bitsForReadId))))
             throw new IllegalArgumentException("byte specified for readId will lose some of its bits when saved! (was: " + readId + " but only allowed " + bitsForReadId + " bits!");
-        if (offset != (offset & ~(-1 << bitsForOffset)))
+        if (offset != (offset & ~(-1 << (totalBits - bitsForOffset))))
             throw new IllegalArgumentException("byte specified for offset will lose some of its bits when saved! (was: " + offset + " but only allowed " + offset + " bits!");
         
         return ((offset << offsetShift) + (libraryId << libraryIdShift) + (mateId << mateIdShift) + (readId << readIdShift));
