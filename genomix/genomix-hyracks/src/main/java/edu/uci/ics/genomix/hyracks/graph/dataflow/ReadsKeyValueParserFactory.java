@@ -92,7 +92,16 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
 
             @Override
             public void parse(LongWritable key, Text value, IFrameWriter writer, String filename) {
-                byte libraryId = Byte.valueOf(libraryPattern.matcher(filename).group(0));
+                // TODO read the libraryId from the filename? Or from the user more directly?
+                // if they specify a fastq file, we'll have no trouble... for our previous readid format, I guess we just have 1 library?
+                byte libraryId;
+                try {
+                    libraryId = Byte.valueOf(libraryPattern.matcher(filename).group(0));
+                } catch (IllegalStateException e) {
+                    System.err.println("Could not determine which library " + filename
+                            + " is supposed to belong to.  Just using library 0!");
+                    libraryId = 0;
+                }
                 long readID = 0;
                 String mate0GeneLine = null;
                 String mate1GeneLine = null;
@@ -106,7 +115,7 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                     mate1GeneLine = rawLine[2];
                 } else {
                     throw new IllegalStateException(
-                            "input format is not true! only support id'\t'readSeq'\t'mateReadSeq or id'\t'readSeq' but saw"
+                            "input format is not correct! only support id'\t'readSeq'\t'mateReadSeq or id'\t'readSeq' but saw"
                                     + value.toString() + "which has " + value.toString().split("\\t").length
                                     + " elements");
                 }
