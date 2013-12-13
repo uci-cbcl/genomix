@@ -125,7 +125,11 @@ public class GenomixDriver {
         long totalNodes = counters.getGroup("totals").getCounter("nodes");
         System.out.println(totalNodes);
         float percentage = 0.2f;
-        long numOfSeeds = (long) (Math.abs((float)totalNodes * percentage) > 10 ? Math.abs((float)totalNodes * percentage) : 10);
+        long numOfSeeds;
+        if(Math.abs((float)totalNodes * percentage) < 100)
+            numOfSeeds = (long) Math.abs((float)totalNodes * percentage);
+        else
+            numOfSeeds = 100;
         System.out.println(numOfSeeds);
         
         long curNumOfSeeds = 0;
