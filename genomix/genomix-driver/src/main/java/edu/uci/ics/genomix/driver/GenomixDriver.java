@@ -18,7 +18,6 @@ package edu.uci.ics.genomix.driver;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -29,7 +28,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
 
@@ -100,28 +98,28 @@ public class GenomixDriver {
         FileOutputFormat.setOutputPath(conf, new Path(curOutput));
     }
 
-    private int setMinScaffoldingSeedLength(GenomixJobConf conf) throws IOException{
+    private void setMinScaffoldingSeedLength(GenomixJobConf conf) throws IOException {
         Counters counters = GraphStatistics.run(curOutput, curOutput + "-kmerLength-stats", conf);
         long totalNodes = counters.getGroup("totals").getCounter("nodes");
-        System.out.println(totalNodes);
-        float percentage = 0.2f;
+        float percentage = 0.2f; // TODO Should it provide by user?
         long numOfSeeds;
-        if(Math.abs((float)totalNodes * percentage) < 100)
-            numOfSeeds = (long) Math.abs((float)totalNodes * percentage);
+        // minimum number of nodes is 100
+        if (Math.abs((float) totalNodes * percentage) < 100) 
+            numOfSeeds = (long) Math.abs((float) totalNodes * percentage);
         else
             numOfSeeds = 100;
-        System.out.println(numOfSeeds);
-        
+
         long curNumOfSeeds = 0;
-        for (Counter c : counters.getGroup("kmerLength-bins")){
+        for (Counter c : counters.getGroup("kmerLength-bins")) {
             curNumOfSeeds += c.getValue();
-            if(curNumOfSeeds > numOfSeeds){
-                return Integer.parseInt(c.getName());
+            if (curNumOfSeeds > numOfSeeds) {
+                conf.setInt(GenomixJobConf.MIN_SCAFFOLDING_SEED_LENGTH, Integer.parseInt(c.getName()));
+                return;
             }
         }
         throw new IllegalStateException("It is impossible to reach here!");
     }
-    
+
     private void addStep(GenomixJobConf conf, Patterns step) throws Exception {
         // oh, java, why do you pain me so?
         switch (step) {
@@ -144,6 +142,9 @@ public class GenomixDriver {
             case MERGE:
             case MERGE_P4:
                 pregelixJobs.add(P4ForPathMergeVertex.getConfiguredJob(conf, P4ForPathMergeVertex.class));
+                flushPendingJobs(conf);
+                if (Boolean.parseBoolean(conf.get(GenomixJobConf.SET_MIN_SCAFFOLDING_SEED_LENGTH)))
+                    setMinScaffoldingSeedLength(conf);
                 break;
             case UNROLL_TANDEM:
                 pregelixJobs.add(UnrollTandemRepeat.getConfiguredJob(conf, UnrollTandemRepeat.class));
@@ -415,7 +416,8 @@ public class GenomixDriver {
         curOutput = conf.get(GenomixJobConf.INITIAL_HDFS_INPUT_DIR);
     }
 
-    /** Convert the given fastq file(s) to readid format (mate1\tmate2\n)
+    /**
+     * Convert the given fastq file(s) to readid format (mate1\tmate2\n)
      * 
      * @param mate1Fastq
      * @param mate2Fastq
