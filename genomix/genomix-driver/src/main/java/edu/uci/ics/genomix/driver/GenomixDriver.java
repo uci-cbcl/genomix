@@ -37,6 +37,7 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.Counters;
+import org.apache.hadoop.mapred.Counters.Counter;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.JobConf;
@@ -99,6 +100,28 @@ public class GenomixDriver {
         FileOutputFormat.setOutputPath(conf, new Path(curOutput));
     }
 
+    private int setMinScaffoldingSeedLength(GenomixJobConf conf) throws IOException{
+        Counters counters = GraphStatistics.run(curOutput, curOutput + "-kmerLength-stats", conf);
+        long totalNodes = counters.getGroup("totals").getCounter("nodes");
+        System.out.println(totalNodes);
+        float percentage = 0.2f;
+        long numOfSeeds;
+        if(Math.abs((float)totalNodes * percentage) < 100)
+            numOfSeeds = (long) Math.abs((float)totalNodes * percentage);
+        else
+            numOfSeeds = 100;
+        System.out.println(numOfSeeds);
+        
+        long curNumOfSeeds = 0;
+        for (Counter c : counters.getGroup("kmerLength-bins")){
+            curNumOfSeeds += c.getValue();
+            if(curNumOfSeeds > numOfSeeds){
+                return Integer.parseInt(c.getName());
+            }
+        }
+        throw new IllegalStateException("It is impossible to reach here!");
+    }
+    
     private void addStep(GenomixJobConf conf, Patterns step) throws Exception {
         // oh, java, why do you pain me so?
         switch (step) {
