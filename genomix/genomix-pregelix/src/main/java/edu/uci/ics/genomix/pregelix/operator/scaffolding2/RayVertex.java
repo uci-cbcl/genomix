@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.SortedSet;
 
+import org.apache.hadoop.conf.Configuration;
+
 import edu.uci.ics.genomix.data.config.GenomixJobConf;
 import edu.uci.ics.genomix.data.types.DIR;
 import edu.uci.ics.genomix.data.types.EDGETYPE;
@@ -19,14 +21,38 @@ import edu.uci.ics.genomix.pregelix.operator.scaffolding2.RayMessage.RayMessageT
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 
 public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
-    private static final int MIN_OUTER_DISTANCE = 0;
-    private static DIR INITIAL_DIRECTION = null;
-    private static int MAX_READ_LENGTH = 0;
-    private static int MAX_OUTER_DISTANCE = 0;
+    private static DIR INITIAL_DIRECTION;
+    private static boolean HAS_PAIRED_END_READS;
+    private static int MAX_READ_LENGTH;
+    private static int MAX_OUTER_DISTANCE;
+    private static int MIN_OUTER_DISTANCE;
 
+    public RayVertex() {
+        outgoingMsg = new RayMessage();
+    }
+    
+    @Override
+    public void configure(Configuration conf) {
+        super.configure(conf);
+        initVertex();
+        INITIAL_DIRECTION = DIR.FORWARD;  // TODO set the INITIAL-DIRECTION appropriately
+        HAS_PAIRED_END_READS = GenomixJobConf.outerDistanceMeans != null;
+        MAX_READ_LENGTH = Integer.MIN_VALUE;
+        MAX_OUTER_DISTANCE = Integer.MIN_VALUE;
+        MIN_OUTER_DISTANCE = Integer.MAX_VALUE;
+        for (byte libraryId=0; libraryId < GenomixJobConf.readLengths.size(); libraryId++) {
+            MAX_READ_LENGTH = Math.max(MAX_READ_LENGTH, GenomixJobConf.readLengths.get(libraryId));
+            if (GenomixJobConf.outerDistanceMeans.containsKey(libraryId)) {
+                MAX_OUTER_DISTANCE = Math.max(MAX_OUTER_DISTANCE, GenomixJobConf.outerDistanceMeans.get(libraryId) + GenomixJobConf.outerDistanceStdDevs.get(libraryId));
+                MIN_OUTER_DISTANCE = Math.min(MIN_OUTER_DISTANCE, GenomixJobConf.outerDistanceMeans.get(libraryId) - GenomixJobConf.outerDistanceStdDevs.get(libraryId));
+            }
+        }
+    }
+    
     @Override
     public void compute(Iterator<RayMessage> msgIterator) throws Exception {
         if (getSuperstep() == 1) {
+            initVertex();
             if (isStartSeed()) {
                 msgIterator = getStartMessage();
             }
@@ -49,10 +75,19 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
      *         this allows us to call the `scaffold` function the same way in all iterations.
      */
     private Iterator<RayMessage> getStartMessage() {
-        // TODO Auto-generated method stub
+        if (INITIAL_DIRECTION == DIR.FORWARD) {
+            // TODO Auto-generated method stub
+            
+        } else {
+            // TODO Auto-generated method stub
+        }
         return null;
     }
 
+    // local variables for scaffold
+    private ArrayList<RayMessage> aggregateScoreMsgs = new ArrayList<>();
+    private ArrayList<RayMessage> requestScoreMsgs = new ArrayList<>();
+    
     private void scaffold(Iterator<RayMessage> msgIterator) {
         // TODO since the messages aren't synchronized by iteration, we might want to  
         // manually order our messages to make the process a little more deterministic
@@ -222,7 +257,10 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
 
         // I'm now allowed to score the first minLength kmers according to my readids
         RayScores singleEndScores = voteFromReads(true, vertex, msgs, myOffset, walkLength, minLength);
-        RayScores pairedEndScores = voteFromReads(false, vertex, msgs, myOffset, walkLength, minLength);
+        RayScores pairedEndScores = null;
+        if (HAS_PAIRED_END_READS) {
+             pairedEndScores = voteFromReads(false, vertex, msgs, myOffset, walkLength, minLength);
+        }
 
         outgoingMsg.reset();
         outgoingMsg.setMessageType(RayMessageType.AGGREGATE_SCORE);
@@ -374,31 +412,6 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
     private void compareScoresAndPrune(ArrayList<RayMessage> msgs) {
         // TODO Auto-generated method stub
 
-    }
-
-    // local variables for scaffold
-    private ArrayList<RayMessage> aggregateScoreMsgs = new ArrayList<>();
-    private ArrayList<RayMessage> requestScoreMsgs = new ArrayList<>();
-
-    @Override
-    public void initVertex() {
-        super.initVertex();
-        if (INITIAL_DIRECTION == null) {
-            // TODO set the INITIAL-DIRECTION appropriately
-            INITIAL_DIRECTION = DIR.FORWARD;
-//            INITIAL_DIRECTION = DIR.valueOf(getContext().getConfiguration().get(
-//                    GenomixJobConf.SCAFFOLDING_RAY_DIRECTION));
-        }
-        if (MAX_READ_LENGTH == -1) {
-            MAX_READ_LENGTH = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.READ_LENGTH));
-        }
-        if (MAX_OUTER_DISTANCE == -1) {
-            // FIXME read from the proper value
-            // MAX_OUTER_DISTANCE = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.OUTER_DISTANCE));
-        }
-        if (outgoingMsg == null) {
-            outgoingMsg = new RayMessage();
-        }
     }
 
     public static PregelixJob getConfiguredJob(

@@ -40,6 +40,7 @@ public class GenomixJobConf extends JobConf {
     public static boolean debug;
     public static ArrayList<VKmer> debugKmers;
     
+    public static ArrayList<Integer> readLengths;
     public static HashMap<Byte, Integer> outerDistanceMeans;
     public static HashMap<Byte, Integer> outerDistanceStdDevs;
 
@@ -64,11 +65,14 @@ public class GenomixJobConf extends JobConf {
         @Option(name = "-pipelineOrder", usage = "Specify the order of the graph cleaning process", required = false)
         private String pipelineOrder;
 
-        @Option(name = "-singleEndFastqs", usage = "One or more local fastq files as inputs to graphbuild. Treated as single-ends reads.", required = false)
-        private String[] singleEndFastqs;
-        
         @Option(name = "-pairedEndFastqs", usage = "Two or more local fastq files as inputs to graphbuild. Treated as paired-end reads. See also, -outerDistMean and -outerDistStdDev", required = false)
         private String[] pairedEndFastqs;
+
+        @Option(name = "-singleEndFastqs", usage = "One or more local fastq files as inputs to graphbuild. Treated as single-ends reads.", required = false)
+        private String[] singleEndFastqs;
+
+        @Option(name = "-readLengths", usage = "read lengths for each library, with paired-end libraries first", required = true)
+        private String[] readLengths;
         
         @Option(name = "-outerDistMeans", usage = "Average outer distances (from A to B:  A==>    <==B)  for paired-end libraries", required = false)
         private String[] outerDistMeans;
@@ -271,11 +275,11 @@ public class GenomixJobConf extends JobConf {
 
     // Global config
     public static final String KMER_LENGTH = "genomix.conf.kmerLength";
-    public static final String READ_LENGTH = "genomix.conf.readLength";
     public static final String LINES_PERMAP = "genomix.conf.linesPerMap";
     public static final String PIPELINE_ORDER = "genomix.conf.pipelineOrder";
     public static final String SINGLE_END_FASTQ_INPUTS = "genomix.conf.singleEndFastqInputs";
     public static final String PAIRED_END_FASTQ_INPUTS = "genomix.conf.pairedEndFastqInputs";
+    public static final String READ_LENGTHS = "genomix.conf.readLengths";
     private static final String OUTER_DISTANCE_MEANS = "genomix.conf.outerDistanceMeans";
     private static final String OUTER_DISTANCE_STD_DEVS = "genomix.conf.outerDistanceStdDevs";
     public static final String INITIAL_HDFS_INPUT_DIR = "genomix.conf.initialHDFSInputDir";
@@ -409,8 +413,6 @@ public class GenomixJobConf extends JobConf {
         // Global config
         int kmerLength = getInt(KMER_LENGTH, -1);
 
-        setInt(READ_LENGTH, getInt(READ_LENGTH, -1));
-
         // Graph cleaning
         if (getInt(BRIDGE_REMOVE_MAX_LENGTH, -1) == -1 && kmerLength != -1)
             setInt(BRIDGE_REMOVE_MAX_LENGTH, kmerLength + 1);
@@ -527,6 +529,9 @@ public class GenomixJobConf extends JobConf {
                 throw new IllegalArgumentException("For paired-end reads, you must specify the outer distance of each library! (saw " + opts.pairedEndFastqs.length / 2 + " libraries but had " + opts.outerDistStdDevs.length + " outerDistStdDevs specified");
             set(PAIRED_END_FASTQ_INPUTS, StringUtils.join(opts.pairedEndFastqs, ","));
         }
+        if (opts.readLengths != null)
+            set(READ_LENGTHS, StringUtils.join(opts.readLengths, ","));
+        
         // the distances can still be specified when we're using an intermediate output
         if (opts.outerDistMeans != null)
             set(OUTER_DISTANCE_MEANS, StringUtils.join(opts.outerDistMeans, ","));
@@ -612,14 +617,23 @@ public class GenomixJobConf extends JobConf {
         ExternalableTreeSet.setupManager(conf, new Path(conf.get("hadoop.tmp.dir", "/tmp")));
         ExternalableTreeSet.setCountLimit(1000);
         
+        if (conf.get(READ_LENGTHS) != null) {
+            readLengths = new ArrayList<>();
+            for (String length : conf.get(READ_LENGTHS).split(",")) {
+                readLengths.add(Integer.valueOf(length));
+            }
+        }
+        
         Byte libraryId = 0;
         if (conf.get(OUTER_DISTANCE_MEANS) != null) {
+            outerDistanceMeans = new HashMap<>();
             for (String mean : conf.get(OUTER_DISTANCE_MEANS).split(",")) {
                 outerDistanceMeans.put(libraryId++, Integer.valueOf(mean));
             }
         }
         libraryId = 0;
         if (conf.get(OUTER_DISTANCE_STD_DEVS) != null) {
+            outerDistanceMeans = new HashMap<>();
             for (String stddev : conf.get(OUTER_DISTANCE_STD_DEVS).split(",")) {
                 outerDistanceStdDevs.put(libraryId++, Integer.valueOf(stddev));
             }
