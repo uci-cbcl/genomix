@@ -120,23 +120,22 @@ public class GenomixDriver {
         }
     }
     
-    private int setMinScaffoldingSeedLength(GenomixJobConf conf) throws IOException{
+    private void setMinScaffoldingSeedLength(GenomixJobConf conf) throws IOException{
         Counters counters = GraphStatistics.run(curOutput, curOutput + "-kmerLength-stats", conf);
         long totalNodes = counters.getGroup("totals").getCounter("nodes");
-        System.out.println(totalNodes);
         float percentage = 0.2f;
         long numOfSeeds;
         if(Math.abs((float)totalNodes * percentage) < 100)
             numOfSeeds = (long) Math.abs((float)totalNodes * percentage);
         else
             numOfSeeds = 100;
-        System.out.println(numOfSeeds);
         
         long curNumOfSeeds = 0;
         for (Counter c : counters.getGroup("kmerLength-bins")){
             curNumOfSeeds += c.getValue();
             if(curNumOfSeeds > numOfSeeds){
-                return Integer.parseInt(c.getName());
+                conf.setInt(GenomixJobConf.MIN_SCAFFOLDING_SEED_LENGTH, Integer.parseInt(c.getName()));
+                return;
             }
         }
         throw new IllegalStateException("It is impossible to reach here!");
@@ -168,7 +167,8 @@ public class GenomixDriver {
             case MERGE_P4:
                 pregelixJobs.add(P4ForPathMergeVertex.getConfiguredJob(conf, P4ForPathMergeVertex.class));
                 flushPendingJobs(conf);
-                setMinScaffoldingSeedLength(conf);
+                if(Boolean.parseBoolean(conf.get(GenomixJobConf.SET_MIN_SCAFFOLDING_SEED_LENGTH)))
+                    setMinScaffoldingSeedLength(conf);
                 break;
             case UNROLL_TANDEM:
                 pregelixJobs.add(UnrollTandemRepeat.getConfiguredJob(conf, UnrollTandemRepeat.class));
