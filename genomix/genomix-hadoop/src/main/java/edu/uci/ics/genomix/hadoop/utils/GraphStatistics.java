@@ -158,7 +158,7 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
     public static void saveGraphStats(String outputDir, Counters jobCounters, GenomixJobConf conf) throws IOException {
         // get relevant counters
 
-        TreeMap<String, Long> sortedCounters = new TreeMap<String, Long>();
+        TreeMap<String, Long> sortedCounters = new TreeMap<String, Long>(); 
         for (Group g : jobCounters) {
             if (!g.getName().endsWith("-bins")) {
                 for (Counter c : g) {
@@ -183,7 +183,7 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
 
         // build up allHists to be {coverage : {1: 50, 2: 20, 3:5}, kmerLength : {55: 100}, ...}
         for (Group g : jobCounters) {
-            if (g.getName().equals("coverage-bins")) {
+            if (g.getName().equals("coverage-bins") || g.getName().equals("kmerLength-bins")) {
                 String baseName = g.getName().replace("-bins", "");
                 if (allHists.containsKey(baseName)) {
                     curCounts = allHists.get(baseName);

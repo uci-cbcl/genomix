@@ -307,6 +307,7 @@ public class GenomixJobConf extends JobConf {
     public static final String PLOT_SUBGRAPH_START_SEEDS = "genomix.plotSubgraph.startSeeds";
     public static final String PLOT_SUBGRAPH_NUM_HOPS = "genomix.plotSubgraph.numHops";
     public static final String PLOT_SUBGRAPH_GRAPH_VERBOSITY = "genomix.plotSubgraph.graphVerbosity";
+    public static final String MIN_SCAFFOLD_SEED_LENGTH = "genomix.min.scaffolding.seed.length";
 
     // Hyracks/Pregelix Setup
     public static final String PROFILE = "genomix.conf.profile";

@@ -40,6 +40,7 @@ import org.apache.hadoop.mapred.Counters;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.Counters.Counter;
 import org.codehaus.plexus.util.FileUtils;
 import org.kohsuke.args4j.CmdLineException;
 
@@ -101,17 +102,17 @@ public class GenomixDriver {
     }
     
     private void setCutoffCoverageByFittingMixture(GenomixJobConf conf) throws IOException{
-        Counters coverageCounters = GraphStatistics.run(curOutput, curOutput + "-cov-stats", conf);
-        GraphStatistics.drawCoverageStatistics(curOutput + "-cov-stats", coverageCounters, conf);
+        Counters counters = GraphStatistics.run(curOutput, curOutput + "-cov-stats", conf);
+        GraphStatistics.drawCoverageStatistics(curOutput + "-cov-stats", counters, conf);
         copyToLocalOutputDir(curOutput + "-cov-stats", conf);
         
         ArrayList<Double> coverageData = new ArrayList<Double>();
-        double maxCoverage = GraphStatistics.getCoverageStats(coverageCounters, coverageData);
+        double maxCoverage = GraphStatistics.getCoverageStats(counters, coverageData);
         if(maxCoverage == 0 || coverageData.size() == 0)
             throw new IllegalStateException("No information for coverage!");
         long cutoffCoverage = (long)FittingMixture.fittingMixture(coverageData, maxCoverage, 30);
         
-        if(cutoffCoverage != 0){
+        if(cutoffCoverage > 0){
             LOG.info("Set the cutoffCoverage to " + cutoffCoverage);
             conf.setFloat(GenomixJobConf.REMOVE_LOW_COVERAGE_MAX_COVERAGE, cutoffCoverage);
         } else{
@@ -119,8 +120,27 @@ public class GenomixDriver {
         }
     }
     
+    private int setMinScaffoldingSeedLength(GenomixJobConf conf) throws IOException{
+        Counters counters = GraphStatistics.run(curOutput, curOutput + "-kmerLength-stats", conf);
+        long totalNodes = counters.getGroup("totals").getCounter("nodes");
+        System.out.println(totalNodes);
+        float percentage = 0.2f;
+        long numOfSeeds = (long) (Math.abs((float)totalNodes * percentage) > 10 ? Math.abs((float)totalNodes * percentage) : 10);
+        System.out.println(numOfSeeds);
+        
+        long curNumOfSeeds = 0;
+        for (Counter c : counters.getGroup("kmerLength-bins")){
+            curNumOfSeeds += c.getValue();
+            if(curNumOfSeeds > numOfSeeds){
+                return Integer.parseInt(c.getName());
+            }
+        }
+        throw new IllegalStateException("It is impossible to reach here!");
+    }
+    
     private void addStep(GenomixJobConf conf, Patterns step) throws Exception {
         // oh, java, why do you pain me so?
+        Counters counters;
         switch (step) {
             case BUILD:
             case BUILD_HYRACKS:
@@ -143,6 +163,8 @@ public class GenomixDriver {
             case MERGE:
             case MERGE_P4:
                 pregelixJobs.add(P4ForPathMergeVertex.getConfiguredJob(conf, P4ForPathMergeVertex.class));
+                flushPendingJobs(conf);
+                setMinScaffoldingSeedLength(conf);
                 break;
             case UNROLL_TANDEM:
                 pregelixJobs.add(UnrollTandemRepeat.getConfiguredJob(conf, UnrollTandemRepeat.class));
@@ -208,7 +230,7 @@ public class GenomixDriver {
                 }
                 flushPendingJobs(conf);
                 curOutput = prevOutput + "-STATS";
-                Counters counters = GraphStatistics.run(prevOutput, curOutput, conf);
+                counters = GraphStatistics.run(prevOutput, curOutput, conf);
                 GraphStatistics.saveGraphStats(curOutput, counters, conf);
                 GraphStatistics.drawStatistics(curOutput, counters, conf);
                 GraphStatistics.getFastaStatsForGage(curOutput, counters, conf);
