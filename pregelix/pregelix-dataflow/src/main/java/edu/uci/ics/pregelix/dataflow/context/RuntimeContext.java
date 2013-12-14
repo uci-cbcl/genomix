@@ -65,17 +65,17 @@ public class RuntimeContext implements IWorkspaceFileFactory {
     };
 
     public RuntimeContext(INCApplicationContext appCtx) {
-        fileMapManager = new TransientFileMapManager();
-        ICacheMemoryAllocator allocator = new HeapBufferAllocator();
-        IPageReplacementStrategy prs = new ClockPageReplacementStrategy();
         int pageSize = 64 * 1024;
         long memSize = Runtime.getRuntime().maxMemory();
         long bufferSize = memSize / 4;
         int numPages = (int) (bufferSize / pageSize);
+
+        fileMapManager = new TransientFileMapManager();
+        ICacheMemoryAllocator allocator = new HeapBufferAllocator();
+        IPageReplacementStrategy prs = new ClockPageReplacementStrategy(allocator, pageSize, numPages);
         /** let the buffer cache never flush dirty pages */
-        bufferCache = new BufferCache(appCtx.getRootContext().getIOManager(), allocator, prs,
-                new PreDelayPageCleanerPolicy(Long.MAX_VALUE), fileMapManager, pageSize, numPages, 1000000,
-                threadFactory);
+        bufferCache = new BufferCache(appCtx.getRootContext().getIOManager(), prs, new PreDelayPageCleanerPolicy(
+                Long.MAX_VALUE), fileMapManager, 1000000, threadFactory);
         int numPagesInMemComponents = numPages / 8;
         vbcs = new ArrayList<IVirtualBufferCache>();
         IVirtualBufferCache vBufferCache = new MultitenantVirtualBufferCache(new VirtualBufferCache(
