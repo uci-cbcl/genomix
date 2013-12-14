@@ -35,16 +35,18 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
     public void configure(Configuration conf) {
         super.configure(conf);
         initVertex();
-        INITIAL_DIRECTION = DIR.FORWARD;  // TODO set the INITIAL-DIRECTION appropriately
+        INITIAL_DIRECTION = DIR.FORWARD; // TODO set the INITIAL-DIRECTION appropriately
         HAS_PAIRED_END_READS = GenomixJobConf.outerDistanceMeans != null;
         MAX_READ_LENGTH = Integer.MIN_VALUE;
         MAX_OUTER_DISTANCE = Integer.MIN_VALUE;
         MIN_OUTER_DISTANCE = Integer.MAX_VALUE;
-        for (byte libraryId=0; libraryId < GenomixJobConf.readLengths.size(); libraryId++) {
+        for (byte libraryId = 0; libraryId < GenomixJobConf.readLengths.size(); libraryId++) {
             MAX_READ_LENGTH = Math.max(MAX_READ_LENGTH, GenomixJobConf.readLengths.get(libraryId));
             if (GenomixJobConf.outerDistanceMeans.containsKey(libraryId)) {
-                MAX_OUTER_DISTANCE = Math.max(MAX_OUTER_DISTANCE, GenomixJobConf.outerDistanceMeans.get(libraryId) + GenomixJobConf.outerDistanceStdDevs.get(libraryId));
-                MIN_OUTER_DISTANCE = Math.min(MIN_OUTER_DISTANCE, GenomixJobConf.outerDistanceMeans.get(libraryId) - GenomixJobConf.outerDistanceStdDevs.get(libraryId));
+                MAX_OUTER_DISTANCE = Math.max(MAX_OUTER_DISTANCE, GenomixJobConf.outerDistanceMeans.get(libraryId)
+                        + GenomixJobConf.outerDistanceStdDevs.get(libraryId));
+                MIN_OUTER_DISTANCE = Math.min(MIN_OUTER_DISTANCE, GenomixJobConf.outerDistanceMeans.get(libraryId)
+                        - GenomixJobConf.outerDistanceStdDevs.get(libraryId));
             }
         }
     }
