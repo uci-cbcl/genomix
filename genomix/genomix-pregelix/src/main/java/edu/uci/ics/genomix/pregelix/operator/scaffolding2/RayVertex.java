@@ -2,6 +2,7 @@ package edu.uci.ics.genomix.pregelix.operator.scaffolding2;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.SortedSet;
 
@@ -14,6 +15,7 @@ import edu.uci.ics.genomix.data.types.Kmer;
 import edu.uci.ics.genomix.data.types.Node.NeighborInfo;
 import edu.uci.ics.genomix.data.types.ReadHeadInfo;
 import edu.uci.ics.genomix.data.types.VKmer;
+import edu.uci.ics.genomix.data.types.VKmerList;
 import edu.uci.ics.genomix.pregelix.base.DeBruijnGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.base.MessageWritable;
 import edu.uci.ics.genomix.pregelix.base.VertexValueWritable;
@@ -30,7 +32,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
     public RayVertex() {
         outgoingMsg = new RayMessage();
     }
-    
+
     @Override
     public void configure(Configuration conf) {
         super.configure(conf);
@@ -50,7 +52,14 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
             }
         }
     }
-    
+
+    @Override
+    public void open() {
+        super.open();
+        outgoingMsg.reset();
+
+    }
+
     @Override
     public void compute(Iterator<RayMessage> msgIterator) throws Exception {
         if (getSuperstep() == 1) {
@@ -79,7 +88,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
     private Iterator<RayMessage> getStartMessage() {
         if (INITIAL_DIRECTION == DIR.FORWARD) {
             // TODO Auto-generated method stub
-            
+
         } else {
             // TODO Auto-generated method stub
         }
@@ -87,9 +96,10 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
     }
 
     // local variables for scaffold
-    private ArrayList<RayMessage> aggregateScoreMsgs = new ArrayList<>();
     private ArrayList<RayMessage> requestScoreMsgs = new ArrayList<>();
-    
+    private RayScores aggregateSingleEndScores = new RayScores();
+    private RayScores aggregatePairedEndScores = new RayScores();
+
     private void scaffold(Iterator<RayMessage> msgIterator) {
         // TODO since the messages aren't synchronized by iteration, we might want to  
         // manually order our messages to make the process a little more deterministic
@@ -100,8 +110,10 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         VKmer id = getVertexId();
         RayValue vertex = getVertexValue();
 
-        aggregateScoreMsgs.clear();
         requestScoreMsgs.clear();
+        aggregateSingleEndScores.reset();
+        aggregatePairedEndScores.reset();
+        DIR aggDir = null;
         while (msgIterator.hasNext()) {
             RayMessage msg = msgIterator.next();
             switch (msg.getMessageType()) {
@@ -118,10 +130,8 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
                     requestScoreMsgs.add(reqMsg);
                     break;
                 case AGGREGATE_SCORE:
-                    // batch-process these (need all scores to choose purges)
-                    RayMessage aggMsg = new RayMessage();
-                    aggMsg.setAsCopy(msg);
-                    aggregateScoreMsgs.add(aggMsg);
+                    aggDir = aggDir == null ? msg.getEdgeTypeBackToFrontier().mirror().dir() : aggDir;
+                    aggregateScore(msg, aggregateSingleEndScores, aggregatePairedEndScores, aggDir);
                     break;
                 case PRUNE_EDGE:
                     // remove the given edge back towards the frontier node.  Also, clear the "visited" state of this node
@@ -140,8 +150,8 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         if (requestScoreMsgs.size() > 0) {
             sendScoresToFrontier(requestScoreMsgs);
         }
-        if (aggregateScoreMsgs.size() > 0) {
-            compareScoresAndPrune(aggregateScoreMsgs);
+        if (aggregateSingleEndScores.size() > 0 || aggregatePairedEndScores.size() > 0) {
+            compareScoresAndPrune(aggregateSingleEndScores, aggregatePairedEndScores, aggDir);
         }
     }
 
@@ -259,10 +269,8 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
 
         // I'm now allowed to score the first minLength kmers according to my readids
         RayScores singleEndScores = voteFromReads(true, vertex, msgs, myOffset, walkLength, minLength);
-        RayScores pairedEndScores = null;
-        if (HAS_PAIRED_END_READS) {
-             pairedEndScores = voteFromReads(false, vertex, msgs, myOffset, walkLength, minLength);
-        }
+        RayScores pairedEndScores = HAS_PAIRED_END_READS ? voteFromReads(false, vertex, msgs, myOffset, walkLength,
+                minLength) : null;
 
         outgoingMsg.reset();
         outgoingMsg.setMessageType(RayMessageType.AGGREGATE_SCORE);
@@ -273,16 +281,13 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
 
     /**
      * use the reads present in this vertex to score the kmers in this message list.
-     * 
-     * For each message, 
-     *      for each read in a subset of reads in this vertex
-     *          run a sliding window of length (original) Kmer.length
-     *              see if all the letters in the sliding window match the read
-     * 
+     * For each message,
+     * for each read in a subset of reads in this vertex
+     * run a sliding window of length (original) Kmer.length
+     * see if all the letters in the sliding window match the read
      * So somehow, we've turned this into a n**4 operation :(
-     * 
      * // TODO for single-end reads, we could alternatively count how many letters in the VKmers match
-     * // or we could base the score on something like edit distance   
+     * // or we could base the score on something like edit distance
      */
     private static RayScores voteFromReads(boolean singleEnd, RayValue vertex, ArrayList<RayMessage> msgs,
             int nodeOffset, int walkLength, int msgKmerLength) {
@@ -303,7 +308,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
             }
             for (ReadHeadInfo read : readSubsetOrientedWithSearch) {
                 for (int kmerIndex = 0; kmerIndex < msgKmerLength; kmerIndex++) {
-                    
+
                     // TODO we currently keep the score separately for each kmer we're considering
                     // ruleC is about the minimum value in the comparison of the single kmers adjacent to the frontier
                     // but we're currently using it as the minimum across many kmers.  We'll have to think about this 
@@ -328,14 +333,14 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
                         if (read.getMateReadSequence()
                                 .reverse()
                                 .matchesInRange(candidateInMate - outerDistanceStd,
-                                        candidateInMate + outerDistanceStd + Kmer.getKmerLength(), candidateKmer, kmerIndex,
-                                        Kmer.getKmerLength())) {
+                                        candidateInMate + outerDistanceStd + Kmer.getKmerLength(), candidateKmer,
+                                        kmerIndex, Kmer.getKmerLength())) {
                             score++;
                         }
                     }
-                    if (score > 0) {
-                        scores.addScore(msg.getToScoreId(), (walkLength - nodeOffset - read.getOffset()) * score, score, score);
-                    }
+
+                    scores.addScore(msg.getToScoreId(), (walkLength - nodeOffset - read.getOffset()) * score, score,
+                            score);
                 }
             }
         }
@@ -396,6 +401,19 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         }
     }
 
+    private void aggregateScore(RayMessage scoreMsg, RayScores aggregateSingleEndScores,
+            RayScores aggregatePairedEndScores, DIR expectedDir) {
+        // make sure all the incoming msgs describe the candidate in the same direction (must agree on the dir)
+        if (scoreMsg.getEdgeTypeBackToFrontier().mirror().dir() != expectedDir) {
+            throw new IllegalStateException("found an inconsistent edge direction! (expected direction" + expectedDir
+                    + ", but saw edgeType " + scoreMsg.getEdgeTypeBackToFrontier().mirror()
+                    + ".\nCurrent message was: " + scoreMsg);
+        }
+        // each msg received contains part of the total score of all outgoing edges
+        aggregateSingleEndScores.aggregate(scoreMsg.getSingleEndScores());
+        aggregatePairedEndScores.aggregate(scoreMsg.getPairedEndScores());
+    }
+
     /**
      * I'm the frontier node and am now receiving the total scores from each node in the walk.
      * Aggregate all the scores from all the nodes by id, then determine if one of the candidates
@@ -405,15 +423,81 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
      * in the special case where the selected edge is myself (I am one of my neighbors-- a tandem repeat),
      * no edges will be pruned since if the repeat is favored, I would end up going the opposite direction and
      * possibly pruning the walk I just came from!
-     * 
      * // TODO it seems that tandem repeats are prunable but if they dominate, the walk should stop here completely.
-     * // Need to think about this a bit more.  
-     * 
-     * @param msg
+     * // Need to think about this a bit more.
      */
-    private void compareScoresAndPrune(ArrayList<RayMessage> msgs) {
-        // TODO Auto-generated method stub
+    private void compareScoresAndPrune(RayScores singleEndScores, RayScores pairedEndScores, DIR aggDir) {
+        VKmer id = getVertexId();
+        RayValue vertex = getVertexValue();
 
+        VKmer dominantKmer = null;
+        EDGETYPE dominantEdgeType = null;
+
+        // need to compare each edge in this dir with every other one.  Unfortunately, this is ugly to do, requiring 
+        // us to iterate over edge types, then edges in those types, and keeping track of the indexes ourselves, etc :(
+        // this 4 loops are really just two for loops that are tracking 1) the index, 2) the edge type, and 3) the kmer
+        int queryIndex = 0, targetIndex = 0;
+        boolean equalEdgeFound = false;
+        boolean dominantEdgeFound = false;
+        for (EDGETYPE queryET : aggDir.edgeTypes()) {
+            for (VKmer queryKmer : vertex.getEdges(queryET)) {
+                queryIndex++;
+                targetIndex = 0;
+                equalEdgeFound = false;
+                for (EDGETYPE targetET : aggDir.edgeTypes()) {
+                    for (VKmer targetKmer : vertex.getEdges(targetET)) {
+                        targetIndex++;
+                        if (queryIndex == targetIndex) {
+                            // don't compare vs self
+                            continue;
+                        }
+                        // TODO FIXME RayScores needs to track edgetype AND kmer-- it's possible to have a given kmer in BOTH FF and FR
+                        if (!pairedEndScores.dominates(queryKmer, targetKmer)) {
+                            equalEdgeFound = true;
+                        }
+                    }
+                    if (equalEdgeFound) {
+                        break;
+                    }
+                }
+                if (!equalEdgeFound) {
+                    // this edge dominated all other edges.  Keep it as the winner
+                    dominantKmer = queryKmer;
+                    dominantEdgeType = queryET;
+                    dominantEdgeFound = true;
+                    break;
+                }
+            }
+            if (dominantEdgeFound) {
+                break;
+            }
+        }
+
+        if (dominantEdgeFound) {
+            // if a dominant edge is found, all the others must be removed.
+            for (EDGETYPE et : aggDir.edgeTypes()) {
+                for (VKmer kmer : vertex.getEdges(et)) {
+                    if (et != dominantEdgeType || kmer != dominantKmer) {
+                        outgoingMsg.reset();
+                        outgoingMsg.setEdgeTypeBackToFrontier(et.mirror());
+                        outgoingMsg.setMessageType(RayMessageType.PRUNE_EDGE);
+                        sendMsg(kmer, outgoingMsg);
+                        vertex.getEdges(et).remove(kmer);
+                    }
+                }
+            }
+            // the walk is then passed on to the single remaining node
+            outgoingMsg.reset();
+            outgoingMsg.setMessageType(RayMessageType.CONTINUE_WALK);
+            outgoingMsg.setEdgeTypeBackToFrontier(dominantEdgeType.mirror());
+            // TODO guess it makes sense to store these values in the frontier rather than keep them passed along in the message?
+            // that or keep single offsets in the request score functions
+//            outgoingMsg.setWalkIds(pairedEndScores.getScoredIds());
+//            outgoingMsg.setWalkOffsets(pairedEndScores.getOffsets());
+//            outgoingMsg.setWalkLength(walkLength);
+            outgoingMsg.setFrontierFlipped(vertex.flippedFromInitialDirection);  // TODO make sure this is correct
+            sendMsg(dominantKmer, outgoingMsg);
+        }
     }
 
     public static PregelixJob getConfiguredJob(

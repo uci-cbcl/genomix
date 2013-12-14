@@ -68,4 +68,14 @@ public class RayScores implements Writable {
         ruleCs.clear();
         ruleCs.addAll(scores.ruleCs);
     }
+
+    public void aggregate(RayScores singleEndScores) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    public boolean dominates(VKmer queryKmer, VKmer targetKmer) {
+        // TODO Auto-generated method stub
+        return false;
+    }
 }
