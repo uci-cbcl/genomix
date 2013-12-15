@@ -72,6 +72,7 @@ public class RayMessage extends MessageWritable {
             getWalkOffsets().clear();
             getWalkOffsets().addAll(other.walkOffsets); // Integer type is immutable; safe for references
         }
+        walkLength = other.walkLength; 
         edgeTypeBackToFrontier = other.edgeTypeBackToFrontier;
         frontierFlipped = other.frontierFlipped;
         if (other.toScoreId != null && other.toScoreId.getKmerLetterLength() > 0) {
@@ -95,6 +96,7 @@ public class RayMessage extends MessageWritable {
         if ((messageFields & FIELDS.WALK) != 0) {
             getWalkIds().readFields(in);
             readWalkOffsets(in);
+            setWalkLength(in.readInt());
         }
         if ((messageFields & FIELDS.EDGETYPE_BACK_TO_FRONTIER) != 0) {
             edgeTypeBackToFrontier = EDGETYPE.fromByte(in.readByte());
@@ -109,6 +111,9 @@ public class RayMessage extends MessageWritable {
         if ((messageFields & FIELDS.SCORE_SINGLE_END) != 0) {
             getSingleEndScores().readFields(in);
         }
+        if ((messageFields & FIELDS.SCORE_PAIRED_END) != 0) {
+            getPairedEndScores().readFields(in);
+        }
     }
     
     @Override
@@ -118,9 +123,13 @@ public class RayMessage extends MessageWritable {
         if (walkIds != null && walkIds.size() > 0) {
             walkIds.write(out);
             writeWalkOffsets(out);
+            out.writeInt(getWalkLength());
         }
         if (edgeTypeBackToFrontier != null) {
             out.writeByte(edgeTypeBackToFrontier.get());
+        }
+        if (frontierFlipped != null) {
+            out.writeBoolean(frontierFlipped);
         }
         if (toScoreKmer != null && toScoreKmer.getKmerLetterLength() > 0) {
             toScoreKmer.write(out);
@@ -190,8 +199,9 @@ public class RayMessage extends MessageWritable {
     }
 
     public VKmerList getWalkIds() {
-        if (walkIds == null)
+        if (walkIds == null) {
             walkIds = new VKmerList();
+        }
         return walkIds;
     }
 
@@ -200,8 +210,9 @@ public class RayMessage extends MessageWritable {
     }
 
     public ArrayList<Integer> getWalkOffsets() {
-        if (walkOffsets == null)
+        if (walkOffsets == null) {
             walkOffsets = new ArrayList<>();
+        }
         return walkOffsets;
     }
 
@@ -244,8 +255,9 @@ public class RayMessage extends MessageWritable {
     }
 
     public VKmer getToScoreId() {
-        if (toScoreId == null)
+        if (toScoreId == null) {
             toScoreId = new VKmer();
+        }
         return toScoreId;
     }
 
@@ -254,6 +266,9 @@ public class RayMessage extends MessageWritable {
     }
 
     public RayScores getSingleEndScores() {
+        if (singleEndScores == null) {
+            singleEndScores = new RayScores();
+        }
         return singleEndScores;
     }
 
@@ -262,6 +277,9 @@ public class RayMessage extends MessageWritable {
     }
     
     public RayScores getPairedEndScores() {
+        if (pairedEndScores == null) {
+            pairedEndScores = new RayScores();
+        }
         return pairedEndScores;
     }
 
