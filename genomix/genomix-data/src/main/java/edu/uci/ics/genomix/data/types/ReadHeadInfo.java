@@ -26,12 +26,18 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
     private static final int mateIdShift = bitsForReadId;
     private static final int readIdShift = 0;
 
+    // 2's complement => -1 has all the bits filled
+    public static final byte MAX_MATE_VALUE = (byte) (-1 >>> (totalBits - bitsForMate));
+    public static final byte MAX_LIBRARY_VALUE = (byte) (-1 >>> (totalBits - bitsForLibrary));
+    public static final long MAX_READID_VALUE = -1 >>> (totalBits - bitsForReadId);
+    public static final int MAX_OFFSET_VALUE = (int) (-1 >>> (totalBits - bitsForOffset));
+
     protected static ReadHeadInfo getLowerBoundInfo(int offset) {
-        return new ReadHeadInfo(Byte.MIN_VALUE, Byte.MIN_VALUE, Long.MIN_VALUE, offset, null, null);
+        return new ReadHeadInfo((byte) 0, (byte) 0, 0l, offset, null, null);
     }
 
     protected static ReadHeadInfo getUpperBoundInfo(int offset) {
-        return new ReadHeadInfo(Byte.MAX_VALUE, Byte.MAX_VALUE, Long.MAX_VALUE, offset, null, null);
+        return new ReadHeadInfo((byte) MAX_MATE_VALUE, (byte) MAX_LIBRARY_VALUE, MAX_READID_VALUE, offset, null, null);
     }
 
     private long value;
@@ -44,7 +50,8 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
         this.mateReadSequence = null;
     }
 
-    public ReadHeadInfo(byte mateId, byte libraryId, long readId, int offset, VKmer thisReadSequence, VKmer mateReadSequence) {
+    public ReadHeadInfo(byte mateId, byte libraryId, long readId, int offset, VKmer thisReadSequence,
+            VKmer mateReadSequence) {
         set(mateId, libraryId, readId, offset, thisReadSequence, mateReadSequence);
     }
 
@@ -91,15 +98,23 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
 
     public static long makeUUID(byte mateId, byte libraryId, long readId, int offset) {
         // check to make sure we aren't losing any information
-        if (mateId != (mateId & ~(-1 << (totalBits - bitsForMate))))
-            throw new IllegalArgumentException("byte specified for mateId will lose some of its bits when saved! (was: " + mateId + " but only allowed " + bitsForMate + " bits!");
-        if (libraryId != (libraryId & ~(-1 << (totalBits - bitsForLibrary))))
-            throw new IllegalArgumentException("byte specified for libraryId will lose some of its bits when saved! (was: " + libraryId + " but only allowed " + bitsForLibrary + " bits!");
-        if (readId != (readId & ~(-1 << (totalBits - bitsForReadId))))
-            throw new IllegalArgumentException("byte specified for readId will lose some of its bits when saved! (was: " + readId + " but only allowed " + bitsForReadId + " bits!");
-        if (offset != (offset & ~(-1 << (totalBits - bitsForOffset))))
-            throw new IllegalArgumentException("byte specified for offset will lose some of its bits when saved! (was: " + offset + " but only allowed " + offset + " bits!");
-        
+        if (mateId != (mateId & ~(-1l << (totalBits - bitsForMate))))
+            throw new IllegalArgumentException(
+                    "byte specified for mateId will lose some of its bits when saved! (was: " + mateId
+                            + " but only allowed " + bitsForMate + " bits!");
+        if (libraryId != (libraryId & ~(-1l << (totalBits - bitsForLibrary))))
+            throw new IllegalArgumentException(
+                    "byte specified for libraryId will lose some of its bits when saved! (was: " + libraryId
+                            + " but only allowed " + bitsForLibrary + " bits!");
+        if (readId != (readId & ~(-1l << (totalBits - bitsForReadId))))
+            throw new IllegalArgumentException(
+                    "byte specified for readId will lose some of its bits when saved! (was: " + readId
+                            + " but only allowed " + bitsForReadId + " bits!");
+        if (offset != (offset & ~(-1l << (totalBits - bitsForOffset))))
+            throw new IllegalArgumentException(
+                    "byte specified for offset will lose some of its bits when saved! (was: " + offset
+                            + " but only allowed " + bitsForOffset + " bits!");
+
         return ((offset << offsetShift) + (libraryId << libraryIdShift) + (mateId << mateIdShift) + (readId << readIdShift));
     }
 
@@ -133,7 +148,7 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
     public byte getMateId() {
         return (byte) ((value & ~(-1 << (mateIdShift + bitsForMate))) >>> mateIdShift); // clear leading bits, then shift back to place
     }
-    
+
     public byte getLibraryId() {
         return (byte) ((value & ~(-1 << (libraryIdShift + bitsForLibrary))) >>> libraryIdShift);
     }
@@ -205,17 +220,32 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
      */
     @Override
     public String toString() {
-        return this.getReadId() + "-" + this.getOffset() + "_" + this.getMateId() + "-" + this.getLibraryId() + " " + "readSeq: "
-                + (this.thisReadSequence != null ? this.thisReadSequence.toString() : "null") + " " + "mateReadSeq: "
-                + (this.mateReadSequence != null ? this.mateReadSequence.toString() : "null");
+        return this.getReadId() + "-" + this.getOffset() + "_" + this.getMateId() + "-" + this.getLibraryId() + " "
+                + "readSeq: " + (this.thisReadSequence != null ? this.thisReadSequence.toString() : "null") + " "
+                + "mateReadSeq: " + (this.mateReadSequence != null ? this.mateReadSequence.toString() : "null");
     }
 
     /**
      * sort by bit significance:
-     *   offset, library, mate, then readid 
+     * offset, library, mate, then readid
      */
     @Override
     public int compareTo(ReadHeadInfo o) {
-        return Long.compare(this.value, o.value);
+        int compareResults = Long.compare(this.getOffset(), o.getOffset());
+        if (compareResults == 0) {
+            compareResults = Byte.compare(this.getLibraryId(), o.getLibraryId());
+            if (compareResults == 0) {
+                compareResults = Byte.compare(this.getMateId(), o.getMateId());
+                if (compareResults == 0) {
+                    return Long.compare(this.getReadId(), o.getReadId());
+                } else {
+                    return compareResults;
+                }
+            } else {
+                return compareResults;
+            }
+        } else {
+            return compareResults;
+        }
     }
 }
