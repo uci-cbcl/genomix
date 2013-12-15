@@ -6,6 +6,7 @@ import java.io.IOException;
 
 import edu.uci.ics.genomix.data.types.DIR;
 import edu.uci.ics.genomix.data.types.Kmer;
+import edu.uci.ics.genomix.data.types.ReadHeadInfo;
 import edu.uci.ics.genomix.pregelix.base.VertexValueWritable;
 
 public class RayValue extends VertexValueWritable {
@@ -61,14 +62,15 @@ public class RayValue extends VertexValueWritable {
      * @return whether or not I have any readids that **could** contribute to the current walk
      */
     public boolean isOutOfRange(int myOffset, int walkLength, int maxDist) {
-        int numBasesToSkip = walkLength - maxDist - myOffset;
+        int numBasesToSkip = Math.max(0, walkLength - maxDist - myOffset);
         if (!flippedFromInitialDirection) {
+            // TODO fix max offset to be distance
             // cut off the beginning
-            return getUnflippedReadIds().getOffSetRange(numBasesToSkip, Integer.MAX_VALUE).isEmpty();
+            return getUnflippedReadIds().getOffSetRange(numBasesToSkip, ReadHeadInfo.MAX_OFFSET_VALUE).isEmpty();
         } else {
             // cut off the end 
             int myLength = getKmerLength() - Kmer.getKmerLength() + 1;
-            return getFlippedReadIds().getOffSetRange(Integer.MIN_VALUE, myLength - numBasesToSkip).isEmpty();
+            return getFlippedReadIds().getOffSetRange(0, myLength - numBasesToSkip).isEmpty();
         }
     }
 }
