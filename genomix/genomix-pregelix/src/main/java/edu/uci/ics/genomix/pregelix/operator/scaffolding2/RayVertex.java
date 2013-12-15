@@ -85,10 +85,11 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         RayMessage initialMsg = new RayMessage();
         initialMsg.setMessageType(RayMessageType.CONTINUE_WALK);
         initialMsg.setWalkLength(0);
-        initialMsg.setFrontierFlipped(false); // TODO make sure this is correct
         if (INITIAL_DIRECTION == DIR.FORWARD) {
+            initialMsg.setFrontierFlipped(false);
             initialMsg.setEdgeTypeBackToFrontier(EDGETYPE.RR);
         } else {
+            initialMsg.setFrontierFlipped(true);
             initialMsg.setEdgeTypeBackToFrontier(EDGETYPE.FF);
         }
         return new ArrayList<RayMessage>(Collections.singletonList(initialMsg)).iterator();
@@ -141,6 +142,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
                     // that neighbor is marked "intersection" and I need to remember the stopped state.  No path
                     // can continue out of me in the future, even when I receive aggregate scores
                     vertex.stopSearch = true;
+                    // TODO obey this stop search in the CONTINUE branch
                     break;
             }
         }
