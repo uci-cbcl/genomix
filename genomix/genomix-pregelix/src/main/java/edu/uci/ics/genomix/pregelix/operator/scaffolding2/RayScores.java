@@ -17,25 +17,24 @@ import edu.uci.ics.genomix.data.types.VKmerList;
 
 public class RayScores implements Writable {
 
-    private HashMap<SimpleEntry<EDGETYPE, VKmer>, Rules> scores;
-
-    // TODO make this an aggregator function which for an existing id, adds ruleA and ruleB but keeps the min of all ruleC's
-    public void addScore(EDGETYPE et, VKmer kmer, int ruleA, int ruleB, int ruleC) {
+    private HashMap<SimpleEntry<EDGETYPE, VKmer>, Rules> scores = new HashMap<>();
+    
+    public void addRuleCounts(EDGETYPE et, VKmer kmer, int ruleA, int ruleB, int ruleC) {
         SimpleEntry<EDGETYPE, VKmer> key = new SimpleEntry<>(et, kmer);
         if (scores.containsKey(key)) {
             Rules r = scores.get(key);
-            r.ruleAs += ruleA;
-            r.ruleBs += ruleB;
-            r.ruleCs = Math.min(r.ruleCs, ruleC);
+            r.ruleA += ruleA;
+            r.ruleB += ruleB;
+            r.ruleC = ruleC > 0 ? (r.ruleC > 0 ? Math.min(r.ruleC, ruleC) : ruleC) : r.ruleC; // min of non-zero values
         } else {
             scores.put(key, new Rules(ruleA, ruleB, ruleC));
         }
     }
 
-    public void addAllScores(RayScores otherScores) {
-        for (Entry<SimpleEntry<EDGETYPE, VKmer>, Rules> elem : scores.entrySet()) {
-            addScore(elem.getKey().getKey(), elem.getKey().getValue(), elem.getValue().ruleAs, elem.getValue().ruleBs,
-                    elem.getValue().ruleCs);
+    public void addAll(RayScores otherScores) {
+        for (Entry<SimpleEntry<EDGETYPE, VKmer>, Rules> elem : otherScores.scores.entrySet()) {
+            addRuleCounts(elem.getKey().getKey(), elem.getKey().getValue(), elem.getValue().ruleA, elem.getValue().ruleB,
+                    elem.getValue().ruleC);
         }
     }
 
@@ -43,19 +42,33 @@ public class RayScores implements Writable {
      * Return true iff queryKmer is "better than" targetKmer according to my scores.
      * Specifically, each of the rule values must be "factor" times larger than the corresponding values for targetKmer
      */
-    public boolean dominates(EDGETYPE queryET, VKmer queryKmer, EDGETYPE targetET, VKmer targetKmer, float factor) {
+    public boolean dominates(EDGETYPE queryET, VKmer queryKmer, EDGETYPE targetET, VKmer targetKmer, float frontierCoverage) {
+        double factor = getMFactor(frontierCoverage);
         SimpleEntry<EDGETYPE, VKmer> queryKey = new SimpleEntry<>(queryET, queryKmer);
         SimpleEntry<EDGETYPE, VKmer> targetKey = new SimpleEntry<>(targetET, targetKmer);
         if (!scores.containsKey(queryKey)) {
-            throw new IllegalArgumentException("Didn't find query in the score list! " + queryET + ":" + queryKmer);
+            return false;
         } else if (!scores.containsKey(targetKey)) {
-            throw new IllegalArgumentException("Didn't find query in the score list! " + targetET + ":" + targetKmer);
+            scores.put(targetKey, new Rules());  // fill all rules with 0
         }
         Rules queryRule = scores.get(queryKey);
         Rules targetRule = scores.get(targetKey);
-        return (((queryRule.ruleAs) > targetRule.ruleAs * factor)// 
-                && ((queryRule.ruleBs) > targetRule.ruleBs * factor)// 
-        && ((queryRule.ruleCs) > targetRule.ruleCs * factor));//
+        return (((queryRule.ruleA) > targetRule.ruleA * factor)     // overlap-weighted score  
+                && ((queryRule.ruleB) > targetRule.ruleB * factor)  // raw score 
+        && ((queryRule.ruleC) > targetRule.ruleC * factor));        // smallest non-zero element of the walk
+        // TODO ruleC again doesn't make much sense in our case-- the min is over nodes currently which may represent long kmers  
+    }
+
+    private double getMFactor(float frontierCoverage) {
+        if (frontierCoverage >= 2 && frontierCoverage <= 19) {
+            return 3;
+        } else if (frontierCoverage >= 20 && frontierCoverage <= 24) {
+            return 2;
+        } else if (frontierCoverage >= 25) {
+            return 1.3;
+        } else {
+            return 0;
+        }
     }
 
     @Override
@@ -92,34 +105,39 @@ public class RayScores implements Writable {
 
     public void setAsCopy(RayScores otherScores) {
         clear();
-        addAllScores(otherScores);
+        addAll(otherScores);
     }
 
     private class Rules {
-        public int ruleAs;
-        public int ruleBs;
-        public int ruleCs;
+        public int ruleA = 0;
+        public int ruleB = 0;
+        public int ruleC = Integer.MAX_VALUE;
 
         public Rules() {
 
         }
 
         public Rules(int ruleAs, int ruleBs, int ruleCs) {
-            this.ruleAs = ruleAs;
-            this.ruleBs = ruleBs;
-            this.ruleCs = ruleCs;
+            this.ruleA = ruleAs;
+            this.ruleB = ruleBs;
+            this.ruleC = ruleCs;
         }
 
         public void readFields(DataInput in) throws IOException {
-            ruleAs = in.readInt();
-            ruleBs = in.readInt();
-            ruleCs = in.readInt();
+            ruleA = in.readInt();
+            ruleB = in.readInt();
+            ruleC = in.readInt();
         }
 
         public void write(DataOutput out) throws IOException {
-            out.writeInt(ruleAs);
-            out.writeInt(ruleBs);
-            out.writeInt(ruleCs);
+            out.writeInt(ruleA);
+            out.writeInt(ruleB);
+            out.writeInt(ruleC);
+        }
+        
+        @Override
+        public String toString() {
+            return ruleA + " " + ruleB + " " + ruleC;
         }
     }
 }
