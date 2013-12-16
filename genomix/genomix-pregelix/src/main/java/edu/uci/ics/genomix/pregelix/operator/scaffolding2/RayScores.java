@@ -19,6 +19,38 @@ public class RayScores implements Writable {
 
     private HashMap<SimpleEntry<EDGETYPE, VKmer>, Rules> scores = new HashMap<>();
 
+    private class Rules {
+        public int ruleA = 0; // the overlap-weighted score (reads that overlap the walk better receive higher ruleA values)
+        public int ruleB = 0; // the raw score
+        public int ruleC = Integer.MAX_VALUE; // the smallest score seen in a single node
+
+        public Rules() {
+        }
+
+        public Rules(int ruleAs, int ruleBs, int ruleCs) {
+            this.ruleA = ruleAs;
+            this.ruleB = ruleBs;
+            this.ruleC = ruleCs;
+        }
+
+        public void readFields(DataInput in) throws IOException {
+            ruleA = in.readInt();
+            ruleB = in.readInt();
+            ruleC = in.readInt();
+        }
+
+        public void write(DataOutput out) throws IOException {
+            out.writeInt(ruleA);
+            out.writeInt(ruleB);
+            out.writeInt(ruleC);
+        }
+
+        @Override
+        public String toString() {
+            return "A:" + ruleA + " B:" + ruleB + " C:" + ruleC;
+        }
+    }
+
     public void addRuleCounts(EDGETYPE et, VKmer kmer, int ruleA, int ruleB, int ruleC) {
         SimpleEntry<EDGETYPE, VKmer> key = new SimpleEntry<>(et, kmer);
         if (scores.containsKey(key)) {
@@ -108,37 +140,15 @@ public class RayScores implements Writable {
         clear();
         addAll(otherScores);
     }
-
-    private class Rules {
-        public int ruleA = 0; // the overlap-weighted score (reads that overlap the walk better receive higher ruleA values)
-        public int ruleB = 0; // the raw score
-        public int ruleC = Integer.MAX_VALUE; // the smallest score seen in a single node
-
-        public Rules() {
-
+    
+    @Override
+    public String toString() {
+        StringBuilder s = new StringBuilder();
+        String delim = "";
+        for (Entry<SimpleEntry<EDGETYPE, VKmer>, Rules> elem : scores.entrySet()) {
+            s.append(delim).append("(").append(elem.getKey().getKey()).append(":").append(elem.getKey().getValue()).append(")").append("=").append(elem.getValue());
+            delim = ", ";
         }
-
-        public Rules(int ruleAs, int ruleBs, int ruleCs) {
-            this.ruleA = ruleAs;
-            this.ruleB = ruleBs;
-            this.ruleC = ruleCs;
-        }
-
-        public void readFields(DataInput in) throws IOException {
-            ruleA = in.readInt();
-            ruleB = in.readInt();
-            ruleC = in.readInt();
-        }
-
-        public void write(DataOutput out) throws IOException {
-            out.writeInt(ruleA);
-            out.writeInt(ruleB);
-            out.writeInt(ruleC);
-        }
-
-        @Override
-        public String toString() {
-            return ruleA + " " + ruleB + " " + ruleC;
-        }
+        return s.toString();
     }
 }
