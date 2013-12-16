@@ -297,11 +297,15 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
      * candidateMsgs:
      * - (c1, 4, TTGGGCCC)
      * - (c2, 4, TTGGTCCC)
+     * - (c3, 4, TTGGTCCCC)
      * with an (original) Kmer.length of K=4,
      * .
      * r1 appears earlier in the overall walk and so has more weight for ruleA
      * (specifically, ruleA_r1_factor = walkLength - offset 0 = 4)
      * whereas r2 is later in the walk (ruleA_r2_factor = walkLength - offset 2 = 2)
+     * .
+     * The msgKmerLength will be the shortest of the given kmers (in this case, |c1| = |c2| = 8),
+     * meaning only the first 8 letters of the candidates will be compared.
      * .
      * candidate c1 matches r1 at TTGG, TGGG, GGGC, GGCC, and GCCC but r2 only at TTGG
      * so c1 has an overall score of:
@@ -313,9 +317,24 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
      * - ruleA = 1 (match) * 4 (r1_factor) + 4 (matches) * 2 (r2_factor) = 10
      * - ruleB = 1 (match) + 4 (match) = 5
      * .
-     * ruleC is the minimum non-zero ruleB contribution from individual nodes (of which, we are but one).
+     * candidate c3 would have the same score as c2 since its last letter is skipped (msgKmerLength=8)
      * .
-     * In this case, neither candidate dominates the other
+     * ruleC is the minimum non-zero ruleB contribution from individual nodes (of which, we are but one).
+     * If 1 other node scored these same candidates but its 1 read (r3) only contained the end TCCC..., then 
+     * that read's ruleA_r3_factor = 1, making:
+     * c1 have:
+     * - ruleA = 18 + 0
+     * - ruleB = 5 + 0
+     * and c2 would have:
+     * - ruleA = 10 + 1
+     * - ruleB = 5 + 1
+     * and finally,
+     * - c1.ruleC = 5
+     * - c2.ruleC = 1
+     * As you can see, ruleC is actually penalizing the node that has more support here!
+     * ruleC doesn't make sense when you're comparing nodes containing multiple kmers.
+     * .
+     * In this case, no candidate dominates the others (see {@link RayScores.dominates}).
      * .
      * .
      * The overall algorithm look like this:
@@ -484,6 +503,15 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         // need to compare each edge in this dir with every other one.  Unfortunately, this is ugly to do, requiring 
         // us to iterate over edge types, then edges in those types, and keeping track of the indexes ourselves, etc :(
         // this 4 loops are really just two for loops that are tracking 1) the index, 2) the edge type, and 3) the kmer
+        //
+        // the fact we need to compare all candidates vs all others can be captured by this statement:
+        //  (! c1.dominates(c2)) =!=> (c2.dominates(c1))
+        //
+        // that is, just because c1 doesn't dominate c2, doesn't mean that c2 dominates c1.
+        // the extra m factor makes it so we must compare all vs all.
+        //
+        // fortunately, we can quit comparing as soon as one edge doesn't dominate another edge. 
+        //
         int queryIndex = 0, targetIndex = 0;
         boolean equalPairedEdgeFound = false;
         boolean equalSingleEdgeFound = false;
