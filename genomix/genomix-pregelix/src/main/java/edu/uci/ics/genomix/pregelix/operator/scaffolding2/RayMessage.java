@@ -43,6 +43,14 @@ public class RayMessage extends MessageWritable {
     /** for AGGREGATE_SCORE */
     private RayScores singleEndScores;
     private RayScores pairedEndScores;
+    
+    public RayMessage() {
+        
+    }
+    
+    public RayMessage(RayMessage other) {
+        setAsCopy(other);
+    }
 
     /**
      * add the given vertex to the end of this walk

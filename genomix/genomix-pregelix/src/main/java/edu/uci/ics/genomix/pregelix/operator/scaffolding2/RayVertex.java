@@ -59,7 +59,6 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
     @Override
     public void compute(Iterator<RayMessage> msgIterator) throws Exception {
         if (getSuperstep() == 1) {
-            initVertex();
             if (isStartSeed()) {
                 msgIterator = getStartMessage();
             }
@@ -122,14 +121,10 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
                     break;
                 case REQUEST_SCORE:
                     // batch-process these (have to truncate to min length)
-                    RayMessage reqMsg = new RayMessage();
-                    reqMsg.setAsCopy(msg);
-                    requestScoreMsgs.add(reqMsg);
+                    requestScoreMsgs.add(new RayMessage(msg));
                     break;
                 case AGGREGATE_SCORE:
-                    RayMessage aggMsg = new RayMessage();
-                    aggMsg.setAsCopy(msg);
-                    aggregateScoreMsgs.add(aggMsg);
+                    aggregateScoreMsgs.add(new RayMessage(msg));
                     break;
                 case PRUNE_EDGE:
                     // remove the given edge back towards the frontier node.  Also, clear the "visited" state of this node
@@ -167,7 +162,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
             return;
         }
         vertex.visited = true;
-        // if the prev frontier was flipped and I came across a FR/RF, I'm back to unflipped
+        // I am the new frontier but this message is coming from the previous frontier; I was the "candidate"
         vertex.flippedFromInitialDirection = msg.isCandidateFlipped();
         DIR nextDir = msg.getEdgeTypeBackToFrontier().mirror().neighborDir();
 
@@ -269,6 +264,8 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         }
 
         // get the smallest kmer in all the messages I've received
+        // since the candidates may be of different lengths, we have to use the shortest candidate
+        // that way, long candidates don't receive higher scores simply for being long
         int minLength = msgs.get(0).getWalkIds().getPosition(0).getKmerLetterLength();
         for (int i = 1; i < msgs.size(); i++) {
             minLength = Math.min(minLength, msgs.get(i).getWalkIds().getPosition(0).getKmerLetterLength());
@@ -292,22 +289,52 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
 
     /**
      * use the reads present in this vertex to score the kmers in this message list.
+     * For example, we are a walk node with readSeqs:
+     * readHeadSet:
+     * - (r1, offset 0, AAATTTGGGCCC)
+     * - (r2, offset 2, ATTTGGTCCCCC)
+     * and are asked to score two msgs with kmers and offsets:
+     * candidateMsgs:
+     * - (c1, 4, TTGGGCCC)
+     * - (c2, 4, TTGGTCCC)
+     * with an (original) Kmer.length of K=4,
+     * .
+     * r1 appears earlier in the overall walk and so has more weight for ruleA
+     * (specifically, ruleA_r1_factor = walkLength - offset 0 = 4)
+     * whereas r2 is later in the walk (ruleA_r2_factor = walkLength - offset 2 = 2)
+     * .
+     * candidate c1 matches r1 at TTGG, TGGG, GGGC, GGCC, and GCCC but r2 only at TTGG
+     * so c1 has an overall score of:
+     * - ruleA = 4 (matches) * 4 (r1_factor) + 1 (match) * 2 (r2_factor) = 18
+     * - ruleB = 4 (matches) + 1 (match) = 5
+     * .
+     * candidate c2 matches r1 only at TTGG but matches r2 at TTGG, TGGT, GGTC, GTCC, and TCCC
+     * so c2 has an overall score of:
+     * - ruleA = 1 (match) * 4 (r1_factor) + 4 (matches) * 2 (r2_factor) = 10
+     * - ruleB = 1 (match) + 4 (match) = 5
+     * .
+     * ruleC is the minimum non-zero ruleB contribution from individual nodes (of which, we are but one).
+     * .
+     * In this case, neither candidate dominates the other
+     * .
+     * .
+     * The overall algorithm look like this:
      * For each message,
-     * | for each read in a subset of reads in this vertex
+     * | for each read in the reads oriented with the search
      * | | run a sliding window of length (original) Kmer.length
      * | | | see if all the letters in the sliding window match the read
      * So somehow, we've turned this into a n**4 operation :(
      * // TODO for single-end reads, we could alternatively count how many letters in the VKmers match
      * // or we could base the score on something like edit distance
      */
-    private static RayScores voteFromReads(boolean singleEnd, RayValue vertex, ArrayList<RayMessage> msgs,
+    private static RayScores voteFromReads(boolean singleEnd, RayValue vertex, ArrayList<RayMessage> candidateMsgs,
             int nodeOffset, int walkLength, int msgKmerLength) {
         SortedSet<ReadHeadInfo> readSubsetOrientedWithSearch = getReadSubsetOrientedWithSearch(singleEnd, vertex,
                 nodeOffset, walkLength);
 
         // nothing like nested for loops 4 levels deep (!)
         RayScores scores = new RayScores();
-        for (RayMessage msg : msgs) {
+        for (RayMessage msg : candidateMsgs) {
             VKmer candidateKmer;
             if (singleEnd) {
                 // for single-end reads, we need the candidate in the same orientation as the search
