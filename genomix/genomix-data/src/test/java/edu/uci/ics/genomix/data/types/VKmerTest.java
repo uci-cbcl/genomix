@@ -676,5 +676,20 @@ public class VKmerTest {
         }
     }
     
+    @Test
+    public void TestIndexOfRangeQuery() throws IOException{
+        VKmer kmer1 = new VKmer("ACTATCCTGCGTACGC");
+        VKmer kmer2 = new VKmer("GTGCGTC");
+        Assert.assertEquals(7, kmer1.indexOfRangeQuery(kmer2, 1, 5, 3, 14));
+        VKmer kmer3 = new VKmer("TGCGTACGC");
+        VKmer kmer4 = new VKmer("GTGCGTC");
+        Assert.assertEquals(0, kmer3.indexOfRangeQuery(kmer4, 1, 5, 0, 7));
+        VKmer kmer5 = new VKmer("CCCGACTGCGT");
+        VKmer kmer6 = new VKmer("GTGCGTC");
+        Assert.assertEquals(6, kmer5.indexOfRangeQuery(kmer6, 1, 5, 0, 10));
+        VKmer kmer7 = new VKmer("CCCGACTGCGT");
+        VKmer kmer8 = new VKmer("GTGGGTC");
+        Assert.assertEquals(-1, kmer7.indexOfRangeQuery(kmer8, 1, 5, 0, 10));
+    }
 
 }
