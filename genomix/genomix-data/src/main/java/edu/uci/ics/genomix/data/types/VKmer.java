@@ -838,7 +838,22 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
         return failureSet;
     }
 
- 
+    protected static int[] computeFailureSetWithRange(VKmer pattern, int subPsize, int start, int end) {
+        int[] failureSet = new int[subPsize];
+        int i = 0;
+        failureSet[0] = -1;
+        for (int j = 1; j < subPsize; j++) {
+            i = failureSet[j - 1];
+            while (i > 0 && pattern.getGeneCodeAtPosition(j + start) != pattern.getGeneCodeAtPosition(i + start + 1)) {
+                i = failureSet[i];
+            }
+            if (pattern.getGeneCodeAtPosition(j + start) == pattern.getGeneCodeAtPosition(i + start + 1)) {
+                failureSet[j] = i + 1;
+            } else
+                failureSet[j] = -1;
+        }
+        return failureSet;
+    }
 
     /**
      * return the fractional difference between the given kmers. This is the edit distance divided by the smaller length.
