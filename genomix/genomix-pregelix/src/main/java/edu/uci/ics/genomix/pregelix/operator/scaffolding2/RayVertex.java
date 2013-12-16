@@ -310,11 +310,10 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         for (RayMessage msg : msgs) {
             VKmer candidateKmer;
             if (singleEnd) {
-                // for single-end reads, we need the candidate in the same orientation as the readheads
-                boolean sameOrientationAsMe = vertex.flippedFromInitialDirection == msg.isCandidateFlipped();
-                candidateKmer = sameOrientationAsMe ? msg.getToScoreKmer() : msg.getToScoreKmer().reverse();
+                // for single-end reads, we need the candidate in the same orientation as the search
+                candidateKmer = msg.isCandidateFlipped() ? msg.getToScoreKmer().reverse() : msg.getToScoreKmer();
             } else {
-                // for paired-end reads, we place the candidate in the same orientation as the search started
+                // for paired-end reads, the mate sequence is revcomp'ed; need the candidate the opposite orientation as the search
                 candidateKmer = msg.isCandidateFlipped() ? msg.getToScoreKmer() : msg.getToScoreKmer().reverse();
             }
             int ruleATotal = 0, ruleBTotal = 0, ruleCTotal = 0;
@@ -341,11 +340,9 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
                         // since read.thisSeq is in the same orientation as the search direction, 
                         // the mate sequence is flipped wrt search direction. we reverse it to be in 
                         // the same direction as the search direction.
-                        if (read.getMateReadSequence()
-                                .reverse()
-                                .matchesInRange(candidateInMate - outerDistanceStd,
-                                        candidateInMate + outerDistanceStd + Kmer.getKmerLength(), candidateKmer,
-                                        kmerIndex, Kmer.getKmerLength())) {
+                        if (read.getMateReadSequence().matchesInRange(candidateInMate - outerDistanceStd,
+                                candidateInMate + outerDistanceStd + Kmer.getKmerLength(), candidateKmer, kmerIndex,
+                                Kmer.getKmerLength())) {
                             match = true;
                         }
                     }
@@ -407,9 +404,9 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
             int myLength = vertex.getKmerLength() - Kmer.getKmerLength() + 1;
             if (singleEnd) {
                 int numBasesToSkipStart = Math.max(0, walkLength - nodeOffset - MAX_READ_LENGTH);
-                return vertex.getFlippedReadIds().getOffSetRange(Integer.MIN_VALUE, myLength - numBasesToSkipStart);
+                return vertex.getFlippedReadIds().getOffSetRange(0, myLength - numBasesToSkipStart);
             } else {
-                int numBasesToSkipStart = walkLength - nodeOffset - MAX_OUTER_DISTANCE;
+                int numBasesToSkipStart = Math.max(0, walkLength - nodeOffset - MAX_OUTER_DISTANCE);
                 int numBasesToSkipEnd = walkLength - nodeOffset - MIN_OUTER_DISTANCE + MAX_READ_LENGTH;
                 return vertex.getFlippedReadIds().getOffSetRange(numBasesToSkipEnd, myLength - numBasesToSkipStart);
             }
@@ -464,8 +461,8 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         boolean equalPairedEdgeFound = false;
         boolean equalSingleEdgeFound = false;
         boolean dominantEdgeFound = false;
-        EDGETYPE[] searchETs = vertex.flippedFromInitialDirection ? INITIAL_DIRECTION.mirror().edgeTypes()
-                : INITIAL_DIRECTION.edgeTypes();
+        EDGETYPE[] searchETs = vertex.flippedFromInitialDirection ? DIR.REVERSE.edgeTypes()
+                : DIR.FORWARD.edgeTypes();
         for (EDGETYPE queryET : searchETs) {
             for (VKmer queryKmer : vertex.getEdges(queryET)) {
                 queryIndex++;

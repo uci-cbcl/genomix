@@ -49,7 +49,7 @@ public class RayScores implements Writable {
         if (!scores.containsKey(queryKey)) {
             return false;
         } else if (!scores.containsKey(targetKey)) {
-            scores.put(targetKey, new Rules());  // fill all rules with 0
+            scores.put(targetKey, new Rules());  // fill all rules with 0 // TODO what will 0 mean for ruleC?
         }
         Rules queryRule = scores.get(queryKey);
         Rules targetRule = scores.get(targetKey);
