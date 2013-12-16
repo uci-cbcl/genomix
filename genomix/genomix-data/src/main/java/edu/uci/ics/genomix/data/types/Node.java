@@ -567,10 +567,11 @@ public class Node implements Writable, Serializable {
 
     public void mergeWithNodeUsingTruncatedKmer(EDGETYPE edgeType, Node other) {
         mergeEdges(edgeType, other);
-        mergeUnflippedAndFlippedReadIDs(edgeType, other);
+        int otherLength = other.internalKmer.getKmerLetterLength() + Kmer.getKmerLength() - 1;
+        mergeUnflippedAndFlippedReadIDs(edgeType, other, otherLength);
 
         // only the non-overlapping portions of the kmer were sent-- coverage and kmer merge handled differently as a result
-        mergeCoverage(other, other.internalKmer.getKmerLetterLength() + Kmer.getKmerLength() - 1);
+        mergeCoverage(other, otherLength);
         getInternalKmer().mergeWithKmerInDir(edgeType, 1, other.getInternalKmer());
     }
 
@@ -725,8 +726,12 @@ public class Node implements Writable, Serializable {
     }
 
     protected void mergeUnflippedAndFlippedReadIDs(EDGETYPE edgeType, Node other) {
-        int K = Kmer.getKmerLength();
         int otherLength = other.internalKmer.lettersInKmer;
+        mergeUnflippedAndFlippedReadIDs(edgeType, other, otherLength);
+    }
+    
+    protected void mergeUnflippedAndFlippedReadIDs(EDGETYPE edgeType, Node other, int otherLength) {
+        int K = Kmer.getKmerLength();
         int thisLength = internalKmer.lettersInKmer;
         int newOtherOffset, newThisOffset;
         switch (edgeType) {
