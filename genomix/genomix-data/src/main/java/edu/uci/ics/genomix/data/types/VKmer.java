@@ -781,6 +781,17 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
     public static int indexOfRangeQuery(VKmer pattern, int pStart, int pEnd, VKmer master, int mStart, int mEnd)
             throws IOException {
 
+        if ((pStart > pEnd) || (mStart > mEnd)) {
+            throw new IOException("index Start can't exceed index End!");
+        }
+        if ((pStart < 0) || (mStart < 0) || (pEnd >= pattern.getKmerLetterLength())
+                || (mEnd >= master.getKmerLetterLength())) {
+            throw new IOException("index Start can't be less than 0, or index End can't exceed the kmer length!");
+        }
+        if((pEnd - pStart) > (mEnd - mStart)){
+            throw new IOException("sdfsdf");
+        }
+        
         int subPsize = pEnd - pStart + 1;
         int subMSize = mEnd - mStart + 1;
         int[] failureSet = computeFailureSetWithRange(pattern, subPsize, pStart, pEnd);
