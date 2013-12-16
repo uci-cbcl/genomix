@@ -461,8 +461,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         boolean equalPairedEdgeFound = false;
         boolean equalSingleEdgeFound = false;
         boolean dominantEdgeFound = false;
-        EDGETYPE[] searchETs = vertex.flippedFromInitialDirection ? DIR.REVERSE.edgeTypes()
-                : DIR.FORWARD.edgeTypes();
+        EDGETYPE[] searchETs = vertex.flippedFromInitialDirection ? DIR.REVERSE.edgeTypes() : DIR.FORWARD.edgeTypes();
         for (EDGETYPE queryET : searchETs) {
             for (VKmer queryKmer : vertex.getEdges(queryET)) {
                 queryIndex++;
