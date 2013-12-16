@@ -746,6 +746,7 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
         return indexOf(this, pattern);
     }
 
+
     /**
      * use KMP to fast detect whether master Vkmer contain pattern (only detect the first position which pattern match);
      * if true return index, otherwise return -1;
@@ -777,6 +778,31 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
         }
     }
 
+    public static int indexOfRangeQuery(VKmer pattern, int pStart, int pEnd, VKmer master, int mStart, int mEnd)
+            throws IOException {
+
+        int subPsize = pEnd - pStart + 1;
+        int subMSize = mEnd - mStart + 1;
+        int[] failureSet = computeFailureSetWithRange(pattern, subPsize, pStart, pEnd);
+        int p = 0;
+        int m = 0;
+        while (p < subPsize && m < subMSize) {
+            if (pattern.getGeneCodeAtPosition(p + pStart) == master.getGeneCodeAtPosition(m + mStart)) {
+                p++;
+                m++;
+            } else if (p == 0) {
+                m++;
+            } else {
+                p = failureSet[p - 1] + 1;
+            }
+        }
+        if (p < subPsize) {
+            return -1;
+        } else {
+            return m + mStart - subPsize;
+        }
+    }
+
     /**
      * compute the failure function of KMP algorithm
      * 
@@ -801,6 +827,8 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
         return failureSet;
     }
 
+ 
+
     /**
      * return the fractional difference between the given kmers. This is the edit distance divided by the smaller length.
      * Note: the fraction may be larger than 1 (when the edit distance is larger than the kmer)
@@ -820,7 +848,7 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
             return fracDissimilar(this, reverseKmer);
         }
     }
-    
+
     public float editDistance(boolean sameOrientation, VKmer other) {
         if (sameOrientation)
             return editDistance(this, other);
@@ -842,14 +870,14 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
         }
         return c.compare(getBlockBytes(), getBlockOffset(), getLength(), other.getBytes(), 0, other.getLength());
     }
-    
-    public static VKmer reverse(VKmer other){
+
+    public static VKmer reverse(VKmer other) {
         String reverse = other.toString(); // TODO don't use toString here (something more efficient?)
         VKmer reverseKmer = new VKmer();
         reverseKmer.setReversedFromStringBytes(reverse.length(), reverse.getBytes(), 0);
         return reverseKmer;
-    }   
-    
+    }
+
     public VKmer reverse() {
         return reverse(this);
     }
