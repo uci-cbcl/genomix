@@ -746,7 +746,10 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
         return indexOf(this, pattern);
     }
 
-
+    public int indexOfRangeQuery(VKmer pattern, int pStart, int pEnd, int mStart, int mEnd) throws IOException{
+        return indexOfRangeQuery(pattern, pStart, pEnd, this, mStart, mEnd);
+    }
+    
     /**
      * use KMP to fast detect whether master Vkmer contain pattern (only detect the first position which pattern match);
      * if true return index, otherwise return -1;
