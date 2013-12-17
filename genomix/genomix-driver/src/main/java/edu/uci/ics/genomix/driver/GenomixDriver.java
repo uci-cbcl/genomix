@@ -36,6 +36,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.Counters;
 import org.apache.hadoop.mapred.Counters.Counter;
+import org.apache.hadoop.mapred.Counters.Group;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.JobConf;
@@ -101,23 +102,44 @@ public class GenomixDriver {
     private void setMinScaffoldingSeedLength(GenomixJobConf conf) throws IOException {
         Counters counters = GraphStatistics.run(curOutput, curOutput + "-kmerLength-stats", conf);
         long totalNodes = counters.getGroup("totals").getCounter("nodes");
-        float percentage = 0.2f; // TODO Should it provide by user?
+        float fraction = 0.01f; // TODO Should it provide by user?
         long numOfSeeds;
         // minimum number of nodes is 100
-        if (Math.abs((float) totalNodes * percentage) < 100) 
-            numOfSeeds = (long) Math.abs((float) totalNodes * percentage);
+        if (Math.round((float) totalNodes * fraction) > 100) 
+            numOfSeeds = (long) Math.round((float) totalNodes * fraction);
         else
             numOfSeeds = 100;
 
+        // sort counters
+        ArrayList<Long> sortedCounter = new ArrayList<Long>();
+        int maxLength = sortCounter(counters.getGroup("kmerLength-bins"), sortedCounter);
         long curNumOfSeeds = 0;
-        for (Counter c : counters.getGroup("kmerLength-bins")) {
-            curNumOfSeeds += c.getValue();
+        for(int i = sortedCounter.size() - 1; i >= 0; i--){
+            curNumOfSeeds += sortedCounter.get(i);
             if (curNumOfSeeds > numOfSeeds) {
-                conf.setInt(GenomixJobConf.MIN_SCAFFOLDING_SEED_LENGTH, Integer.parseInt(c.getName()));
+                conf.setInt(GenomixJobConf.MIN_SCAFFOLDING_SEED_LENGTH, maxLength - i);
                 return;
             }
         }
         throw new IllegalStateException("It is impossible to reach here!");
+    }
+    
+    private int sortCounter(Group group, ArrayList<Long> sortedCounter){
+        int minLength = 0;
+        int maxLength = 0;
+        for(Counter c : group){
+            if(minLength > Integer.parseInt(c.getName()))
+                minLength = Integer.parseInt(c.getName());
+            if(maxLength < Integer.parseInt(c.getName()))
+                maxLength = Integer.parseInt(c.getName());
+        }
+        
+        Long[] sortedCounterArray = new Long[maxLength - minLength + 1];
+        for(Counter c : group){
+            sortedCounterArray[Integer.parseInt(c.getName()) - minLength] = c.getValue();
+        }
+        sortedCounter = (ArrayList<Long>)Arrays.asList(sortedCounterArray);
+        return maxLength;
     }
 
     private void addStep(GenomixJobConf conf, Patterns step) throws Exception {
