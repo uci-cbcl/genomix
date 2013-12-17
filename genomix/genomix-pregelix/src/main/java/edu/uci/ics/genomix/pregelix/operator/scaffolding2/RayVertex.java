@@ -267,9 +267,9 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         // get the smallest kmer in all the messages I've received
         // since the candidates may be of different lengths, we have to use the shortest candidate
         // that way, long candidates don't receive higher scores simply for being long
-        int minLength = msgs.get(0).getWalkIds().getPosition(0).getKmerLetterLength();
+        int minLength = msgs.get(0).getToScoreKmer().getKmerLetterLength();
         for (int i = 1; i < msgs.size(); i++) {
-            minLength = Math.min(minLength, msgs.get(i).getWalkIds().getPosition(0).getKmerLetterLength());
+            minLength = Math.min(minLength, msgs.get(i).getToScoreKmer().getKmerLetterLength());
         }
         minLength = minLength - Kmer.getKmerLength() + 1;
 
