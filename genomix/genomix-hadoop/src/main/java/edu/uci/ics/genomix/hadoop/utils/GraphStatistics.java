@@ -134,22 +134,25 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
     /**
      * run a map-reduce job on the given input graph and return an array of coverage
      */
-    public static double getCoverageStats(Counters jobCounters, ArrayList<Double> result) {
-        double maxCoverage = 0;
+    public static float[] getCoverageStats(Counters jobCounters, Float maxCoverage) {
+        ArrayList<Float> resultArrayList = new ArrayList<Float>();
         // get Coverage counter
         for (Group g : jobCounters) {
             if (g.getName().equals("coverage-bins")) {
                 for (Counter c : g) {
-                    double cov = Double.parseDouble(c.getName());
+                    float cov = Float.parseFloat(c.getName());
                     if (maxCoverage < cov)
                         maxCoverage = cov;
                     for (long i = 0; i < c.getValue(); i++) {
-                        result.add((double)cov);
+                        resultArrayList.add(cov);
                     }
                 }
             }
         }
-        return maxCoverage;
+        float[] resultArray = new float[resultArrayList.size()];
+        for(int i = 0; i < resultArrayList.size(); i++)
+            resultArray[i] = resultArrayList.get(i);
+        return resultArray;
     }
 
     /**
