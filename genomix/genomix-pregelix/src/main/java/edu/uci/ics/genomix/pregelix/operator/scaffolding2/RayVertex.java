@@ -72,7 +72,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
      */
     private boolean isStartSeed() {
         // TODO Auto-generated method stub
-        return getVertexId().toString().equals("AGGTCC");
+        return getVertexId().toString().equals("CTCTTCTTACCAC");
     }
 
     /**
@@ -480,6 +480,8 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
     private void compareScoresAndPrune(ArrayList<RayMessage> msgs) {
         VKmer id = getVertexId();
         RayValue vertex = getVertexValue();
+        
+        // TODO check if I'm supposed to stop!  if so, don't do anything here.
 
         // aggregate scores and walk info from all msgs
         singleEndScores.clear();
