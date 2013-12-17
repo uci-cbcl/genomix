@@ -112,7 +112,7 @@ public class GenomixDriver {
 
         // sort counters
         ArrayList<Long> sortedCounter = new ArrayList<Long>();
-        int maxLength = sortCounter(counters.getGroup("kmerLength-bins"), sortedCounter);
+        int maxLength = sortCounters(counters.getGroup("kmerLength-bins"), sortedCounter);
         long curNumOfSeeds = 0;
         for (int i = sortedCounter.size() - 1; i >= 0; i--) {
             curNumOfSeeds += sortedCounter.get(i);
@@ -123,8 +123,9 @@ public class GenomixDriver {
         }
         throw new IllegalStateException("It is impossible to reach here!");
     }
-
-    private int sortCounter(Group group, ArrayList<Long> sortedCounter) {
+    
+    // bucket sort to sort Counters
+    private int sortCounters(Group group, ArrayList<Long> sortedCounter) {
         int minLength = 0;
         int maxLength = 0;
         for (Counter c : group) {
@@ -138,7 +139,9 @@ public class GenomixDriver {
         for (Counter c : group) {
             sortedCounterArray[Integer.parseInt(c.getName()) - minLength] = c.getValue();
         }
-        sortedCounter = (ArrayList<Long>) Arrays.asList(sortedCounterArray);
+        
+        for(int i = 0; i < sortedCounterArray.length; i++)
+            sortedCounter.set(i, sortedCounterArray[i]);
         return maxLength;
     }
 
