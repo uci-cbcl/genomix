@@ -186,9 +186,6 @@ public class GenomixJobConf extends JobConf {
 
         @Option(name = "-runAllStats", usage = "Whether or not to run a STATS job after each normal job")
         private boolean runAllStats = false;
-        
-        @Option(name = "-setMinScaffoldingSeedLength", usage = "Whether or not to automatically set min scaffolding seed length")
-        private boolean setMinScaffoldingSeedLength = false;
     }
 
     /**
@@ -287,7 +284,6 @@ public class GenomixJobConf extends JobConf {
     public static final String HDFS_WORK_PATH = "genomix.hdfs.work.path";
     public static final String EXTRA_CONF_FILES = "genomix.conf.extraConfFiles";
     public static final String RUN_ALL_STATS = "genomix.conf.runAllStats";
-    public static final String SET_MIN_SCAFFOLDING_SEED_LENGTH = "genomix.conf.setMinScaffoldingSeedLength";
     public static final String MIN_SCAFFOLDING_SEED_LENGTH = "genomix.conf.minScaffoldingSeedLength";
 
     // Graph cleaning   
@@ -584,7 +580,6 @@ public class GenomixJobConf extends JobConf {
         if (opts.extraConfFiles != null)
             set(EXTRA_CONF_FILES, opts.extraConfFiles);
         setBoolean(RUN_ALL_STATS, opts.runAllStats);
-        setBoolean(SET_MIN_SCAFFOLDING_SEED_LENGTH, opts.setMinScaffoldingSeedLength);
     }
 
     /**

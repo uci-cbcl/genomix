@@ -105,7 +105,7 @@ public class GenomixDriver {
         float fraction = 0.01f; // TODO Should it provide by user?
         long numOfSeeds;
         // minimum number of nodes is 100
-        if (Math.round((float) totalNodes * fraction) > 100) 
+        if (Math.round((float) totalNodes * fraction) > 100)
             numOfSeeds = (long) Math.round((float) totalNodes * fraction);
         else
             numOfSeeds = 100;
@@ -114,31 +114,31 @@ public class GenomixDriver {
         ArrayList<Long> sortedCounter = new ArrayList<Long>();
         int maxLength = sortCounter(counters.getGroup("kmerLength-bins"), sortedCounter);
         long curNumOfSeeds = 0;
-        for(int i = sortedCounter.size() - 1; i >= 0; i--){
+        for (int i = sortedCounter.size() - 1; i >= 0; i--) {
             curNumOfSeeds += sortedCounter.get(i);
             if (curNumOfSeeds > numOfSeeds) {
-                conf.setInt(GenomixJobConf.MIN_SCAFFOLDING_SEED_LENGTH, maxLength - i);
+                conf.setInt(GenomixJobConf.MIN_SCAFFOLDING_SEED_LENGTH, maxLength - (sortedCounter.size() - 1 - i));
                 return;
             }
         }
         throw new IllegalStateException("It is impossible to reach here!");
     }
-    
-    private int sortCounter(Group group, ArrayList<Long> sortedCounter){
+
+    private int sortCounter(Group group, ArrayList<Long> sortedCounter) {
         int minLength = 0;
         int maxLength = 0;
-        for(Counter c : group){
-            if(minLength > Integer.parseInt(c.getName()))
+        for (Counter c : group) {
+            if (minLength > Integer.parseInt(c.getName()))
                 minLength = Integer.parseInt(c.getName());
-            if(maxLength < Integer.parseInt(c.getName()))
+            if (maxLength < Integer.parseInt(c.getName()))
                 maxLength = Integer.parseInt(c.getName());
         }
-        
+
         Long[] sortedCounterArray = new Long[maxLength - minLength + 1];
-        for(Counter c : group){
+        for (Counter c : group) {
             sortedCounterArray[Integer.parseInt(c.getName()) - minLength] = c.getValue();
         }
-        sortedCounter = (ArrayList<Long>)Arrays.asList(sortedCounterArray);
+        sortedCounter = (ArrayList<Long>) Arrays.asList(sortedCounterArray);
         return maxLength;
     }
 
@@ -165,8 +165,7 @@ public class GenomixDriver {
             case MERGE_P4:
                 pregelixJobs.add(P4ForPathMergeVertex.getConfiguredJob(conf, P4ForPathMergeVertex.class));
                 flushPendingJobs(conf);
-                if (Boolean.parseBoolean(conf.get(GenomixJobConf.SET_MIN_SCAFFOLDING_SEED_LENGTH)))
-                    setMinScaffoldingSeedLength(conf);
+                setMinScaffoldingSeedLength(conf);
                 break;
             case UNROLL_TANDEM:
                 pregelixJobs.add(UnrollTandemRepeat.getConfiguredJob(conf, UnrollTandemRepeat.class));
