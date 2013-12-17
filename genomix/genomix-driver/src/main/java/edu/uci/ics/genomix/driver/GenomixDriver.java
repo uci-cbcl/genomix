@@ -54,6 +54,7 @@ import edu.uci.ics.genomix.hadoop.utils.ConvertToFasta;
 import edu.uci.ics.genomix.hadoop.utils.GraphStatistics;
 import edu.uci.ics.genomix.hyracks.graph.driver.GenomixHyracksDriver;
 import edu.uci.ics.genomix.hyracks.graph.driver.GenomixHyracksDriver.Plan;
+import edu.uci.ics.genomix.mixture.model.FittingMixture;
 import edu.uci.ics.genomix.pregelix.operator.bridgeremove.BridgeRemoveVertex;
 import edu.uci.ics.genomix.pregelix.operator.extractsubgraph.ExtractSubgraphVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.P1ForPathMergeVertex;
@@ -99,6 +100,25 @@ public class GenomixDriver {
         FileOutputFormat.setOutputPath(conf, new Path(curOutput));
     }
 
+    private void setCutoffCoverageByFittingMixture(GenomixJobConf conf) throws IOException {
+        Counters counters = GraphStatistics.run(curOutput, curOutput + "-cov-stats", conf);
+        GraphStatistics.drawCoverageStatistics(curOutput + "-cov-stats", counters, conf);
+        copyToLocalOutputDir(curOutput + "-cov-stats", conf);
+
+        ArrayList<Double> coverageData = new ArrayList<Double>();
+        double maxCoverage = GraphStatistics.getCoverageStats(counters, coverageData);
+        if (maxCoverage == 0 || coverageData.size() == 0)
+            throw new IllegalStateException("No information for coverage!");
+        long cutoffCoverage = (long) FittingMixture.fittingMixture(coverageData, maxCoverage, 30);
+
+        if (cutoffCoverage > 0) {
+            LOG.info("Set the cutoffCoverage to " + cutoffCoverage);
+            conf.setFloat(GenomixJobConf.REMOVE_LOW_COVERAGE_MAX_COVERAGE, cutoffCoverage);
+        } else {
+            LOG.info("The generated cutoffCoverage is " + cutoffCoverage + "! It's not set.");
+        }
+    }
+
     private void setMinScaffoldingSeedLength(GenomixJobConf conf) throws IOException {
         Counters counters = GraphStatistics.run(curOutput, curOutput + "-kmerLength-stats", conf);
         long totalNodes = counters.getGroup("totals").getCounter("nodes");
@@ -123,7 +143,7 @@ public class GenomixDriver {
         }
         throw new IllegalStateException("It is impossible to reach here!");
     }
-    
+
     // bucket sort to sort Counters
     private int sortCounters(Group group, ArrayList<Long> sortedCounter) {
         int minLength = 0;
@@ -139,20 +159,23 @@ public class GenomixDriver {
         for (Counter c : group) {
             sortedCounterArray[Integer.parseInt(c.getName()) - minLength] = c.getValue();
         }
-        
+
         sortedCounter.clear();
-        for(int i = 0; i < sortedCounterArray.length; i++)
+        for (int i = 0; i < sortedCounterArray.length; i++)
             sortedCounter.add(sortedCounterArray[i]);
         return maxLength;
     }
 
     private void addStep(GenomixJobConf conf, Patterns step) throws Exception {
         // oh, java, why do you pain me so?
+        Counters counters;
         switch (step) {
             case BUILD:
             case BUILD_HYRACKS:
                 flushPendingJobs(conf);
                 buildGraphWithHyracks(conf);
+                if (Boolean.parseBoolean(conf.get(GenomixJobConf.SET_CUTOFF_COVERAGE)))
+                    setCutoffCoverageByFittingMixture(conf);
                 break;
             case BUILD_HADOOP:
                 flushPendingJobs(conf);
@@ -235,7 +258,7 @@ public class GenomixDriver {
                 }
                 flushPendingJobs(conf);
                 curOutput = prevOutput + "-STATS";
-                Counters counters = GraphStatistics.run(prevOutput, curOutput, conf);
+                counters = GraphStatistics.run(prevOutput, curOutput, conf);
                 GraphStatistics.saveGraphStats(curOutput, counters, conf);
                 GraphStatistics.drawStatistics(curOutput, counters, conf);
                 GraphStatistics.getFastaStatsForGage(curOutput, counters, conf);
