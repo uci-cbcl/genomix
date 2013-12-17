@@ -140,6 +140,7 @@ public class GenomixDriver {
             sortedCounterArray[Integer.parseInt(c.getName()) - minLength] = c.getValue();
         }
         
+        sortedCounter.clear();
         for(int i = 0; i < sortedCounterArray.length; i++)
             sortedCounter.add(sortedCounterArray[i]);
         return maxLength;
