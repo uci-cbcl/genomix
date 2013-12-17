@@ -844,7 +844,7 @@ public class Node implements Writable, Serializable {
         return isPathNode() || (inDegree() == 0 && outDegree() == 1) || (inDegree() == 1 && outDegree() == 0);
     }
 
-    public boolean isUnflippedOrFlippedReadIds() {
+    public boolean hasUnflippedOrFlippedReadIds() {
         return (unflippedReadIds != null && unflippedReadIds.size() > 0)
                 || (flippedReadIds != null && flippedReadIds.size() > 0);
     }
