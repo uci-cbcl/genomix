@@ -104,8 +104,8 @@ public class GenomixDriver {
         long totalNodes = counters.getGroup("totals").getCounter("nodes");
         float fraction = 0.01f; // TODO Should it provide by user?
         long numOfSeeds;
-        // minimum number of nodes is 100
-        if (Math.round((float) totalNodes * fraction) > 100)
+        // maximum number of nodes is 100
+        if (Math.round((float) totalNodes * fraction) < 100)
             numOfSeeds = (long) Math.round((float) totalNodes * fraction);
         else
             numOfSeeds = 100;
@@ -141,7 +141,7 @@ public class GenomixDriver {
         }
         
         for(int i = 0; i < sortedCounterArray.length; i++)
-            sortedCounter.set(i, sortedCounterArray[i]);
+            sortedCounter.add(sortedCounterArray[i]);
         return maxLength;
     }
 
