@@ -135,7 +135,11 @@ public class ClientCounterContext implements IClusterCounterContext {
                 }
             }
         } catch (Exception e) {
-            throw new IllegalStateException(e);
+            if (e instanceof java.net.ConnectException) {
+                //ignore
+            } else {
+                throw new IllegalStateException(e);
+            }
         }
     }
 
