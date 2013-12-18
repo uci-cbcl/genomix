@@ -116,7 +116,7 @@ public class RandMergeOffsetTest {
                             buildExpectedResults(originStr, originFlipStr, true, kmerSize, kmerNum);
                         }
                         if (value.getFlippedReadIds().size() != 0) {
-                            for (ReadHeadInfo iter : value.getFlippedReadIds().getOffSetRange(0, 6)) {
+                            for (ReadHeadInfo iter : value.getFlippedReadIds().getOffSetRange(0, kmerNum)) {
                                 if (expectedReadHeadOffset.containsKey((int) iter.getReadId())) {
                                     int expectedOffset = expectedReadHeadOffset.get((int) iter.getReadId());
                                     Assert.assertEquals(expectedOffset, iter.getOffset());
@@ -126,7 +126,7 @@ public class RandMergeOffsetTest {
                             }
                         }
                         if (value.getUnflippedReadIds().size() != 0) {
-                            for (ReadHeadInfo iter : value.getUnflippedReadIds().getOffSetRange(0, 6)) {
+                            for (ReadHeadInfo iter : value.getUnflippedReadIds().getOffSetRange(0, kmerNum)) {
                                 if (expectedReadHeadOffset.containsKey((int) iter.getReadId())) {
                                     int expectedOffset = expectedReadHeadOffset.get((int) iter.getReadId());
                                     Assert.assertEquals(expectedOffset, iter.getOffset());
