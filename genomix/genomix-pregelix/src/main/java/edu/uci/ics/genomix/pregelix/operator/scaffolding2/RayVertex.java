@@ -27,6 +27,7 @@ import edu.uci.ics.pregelix.api.job.PregelixJob;
 
 public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
     private static DIR INITIAL_DIRECTION;
+    private static int MIN_SCAFFOLDING_SEED_LENGTH;
     private static boolean HAS_PAIRED_END_READS;
     private static int MAX_READ_LENGTH;
     private static int MAX_OUTER_DISTANCE;
@@ -43,6 +44,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         initVertex();
         // TODO maybe have FORWARD and REVERSE happening at the same time?
         INITIAL_DIRECTION = DIR.valueOf(conf.get(GenomixJobConf.SCAFFOLDING_INITIAL_DIRECTION));
+        MIN_SCAFFOLDING_SEED_LENGTH = Integer.parseInt(GenomixJobConf.MIN_SCAFFOLDING_SEED_LENGTH);
         HAS_PAIRED_END_READS = GenomixJobConf.outerDistanceMeans != null;
         MAX_READ_LENGTH = Integer.MIN_VALUE;
         MAX_OUTER_DISTANCE = Integer.MIN_VALUE;
@@ -74,8 +76,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
      * @return whether or not this node meets the "seed" criteria
      */
     private boolean isStartSeed() {
-        // TODO Auto-generated method stub
-        return getVertexId().toString().equals("CTCTTCTTACCAC");
+        return getVertexValue().getKmerLength() >= MIN_SCAFFOLDING_SEED_LENGTH;
     }
 
     /**
@@ -490,7 +491,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
     private void compareScoresAndPrune(ArrayList<RayMessage> msgs) {
         VKmer id = getVertexId();
         RayValue vertex = getVertexValue();
-        
+
         if (vertex.stopSearch) {
             // one of my candidate nodes was already visited by a different walk
             // I can't proceed with the prune and I have to stop the search entirely :(
@@ -613,7 +614,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         job.setVertexOutputFormatClass(RayVertexToNodeOutputFormat.class);
         return job;
     }
-    
+
     public Logger LOG = Logger.getLogger(RayVertex.class.getName());
 
 }
