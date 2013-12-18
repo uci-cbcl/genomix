@@ -1,4 +1,4 @@
-package edu.uci.ics.genomix.driver.randommerge;
+package edu.uci.ics.genomix.driver.pipelinetests;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -11,7 +11,7 @@ import org.apache.commons.io.FileUtils;
 import edu.uci.ics.genomix.data.types.Kmer;
 import edu.uci.ics.genomix.hyracks.graph.driver.GenomixHyracksDriver;
 
-public class GenRandomNodeForMerging {
+public class GenRandMultiReadForMergOffset {
 
     private static final char[] symbols = new char[4];
     private static final Logger LOG = Logger.getLogger(GenomixHyracksDriver.class.getName());
@@ -38,7 +38,7 @@ public class GenRandomNodeForMerging {
     private KmerDir curKmerDir = KmerDir.FORWARD;
     private String targetPath;
 
-    public GenRandomNodeForMerging(int kmerSize, int kmerNum) {
+    public GenRandMultiReadForMergOffset(int kmerSize, int kmerNum) {
         if (kmerNum < 1)
             throw new IllegalArgumentException("length < 1: " + kmerNum);
         buf = new char[kmerSize + kmerNum - 1];
@@ -51,7 +51,7 @@ public class GenRandomNodeForMerging {
         targetPath = "randommerge" + File.separator + "randommergeseq.fastq";
     }
 
-    public void generateString() {
+    public String generateString() {
         String tmp = "";
         int count = 4;
         LOG.info("Begin to generate string !");
@@ -91,6 +91,7 @@ public class GenRandomNodeForMerging {
                 idx++;
         }
         LOG.info("End to generate string !");
+        return new String(buf);
     }
 
     public void writeToDisk() throws IOException {
