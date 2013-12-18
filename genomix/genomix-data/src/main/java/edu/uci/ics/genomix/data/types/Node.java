@@ -850,6 +850,7 @@ public class Node implements Writable, Serializable {
     }
 
     public int calculateSeedScore() {
-        return getKmerLength() * (getUnflippedReadIds().size() + getFlippedReadIds().size());
+        int length = getKmerLength() == 0 ? Kmer.getKmerLength() : getKmerLength(); 
+        return length * (getUnflippedReadIds().size() + getFlippedReadIds().size());
     }
 }
