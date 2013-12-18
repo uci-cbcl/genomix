@@ -85,6 +85,7 @@ public class GenomixDriver {
     private String curOutput;
     private int stepNum;
     private List<PregelixJob> pregelixJobs;
+    Counters prevStatsCounters = null;
     private boolean runLocal = false;
     private int threadsPerMachine;
     private int numMachines;
@@ -143,7 +144,8 @@ public class GenomixDriver {
             if (sortedCounter.get(i) != null)
                 curNumOfSeeds += sortedCounter.get(i);
             if (curNumOfSeeds > numOfSeeds) {
-                conf.setInt(GenomixJobConf.SCAFFOLDING_SEED_LENGTH_THRESHOLD, maxLength - (sortedCounter.size() - 1 - i));
+                conf.setInt(GenomixJobConf.SCAFFOLDING_SEED_LENGTH_THRESHOLD, maxLength
+                        - (sortedCounter.size() - 1 - i));
                 return;
             }
         }
@@ -174,7 +176,6 @@ public class GenomixDriver {
 
     private void addStep(GenomixJobConf conf, Patterns step) throws Exception {
         // oh, java, why do you pain me so?
-        Counters prevStatsCounters = null;
         switch (step) {
             case BUILD:
             case BUILD_HYRACKS:
@@ -219,9 +220,14 @@ public class GenomixDriver {
                 pregelixJobs.add(BridgeRemoveVertex.getConfiguredJob(conf, BridgeRemoveVertex.class));
                 break;
             case RAY_SCAFFOLD:
-                if (!prevOutput.endsWith("-STATS")) {
-                    // need up-to-date stats before we can run
-                    prevStatsCounters = runStatsJob(conf);
+                throw new IllegalStateException(
+                        "RAY_SCAFFOLD should have been expanded to RAY_SCAFFOLD_FORWARD and *_REVERSE!");
+            case RAY_SCAFFOLD_FORWARD:
+            case RAY_SCAFFOLD_REVERSE:
+                if (step == Patterns.RAY_SCAFFOLD_FORWARD) {
+                    conf.set(GenomixJobConf.SCAFFOLDING_INITIAL_DIRECTION, DIR.FORWARD.toString());
+                } else {
+                    conf.set(GenomixJobConf.SCAFFOLDING_INITIAL_DIRECTION, DIR.REVERSE.toString());
                 }
                 Float scorePercentile = conf.getFloat(GenomixJobConf.SCAFFOLD_SEED_SCORE_PERCENTILE, -1);
                 Float lengthPercentile = conf.getFloat(GenomixJobConf.SCAFFOLD_SEED_LENGTH_PERCENTILE, -1);
@@ -236,13 +242,8 @@ public class GenomixDriver {
                     conf.setInt(GenomixJobConf.SCAFFOLDING_SEED_LENGTH_THRESHOLD,
                             RayVertex.calculateScoreThreshold(prevStatsCounters, topFraction, topCount));
                 }
-                
-                
                 conf.setFloat(GenomixJobConf.COVERAGE_NORMAL_MEAN, (float) cur_normalMean);
                 conf.setFloat(GenomixJobConf.COVERAGE_NORMAL_STD, (float) cur_normalStd);
-                conf.set(GenomixJobConf.SCAFFOLDING_INITIAL_DIRECTION, DIR.FORWARD.toString());
-                pregelixJobs.add(RayVertex.getConfiguredJob(conf, RayVertex.class));
-                conf.set(GenomixJobConf.SCAFFOLDING_INITIAL_DIRECTION, DIR.REVERSE.toString());
                 pregelixJobs.add(RayVertex.getConfiguredJob(conf, RayVertex.class));
                 break;
             case DUMP_FASTA:
@@ -386,7 +387,7 @@ public class GenomixDriver {
                     pregelixDriver.runJob(pregelixJobs.get(i), masterIP, pregelixPort);
 
                     LOG.info("Finished job " + pregelixJobs.get(i).getJobName() + " in "
-                            + GenomixJobConf.tock("pregelix-job"));
+                            + GenomixJobConf.tock("pregelix-job") + "ms");
                 }
                 LOG.info("Finished job series in " + GenomixJobConf.tock("pregelix-runJob-one-by-one"));
             } else {
@@ -439,15 +440,35 @@ public class GenomixDriver {
         // currently, we just iterate over the jobs set in conf[PIPELINE_ORDER].  In the future, we may want more logic to iterate multiple times, etc
         String pipelineSteps = conf.get(GenomixJobConf.PIPELINE_ORDER);
         List<Patterns> allPatterns = new ArrayList<>(Arrays.asList(Patterns.arrayFromString(pipelineSteps)));
+
+        // break up SCAFFOLD into FORWARD and REVERSE steps and insert STATS and MERGE between jobs
+        for (int i = 0; i < allPatterns.size(); i++) {
+            if (allPatterns.get(i) == Patterns.RAY_SCAFFOLD) {
+                if (i == 0 || allPatterns.get(i - 1) != Patterns.STATS) {
+                    allPatterns.set(i, Patterns.STATS);
+                    i++;
+                } else {
+                    allPatterns.remove(i);
+                }
+                // replace
+                allPatterns.add(i, Patterns.RAY_SCAFFOLD_FORWARD);
+                allPatterns.add(i + 1, Patterns.MERGE);
+                allPatterns.add(i + 2, Patterns.STATS);
+                allPatterns.add(i + 3, Patterns.RAY_SCAFFOLD_REVERSE);
+            }
+        }
+
         if (Boolean.parseBoolean(conf.get(GenomixJobConf.RUN_ALL_STATS))) {
             // insert a STATS step between all jobs that mutate the graph
             for (int i = 0; i < allPatterns.size(); i++) {
-                if (Patterns.mutatingJobs.contains(allPatterns.get(i))) {
+                if (((i + 1) == allPatterns.size() || allPatterns.get(i + 1) != Patterns.STATS)
+                        && Patterns.mutatingJobs.contains(allPatterns.get(i))) {
                     allPatterns.add(i + 1, Patterns.STATS);
                     i++; // skip the STATS job we just added
                 }
             }
         }
+
         for (Patterns step : allPatterns) {
             stepNum++;
             setOutput(conf, step);
