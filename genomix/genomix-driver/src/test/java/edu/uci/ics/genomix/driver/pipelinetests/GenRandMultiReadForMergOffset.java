@@ -95,21 +95,18 @@ public class GenRandMultiReadForMergOffset {
     }
 
     public void writeToDisk() throws IOException {
-        System.out.println("-----------------------");
-        System.out.println("the original sequence is:" + String.valueOf(buf));
         String[] reads = new String[this.kmerNum - 1];
         for (int i = 0; i < this.kmerNum - 1; i++) {
             reads[i] = new String(buf, i, k + 1);
         }
+        File file = new File(targetPath);
         BufferedWriter writer = null;
+        file.getParentFile().mkdirs();
         writer = new BufferedWriter(new FileWriter(targetPath));
-        System.out.println("-----------------------");
         for (int i = 0; i < reads.length; i++) {
             writer.write(i + "\t" + reads[i]);
-            System.out.println("read: " + i + "\t" + reads[i]);
             writer.newLine();
         }
-        System.out.println("-----------------------");
         writer.close();
     }
 

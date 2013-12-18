@@ -103,8 +103,6 @@ public class RandMergeOffsetTest {
                     while (reader.next(key, value)) {
                         if (key == null || value == null)
                             throw new Exception("the results of key-value pair can not be null! ");
-                        //                        System.out.println(key.toString());
-                        //                        System.out.println(value.toString());
                         String actualMergeStr = value.getInternalKmer().toString();
                         String originFlipStr = getFlippedGeneStr(originStr);
                         if (originStr.equals(actualMergeStr)) {
@@ -147,10 +145,10 @@ public class RandMergeOffsetTest {
         GenRandMultiReadForMergOffset test = new GenRandMultiReadForMergOffset(5, 6);
         String originStr = test.generateString();
         test.writeToDisk();
-        String[] randmergePressureArgs = { "-runLocal", "-kmerLength", String.valueOf(5), "-readLengths",
-                String.valueOf(6), "-saveIntermediateResults", "-localInput", test.getTestDir(), "-localOutput",
-                "output", "-pipelineOrder", "BUILD_HYRACKS,MERGE" };
-        GenomixDriver.main(randmergePressureArgs);
+//        String[] randmergePressureArgs = { "-runLocal", "-kmerLength", String.valueOf(5), "-readLengths",
+//                String.valueOf(6), "-saveIntermediateResults", "-localInput", test.getTestDir(), "-localOutput",
+//                "output", "-pipelineOrder", "BUILD_HYRACKS,MERGE" };
+//        GenomixDriver.main(randmergePressureArgs);
         return originStr;
     }
 
