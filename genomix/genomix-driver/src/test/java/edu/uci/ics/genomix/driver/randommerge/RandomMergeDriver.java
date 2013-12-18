@@ -48,14 +48,18 @@ public class RandomMergeDriver {
         }
     }
 
+    public static void runPipeLine(String[] args) throws NumberFormatException, Exception {
+        GenRandomNodeForMerging test = new GenRandomNodeForMerging(5, 6);
+        test.generateString();
+        test.writeToDisk();
+        String[] randmergePressureArgs = { "-runLocal", "-kmerLength", String.valueOf(5), "-readLengths",
+                String.valueOf(6), "-saveIntermediateResults", "-localInput", test.getTestDir(), "-localOutput",
+                "output", "-pipelineOrder", "BUILD_HYRACKS,MERGE" };
+        GenomixDriver.main(randmergePressureArgs);
+    }
+
     public static void main(String[] args) throws NumberFormatException, Exception {
-//        GenRandomNodeForMerging test = new GenRandomNodeForMerging(5, 6);
-//        test.generateString();
-//        test.writeToDisk();
-//        String[] randmergePressureArgs = { "-runLocal", "-kmerLength", String.valueOf(5), "-readLengths",
-//                String.valueOf(6), "-saveIntermediateResults", "-localInput", test.getTestDir(), "-localOutput",
-//                "output", "-pipelineOrder", "BUILD_HYRACKS,MERGE" };
-//        GenomixDriver.main(randmergePressureArgs);
+        runPipeLine(args);
         readSequenceFile("output/FINAL-02-MERGE/bin");
         System.out.println("complete!");
     }
