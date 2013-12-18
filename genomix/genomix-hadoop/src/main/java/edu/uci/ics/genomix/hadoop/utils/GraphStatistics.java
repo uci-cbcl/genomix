@@ -131,13 +131,48 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
         return job.getCounters();
     }
 
+    public static double getMaxCoverage(Counters jobCounters){
+        double maxCoverage = 0;
+        for (Group g : jobCounters) {
+            if (g.getName().equals("coverage-bins")) {
+                for (Counter c : g) {
+                    double cov = Double.parseDouble(c.getName());
+                    if (maxCoverage < cov)
+                        maxCoverage = cov;
+                }
+            }
+        }
+        return maxCoverage;
+    }
+    /**
+     * run a map-reduce job on the given input graph and return an array of coverage
+     */
+    public static double[] getCoverageStats(Counters jobCounters) {
+        ArrayList<Double> resultArrayList = new ArrayList<Double>();
+        // get Coverage counter
+        for (Group g : jobCounters) {
+            if (g.getName().equals("coverage-bins")) {
+                for (Counter c : g) {
+                    double cov = Double.parseDouble(c.getName());
+                    for (long i = 0; i < c.getValue(); i++) {
+                        resultArrayList.add(cov);
+                    }
+                }
+            }
+        }
+        double[] resultArray = new double[resultArrayList.size()];
+        for(int i = 0; i < resultArrayList.size(); i++)
+            resultArray[i] = resultArrayList.get(i);
+        return resultArray;
+    }
+
     /**
      * run a map-reduce job on the given input graph and save a simple text file of the relevant counters
      */
     public static void saveGraphStats(String outputDir, Counters jobCounters, GenomixJobConf conf) throws IOException {
         // get relevant counters
 
-        TreeMap<String, Long> sortedCounters = new TreeMap<String, Long>();
+        TreeMap<String, Long> sortedCounters = new TreeMap<String, Long>(); 
         for (Group g : jobCounters) {
             if (!g.getName().endsWith("-bins")) {
                 for (Counter c : g) {
@@ -155,7 +190,50 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
         }
         writer.close();
     }
+    
+    public static void drawCoverageStatistics(String outputDir, Counters jobCounters, GenomixJobConf conf) throws IOException {
+        HashMap<String, TreeMap<Integer, Long>> allHists = new HashMap<String, TreeMap<Integer, Long>>();
+        TreeMap<Integer, Long> curCounts;
 
+        // build up allHists to be {coverage : {1: 50, 2: 20, 3:5}, kmerLength : {55: 100}, ...}
+        for (Group g : jobCounters) {
+            if (g.getName().equals("coverage-bins") || g.getName().equals("kmerLength-bins")) {
+                String baseName = g.getName().replace("-bins", "");
+                if (allHists.containsKey(baseName)) {
+                    curCounts = allHists.get(baseName);
+                } else {
+                    curCounts = new TreeMap<Integer, Long>();
+                    allHists.put(baseName, curCounts);
+                }
+                for (Counter c : g) { // counter name is the X value of the histogram; its count is the Y value
+                    Integer X = Integer.parseInt(c.getName());
+                    if (curCounts.get(X) != null) {
+                        curCounts.put(X, curCounts.get(X) + c.getCounter());
+                    } else {
+                        curCounts.put(X, c.getCounter());
+                    }
+                }
+            }
+        }
+
+        for (String graphType : allHists.keySet()) {
+            curCounts = allHists.get(graphType);
+            XYSeries series = new XYSeries(graphType);
+            for (Entry<Integer, Long> pair : curCounts.entrySet()) {
+                series.add(pair.getKey().floatValue(), pair.getValue().longValue());
+            }
+            XYSeriesCollection xyDataset = new XYSeriesCollection(series);
+            JFreeChart chart = ChartFactory.createXYBarChart(graphType, graphType, false, "Count", xyDataset,
+                    PlotOrientation.VERTICAL, true, true, false);
+            // Write the data to the output stream:
+            FileSystem fileSys = FileSystem.get(conf);
+            FSDataOutputStream outstream = fileSys.create(
+                    new Path(outputDir + File.separator + graphType + "-hist.png"), true);
+            ChartUtilities.writeChartAsPNG(outstream, chart, 800, 600);
+            outstream.close();
+        }
+    }
+    
     /**
      * generate a histogram from the *-bins values
      * for example, the coverage counters have the group "coverage-bins", the counter name "5" and the count 10
