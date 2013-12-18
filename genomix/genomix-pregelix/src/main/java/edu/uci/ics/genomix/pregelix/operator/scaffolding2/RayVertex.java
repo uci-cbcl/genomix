@@ -635,24 +635,25 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         if ((topFraction == null && topNumber == null) || (topFraction != null && topNumber != null)) {
             throw new IllegalArgumentException("Please specify either topFraction or topNumber, but not both!");
         }
-        TreeMap<Integer, Long> curCounts = new TreeMap<>();
-        int total = 0, count = 0;
+        TreeMap<Integer, Long> scoreHistogram = new TreeMap<>();
+        int total = 0;
         for (Counter c : statsCounters.getGroup("scaffoldSeedScore-bins")) { // counter name is index; counter value is the count for this index
             Integer X = Integer.parseInt(c.getName());
-            if (curCounts.get(X) != null) {
-                curCounts.put(X, curCounts.get(X) + c.getCounter());
+            if (scoreHistogram.get(X) != null) {
+                scoreHistogram.put(X, scoreHistogram.get(X) + c.getCounter());
             } else {
-                curCounts.put(X, c.getCounter());
+                scoreHistogram.put(X, c.getCounter());
             }
             total += c.getCounter();
-            count++;
         }
-        long numSeen = 0;
+        
         if (topNumber == null) {
-            topNumber = (int) (count * topFraction);
+            topNumber = (int) (total * topFraction);
         }
+
+        long numSeen = 0;
         Integer lastSeen = null;
-        for (Entry<Integer, Long> e : curCounts.descendingMap().entrySet()) {
+        for (Entry<Integer, Long> e : scoreHistogram.descendingMap().entrySet()) {
             numSeen += e.getValue();
             lastSeen = e.getKey();
             if (numSeen >= topNumber) {

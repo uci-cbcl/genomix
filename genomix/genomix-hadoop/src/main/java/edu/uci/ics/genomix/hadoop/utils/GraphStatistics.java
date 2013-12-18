@@ -82,7 +82,7 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
         updateStats("flippedReadIds", value.getFlippedReadIds().size());
         
         float coverage = value.getAverageCoverage();
-        if (coverage > COVERAGE_DIST_MEAN - COVERAGE_DIST_STD && coverage < COVERAGE_DIST_MEAN + COVERAGE_DIST_STD) {
+        if (coverage >= COVERAGE_DIST_MEAN - COVERAGE_DIST_STD && coverage <= COVERAGE_DIST_MEAN + COVERAGE_DIST_STD) {
             updateStats("scaffoldSeedScore", value.calculateSeedScore());
         }
 
