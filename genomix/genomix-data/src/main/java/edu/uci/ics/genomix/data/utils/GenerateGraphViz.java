@@ -121,15 +121,24 @@ public class GenerateGraphViz {
                 /** convert edge to graph **/
                 outputEdge = convertEdgeToGraph(outputNode, value, graphType);
                 gv.addln(outputEdge);
+                String fillColor = "";
+                if (value.hasUnflippedOrFlippedReadIds())
+                    fillColor = "fillcolor=\"grey\", style=\"filled\",";
                 if (graphType == GRAPH_TYPE.DIRECTED_GRAPH_WITH_ALLDETAILS) {
-                    /** add readIdSet **/
-                    String fillColor = "";
-                    if (value.isUnflippedOrFlippedReadIds())
-                        fillColor = "fillcolor=\"grey\", style=\"filled\",";
                     outputNode += " [shape=record, " + fillColor + " label = \"<f0> " + key.toString() + "|<f1> "
                             + "5':" + value.getUnflippedReadIds().toString() + "|<f2> " + "~5':"
-                            + value.getFlippedReadIds().toString() + "|<f3> " + value.getAverageCoverage()
-                            + "|<f4> " + value.getInternalKmer() + "\"]\n";
+                            + value.getFlippedReadIds().toString() + "|<f3> " + value.getAverageCoverage() + "|<f4> "
+                            + value.getInternalKmer() + "\"]\n";
+                } else {
+                    outputNode += " [shape=record, "
+                            + fillColor
+                            + " label=\"<f0> "
+                            + key.toString()
+                            + "|<f1> #reads: "
+                            + (value.getUnflippedReadIds().size() + value.getFlippedReadIds().size())
+                            + ", lenKmer: "
+                            + (value.getInternalKmer().getKmerLetterLength() == 0 ? key.getKmerLetterLength() : value
+                                    .getInternalKmer().getKmerLetterLength()) + "\"]\n";
                 }
                 gv.addln(outputNode);
             }

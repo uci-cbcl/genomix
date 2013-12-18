@@ -37,7 +37,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<ScaffoldingVertexValueWr
             kmerSize = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.KMER_LENGTH));
         }
         if (readLength == -1) {
-            readLength = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.READ_LENGTH));
+            readLength = GenomixJobConf.readLengths.get(0);
         }
         if (outgoingMsg == null) {
             outgoingMsg = new RayScaffoldingMessage();
@@ -146,9 +146,9 @@ public class RayVertex extends DeBruijnGraphCleanVertex<ScaffoldingVertexValueWr
         } else {
             readIds = getVertexValue().getUnflippedReadIds();
         }
-        SortedSet<ReadHeadInfo> validReads = readIds.getOffSetRange(getVertexValue().getKmerLength() - readLength + 1,
-                getVertexValue().getKmerLength(), false);
-
+        SortedSet<ReadHeadInfo> validReads = readIds.getOffSetRange(Math.max(0, getVertexValue().getKmerLength() - readLength + 1),
+                getVertexValue().getKmerLength());
+        //Set<ReadHeadInfo> validReads = readIds.getReadSet();
         while (msgIterator.hasNext()) {
             incomingMsg = msgIterator.next();
             if (incomingMsg.getComputeFlag()) {

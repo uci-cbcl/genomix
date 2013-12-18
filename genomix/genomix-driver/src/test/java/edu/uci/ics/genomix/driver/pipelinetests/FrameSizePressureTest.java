@@ -21,7 +21,7 @@ public class FrameSizePressureTest {
         Options options = new Options();
         CmdLineParser parser = new CmdLineParser(options);
         parser.parseArgument(args);
-        SingleLongReadCreateTool test = new SingleLongReadCreateTool(options.kmerLength, options.readLength);
+        GenRandSingleLongRead test = new GenRandSingleLongRead(options.kmerLength, options.readLength);
         test.cleanDiskFile();
         test.generateString();
         test.writeToDisk();

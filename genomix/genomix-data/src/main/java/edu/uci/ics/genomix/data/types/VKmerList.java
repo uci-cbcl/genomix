@@ -26,8 +26,6 @@ public class VKmerList implements Writable, Iterable<VKmer>, Serializable {
     protected int valueCount;
     protected int storageMaxSize; // since we may be a reference inside a larger datablock, we must track our maximum size
 
-    private VKmer posIter = new VKmer();
-
     public VKmerList() {
         storage = EMPTY_BYTES;
         valueCount = 0;
@@ -153,8 +151,7 @@ public class VKmerList implements Writable, Iterable<VKmer>, Serializable {
     }
 
     public VKmer getPosition(int i) {
-        posIter.setAsReference(storage, getOffsetOfKmer(i));
-        return posIter;
+        return new VKmer(storage, getOffsetOfKmer(i));
     }
 
     /**
@@ -197,6 +194,7 @@ public class VKmerList implements Writable, Iterable<VKmer>, Serializable {
     public Iterator<VKmer> iterator() {
         Iterator<VKmer> it = new Iterator<VKmer>() {
 
+            private VKmer posIter = new VKmer();
             private int currentIndex = 0;
             private int currentOffset = offset + HEADER_SIZE; // init as offset of first kmer
 

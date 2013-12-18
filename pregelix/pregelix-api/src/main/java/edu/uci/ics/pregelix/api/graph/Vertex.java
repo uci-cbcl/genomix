@@ -612,6 +612,17 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
         Vertex vertex = (Vertex) object;
         return vertexId.equals(vertex.getVertexId());
     }
+    
+    /**
+     * called *once* per partition at the start of each iteration, 
+     * before calls to open() or compute()
+     *  
+     * Users can override this method to configure the pregelix job 
+     * and vertex state. 
+     */
+    public void configure(Configuration conf) {
+
+    }
 
     /**
      * called immediately before invocations of compute() on a vertex

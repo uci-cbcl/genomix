@@ -556,7 +556,7 @@ public class GenomixDriver {
         } finally {
             if (Boolean.parseBoolean(conf.get(GenomixJobConf.RUN_LOCAL))) {
                 // force the in-memory pregelix NC to shut down
-                System.exit(0);
+//                System.exit(0);
             }
         }
     }

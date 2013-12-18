@@ -94,9 +94,12 @@ public class ReadHeadSet extends ExternalableTreeSet<ReadHeadInfo> {
         }
     }
 
-    public SortedSet<ReadHeadInfo> getOffSetRange(int lowOffset, int highOffset, boolean mate) {
-        return super.rangeSearch(ReadHeadInfo.getLowerBoundInfo(lowOffset, mate),
-                ReadHeadInfo.getUpperBoundInfo(highOffset, mate));
+    public SortedSet<ReadHeadInfo> getOffSetRange(int lowOffset, int highOffset) {
+        if (lowOffset < 0 || highOffset > ReadHeadInfo.MAX_OFFSET_VALUE) {
+            throw new IllegalArgumentException("Invalid range specified: must be 0 < " + ReadHeadInfo.MAX_OFFSET_VALUE + " but saw low: " + lowOffset + ", high: " + highOffset);
+        }
+        return super.rangeSearch(ReadHeadInfo.getLowerBoundInfo(lowOffset),
+                ReadHeadInfo.getUpperBoundInfo(highOffset));
     }
 
     public Set<Long> getReadIdSet() {
