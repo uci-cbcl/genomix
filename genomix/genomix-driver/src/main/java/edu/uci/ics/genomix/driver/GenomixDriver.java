@@ -105,11 +105,11 @@ public class GenomixDriver {
         GraphStatistics.drawCoverageStatistics(curOutput + "-cov-stats", counters, conf);
         copyToLocalOutputDir(curOutput + "-cov-stats", conf);
 
-        Float maxCoverage = new Float(0);
-        float[] coverageData = GraphStatistics.getCoverageStats(counters, maxCoverage);
+        float maxCoverage = GraphStatistics.getMaxCoverage(counters);
+        float[] coverageData = GraphStatistics.getCoverageStats(counters);
         if (maxCoverage == 0 || coverageData.length == 0)
             throw new IllegalStateException("No information for coverage!");
-        long cutoffCoverage = (long) FittingMixture.fittingMixture(coverageData, maxCoverage, 30);
+        long cutoffCoverage = (long) FittingMixture.fittingMixture(coverageData, maxCoverage, 10);
 
         if (cutoffCoverage > 0) {
             LOG.info("Set the cutoffCoverage to " + cutoffCoverage);

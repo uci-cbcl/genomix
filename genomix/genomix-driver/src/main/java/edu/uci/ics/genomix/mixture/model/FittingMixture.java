@@ -197,11 +197,11 @@ public class FittingMixture {
         /* one choice of threshold is when the probability of belonging to the normal distribution 
          is greater than the probability of belonging to the exponential distribution
          this happens when the ratio of norm to exponential is > 1 */
-        double prob_in_exp = 0;
-        double prob_in_normal = 0;
-        for (double cov = 1; cov < max; cov++) {
-            prob_in_exp = prob_Exp * cur_expDist.density(cov);
-            prob_in_normal = prob_Normal * cur_normalDist.density(cov);
+        float prob_in_exp = 0;
+        float prob_in_normal = 0;
+        for (float cov = 1; cov < max; cov++) {
+            prob_in_exp = prob_Exp * (float)cur_expDist.density(cov);
+            prob_in_normal = prob_Normal * (float)cur_normalDist.density(cov);
             if (prob_in_exp < prob_in_normal)
                 return cov;
         }

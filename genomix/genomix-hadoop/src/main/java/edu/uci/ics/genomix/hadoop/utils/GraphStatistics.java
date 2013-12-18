@@ -131,18 +131,29 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
         return job.getCounters();
     }
 
-    /**
-     * run a map-reduce job on the given input graph and return an array of coverage
-     */
-    public static float[] getCoverageStats(Counters jobCounters, Float maxCoverage) {
-        ArrayList<Float> resultArrayList = new ArrayList<Float>();
-        // get Coverage counter
+    public static float getMaxCoverage(Counters jobCounters){
+        float maxCoverage = 0;
         for (Group g : jobCounters) {
             if (g.getName().equals("coverage-bins")) {
                 for (Counter c : g) {
                     float cov = Float.parseFloat(c.getName());
                     if (maxCoverage < cov)
                         maxCoverage = cov;
+                }
+            }
+        }
+        return maxCoverage;
+    }
+    /**
+     * run a map-reduce job on the given input graph and return an array of coverage
+     */
+    public static float[] getCoverageStats(Counters jobCounters) {
+        ArrayList<Float> resultArrayList = new ArrayList<Float>();
+        // get Coverage counter
+        for (Group g : jobCounters) {
+            if (g.getName().equals("coverage-bins")) {
+                for (Counter c : g) {
+                    float cov = Float.parseFloat(c.getName());
                     for (long i = 0; i < c.getValue(); i++) {
                         resultArrayList.add(cov);
                     }
