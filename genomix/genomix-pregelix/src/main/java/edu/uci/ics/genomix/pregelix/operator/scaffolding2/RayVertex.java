@@ -44,7 +44,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         initVertex();
         // TODO maybe have FORWARD and REVERSE happening at the same time?
         INITIAL_DIRECTION = DIR.valueOf(conf.get(GenomixJobConf.SCAFFOLDING_INITIAL_DIRECTION));
-        MIN_SCAFFOLDING_SEED_LENGTH = Integer.parseInt(GenomixJobConf.MIN_SCAFFOLDING_SEED_LENGTH);
+        MIN_SCAFFOLDING_SEED_LENGTH = Integer.parseInt(GenomixJobConf.SCAFFOLDING_MIN_SEED_LENGTH);
         HAS_PAIRED_END_READS = GenomixJobConf.outerDistanceMeans != null;
         MAX_READ_LENGTH = Integer.MIN_VALUE;
         MAX_OUTER_DISTANCE = Integer.MIN_VALUE;

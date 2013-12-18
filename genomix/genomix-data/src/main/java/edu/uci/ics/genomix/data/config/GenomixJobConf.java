@@ -223,8 +223,7 @@ public class GenomixJobConf extends JobConf {
         TIP_ADD,
         BRIDGE_ADD,
         BUBBLE_ADD,
-        BFS,
-        TEST_SET_COVERAGE;
+        BFS;
         /** the jobs that actually mutate the graph */
         public static final EnumSet<Patterns> mutatingJobs = EnumSet.complementOf(EnumSet.of(Patterns.DUMP_FASTA,
                 Patterns.CHECK_SYMMETRY, Patterns.PLOT_SUBGRAPH, Patterns.STATS, Patterns.TIP_ADD, Patterns.BRIDGE_ADD,
@@ -309,10 +308,12 @@ public class GenomixJobConf extends JobConf {
     public static final String SCAFFOLDING_VERTEX_MIN_COVERAGE = "genomix.scaffolding.vertexMinCoverage";
     public static final String SCAFFOLDING_VERTEX_MIN_LENGTH = "genomix.scaffolding.vertexMinLength";
     public static final String SCAFFOLDING_INITIAL_DIRECTION = "genomix.scaffolding.initialDirection";
+    public static final String SCAFFOLDING_MIN_SEED_LENGTH = "genomix.scaffolding.minSeedLength";
     public static final String PLOT_SUBGRAPH_START_SEEDS = "genomix.plotSubgraph.startSeeds";
     public static final String PLOT_SUBGRAPH_NUM_HOPS = "genomix.plotSubgraph.numHops";
     public static final String PLOT_SUBGRAPH_GRAPH_VERBOSITY = "genomix.plotSubgraph.graphVerbosity";
-    public static final String MIN_SCAFFOLDING_SEED_LENGTH = "genomix.min.scaffolding.seed.length";
+    public static final String COVERAGE_NORMAL_MEAN = "genomix.coverage.normalMean";
+    public static final String COVERAGE_NORMAL_STD = "genomix.coverage.normalStd";
 
     // Hyracks/Pregelix Setup
     public static final String PROFILE = "genomix.conf.profile";
