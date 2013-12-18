@@ -60,7 +60,7 @@ import edu.uci.ics.genomix.pregelix.operator.extractsubgraph.ExtractSubgraphVert
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.P1ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.P4ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.removelowcoverage.RemoveLowCoverageVertex;
-import edu.uci.ics.genomix.pregelix.operator.scaffolding.RayVertex;
+import edu.uci.ics.genomix.pregelix.operator.scaffolding2.RayVertex;
 import edu.uci.ics.genomix.pregelix.operator.simplebubblemerge.SimpleBubbleMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.symmetrychecker.SymmetryCheckerVertex;
 import edu.uci.ics.genomix.pregelix.operator.test.BridgeAddVertex;
