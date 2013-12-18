@@ -223,8 +223,8 @@ public class GenomixJobConf extends JobConf {
         TIP_ADD,
         BRIDGE_ADD,
         BUBBLE_ADD,
-        BFS;
-
+        BFS,
+        TEST_SET_COVERAGE;
         /** the jobs that actually mutate the graph */
         public static final EnumSet<Patterns> mutatingJobs = EnumSet.complementOf(EnumSet.of(Patterns.DUMP_FASTA,
                 Patterns.CHECK_SYMMETRY, Patterns.PLOT_SUBGRAPH, Patterns.STATS, Patterns.TIP_ADD, Patterns.BRIDGE_ADD,

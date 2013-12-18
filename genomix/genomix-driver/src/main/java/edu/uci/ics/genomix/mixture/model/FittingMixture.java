@@ -109,8 +109,12 @@ public class FittingMixture {
          * which maximizes likelihood */
         for (int i = 0; i < data.length; i++) {
             // calculate the expectation prob of the two classes
-            prob_expMembership[i] = (float)cur_expDist.density(data[i]) * prob_Exp;
-            prob_normalMembership[i] = (float)cur_normalDist.density(data[i]) * prob_Normal;
+            prob_expMembership[i] = (float) cur_expDist.density(data[i]) * prob_Exp;
+            if (prob_expMembership[i] == 0)
+                prob_expMembership[i] = 0.000000001f;
+            prob_normalMembership[i] = (float) cur_normalDist.density(data[i]) * prob_Normal;
+            if (prob_normalMembership[i] == 0)
+                prob_normalMembership[i] = 0.000000001f;
 
             // normalize
             float membershipSum = prob_expMembership[i] + prob_normalMembership[i];
@@ -146,7 +150,7 @@ public class FittingMixture {
                 cur_normalStd += prob_normalMembership[i] * Math.pow(data[i] - cur_normalMean, 2);
             }
 
-            cur_normalStd = (float)Math.sqrt(cur_normalStd / normal_overallSum); 
+            cur_normalStd = (float) Math.sqrt(cur_normalStd / normal_overallSum);
             if (cur_normalStd == 0)
                 cur_normalStd = 0.000000001f;
             cur_normalDist = new NormalDistribution(cur_normalMean, cur_normalStd);
@@ -155,8 +159,12 @@ public class FittingMixture {
              * which maximizes likelihood */
             for (int i = 0; i < data.length; i++) {
                 // calculate the expectation prob of the two classes
-                prob_expMembership[i] = (float)cur_expDist.density(data[i]) * prob_Exp;
-                prob_normalMembership[i] = (float)cur_normalDist.density(data[i]) * prob_Normal;
+                prob_expMembership[i] = (float) cur_expDist.density(data[i]) * prob_Exp;
+                if (prob_expMembership[i] == 0)
+                    prob_expMembership[i] = 0.000000001f;
+                prob_normalMembership[i] = (float) cur_normalDist.density(data[i]) * prob_Normal;
+                if (prob_normalMembership[i] == 0)
+                    prob_normalMembership[i] = 0.000000001f;
 
                 // normalize
                 float membershipSum = prob_expMembership[i] + prob_normalMembership[i];
@@ -177,31 +185,31 @@ public class FittingMixture {
             likelihoods.add(fm
                     .computeLikelihood(data, prob_Exp, prob_Normal, prob_expMembership, prob_normalMembership));
         }
-
-        // test final 
-//        double[] exp_randomSample = cur_expDist.sample(5000);
-//        Map<Double, Long> exp_histData = fm.calcHistogram(exp_randomSample, 0, max, (int) (max));
-//        fm.drawHist(exp_histData, "After-Exponential");
-//
-//        double[] norm_randomSample = cur_normalDist.sample(5000);
-//        Map<Double, Long> norm_histData = fm.calcHistogram(norm_randomSample, 0, max, (int) (max));
-//        fm.drawHist(norm_histData, "After-Normal");
-//
-//        double[] combine_randomSample = fm.combineTwoDoubleArray(exp_randomSample, norm_randomSample);
-//        Map<Double, Long> combine_histData = fm.calcHistogram(combine_randomSample, 0, max, (int) (max));
-//        fm.drawHist(combine_histData, "Mixture");
-//
-//        // plot likelihood's change
-//        fm.drawHist(likelihoods, "Likelihood");
-
+        
+        /* For test */
+        //        double[] exp_randomSample = cur_expDist.sample(5000);
+        //        Map<Double, Long> exp_histData = fm.calcHistogram(exp_randomSample, 0, max, (int) (max));
+        //        fm.drawHist(exp_histData, "After-Exponential");
+        //
+        //        double[] norm_randomSample = cur_normalDist.sample(5000);
+        //        Map<Double, Long> norm_histData = fm.calcHistogram(norm_randomSample, 0, max, (int) (max));
+        //        fm.drawHist(norm_histData, "After-Normal");
+        //
+        //        double[] combine_randomSample = fm.combineTwoDoubleArray(exp_randomSample, norm_randomSample);
+        //        Map<Double, Long> combine_histData = fm.calcHistogram(combine_randomSample, 0, max, (int) (max));
+        //        fm.drawHist(combine_histData, "Mixture");
+        //
+        //        // plot likelihood's change
+        //        fm.drawHist(likelihoods, "Likelihood");
+        
         /* one choice of threshold is when the probability of belonging to the normal distribution 
          is greater than the probability of belonging to the exponential distribution
          this happens when the ratio of norm to exponential is > 1 */
         float prob_in_exp = 0;
         float prob_in_normal = 0;
         for (float cov = 1; cov < max; cov++) {
-            prob_in_exp = prob_Exp * (float)cur_expDist.density(cov);
-            prob_in_normal = prob_Normal * (float)cur_normalDist.density(cov);
+            prob_in_exp = prob_Exp * (float) cur_expDist.density(cov);
+            prob_in_normal = prob_Normal * (float) cur_normalDist.density(cov);
             if (prob_in_exp < prob_in_normal)
                 return cov;
         }
