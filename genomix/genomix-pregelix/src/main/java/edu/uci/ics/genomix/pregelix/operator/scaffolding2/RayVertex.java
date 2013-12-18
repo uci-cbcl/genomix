@@ -4,16 +4,21 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.Map.Entry;
 import java.util.SortedSet;
+import java.util.TreeMap;
 import java.util.logging.Logger;
 
 import org.apache.commons.collections.SetUtils;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.mapred.Counters;
+import org.apache.hadoop.mapred.Counters.Counter;
 
 import edu.uci.ics.genomix.data.config.GenomixJobConf;
 import edu.uci.ics.genomix.data.types.DIR;
 import edu.uci.ics.genomix.data.types.EDGETYPE;
 import edu.uci.ics.genomix.data.types.Kmer;
+import edu.uci.ics.genomix.data.types.Node;
 import edu.uci.ics.genomix.data.types.Node.NeighborInfo;
 import edu.uci.ics.genomix.data.types.ReadHeadInfo;
 import edu.uci.ics.genomix.data.types.ReadHeadSet;
@@ -27,6 +32,9 @@ import edu.uci.ics.pregelix.api.job.PregelixJob;
 
 public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
     private static DIR INITIAL_DIRECTION;
+    private int SEED_SCORE_THRESHOLD;
+    private int COVERAGE_DIST_NORMAL_MEAN;
+    private int COVERAGE_DIST_NORMAL_STD;
     private static boolean HAS_PAIRED_END_READS;
     private static int MAX_READ_LENGTH;
     private static int MAX_OUTER_DISTANCE;
@@ -43,6 +51,10 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         initVertex();
         // TODO maybe have FORWARD and REVERSE happening at the same time?
         INITIAL_DIRECTION = DIR.valueOf(conf.get(GenomixJobConf.SCAFFOLDING_INITIAL_DIRECTION));
+        COVERAGE_DIST_NORMAL_MEAN = 0; // TODO set properly once merged
+        COVERAGE_DIST_NORMAL_STD = 0;
+        SEED_SCORE_THRESHOLD = Integer.parseInt(conf.get(GenomixJobConf.SCAFFOLDING_SEED_SCORE_THRESHOLD));
+        
         HAS_PAIRED_END_READS = GenomixJobConf.outerDistanceMeans != null;
         MAX_READ_LENGTH = Integer.MIN_VALUE;
         MAX_OUTER_DISTANCE = Integer.MIN_VALUE;
@@ -74,8 +86,10 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
      * @return whether or not this node meets the "seed" criteria
      */
     private boolean isStartSeed() {
-        // TODO Auto-generated method stub
-        return getVertexId().toString().equals("CTCTTCTTACCAC");
+        float coverage = getVertexValue().getAverageCoverage(); 
+        return ((coverage >= COVERAGE_DIST_NORMAL_MEAN - COVERAGE_DIST_NORMAL_STD) 
+                && (coverage <= COVERAGE_DIST_NORMAL_MEAN + COVERAGE_DIST_NORMAL_STD)
+                && (getVertexValue().calculateSeedScore() >= SEED_SCORE_THRESHOLD));
     }
 
     /**
@@ -490,7 +504,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
     private void compareScoresAndPrune(ArrayList<RayMessage> msgs) {
         VKmer id = getVertexId();
         RayValue vertex = getVertexValue();
-        
+
         if (vertex.stopSearch) {
             // one of my candidate nodes was already visited by a different walk
             // I can't proceed with the prune and I have to stop the search entirely :(
@@ -613,7 +627,40 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         job.setVertexOutputFormatClass(RayVertexToNodeOutputFormat.class);
         return job;
     }
-    
+
     public Logger LOG = Logger.getLogger(RayVertex.class.getName());
+
+    @SuppressWarnings("deprecation")
+    public static int calculateScoreThreshold(Counters statsCounters, Float topFraction, Integer topNumber) {
+        if ((topFraction == null && topNumber == null) || (topFraction != null && topNumber != null)) {
+            throw new IllegalArgumentException("Please specify either topFraction or topNumber, but not both!");
+        }
+        TreeMap<Integer, Long> scoreHistogram = new TreeMap<>();
+        int total = 0;
+        for (Counter c : statsCounters.getGroup("scaffoldSeedScore-bins")) { // counter name is index; counter value is the count for this index
+            Integer X = Integer.parseInt(c.getName());
+            if (scoreHistogram.get(X) != null) {
+                scoreHistogram.put(X, scoreHistogram.get(X) + c.getCounter());
+            } else {
+                scoreHistogram.put(X, c.getCounter());
+            }
+            total += c.getCounter();
+        }
+        
+        if (topNumber == null) {
+            topNumber = (int) (total * topFraction);
+        }
+
+        long numSeen = 0;
+        Integer lastSeen = null;
+        for (Entry<Integer, Long> e : scoreHistogram.descendingMap().entrySet()) {
+            numSeen += e.getValue();
+            lastSeen = e.getKey();
+            if (numSeen >= topNumber) {
+                break;
+            }
+        }
+        return lastSeen;
+    }
 
 }

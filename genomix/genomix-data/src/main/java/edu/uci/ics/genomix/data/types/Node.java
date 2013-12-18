@@ -848,4 +848,8 @@ public class Node implements Writable, Serializable {
         return (unflippedReadIds != null && unflippedReadIds.size() > 0)
                 || (flippedReadIds != null && flippedReadIds.size() > 0);
     }
+
+    public int calculateSeedScore() {
+        return getKmerLength() * (getUnflippedReadIds().size() + getFlippedReadIds().size());
+    }
 }
