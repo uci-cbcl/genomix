@@ -19,6 +19,8 @@ import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
+import edu.uci.ics.genomix.driver.GenomixDriver;
+
 public class FittingMixture {
 
     public Map<Double, Long> calcHistogram(double[] data, double min, double max, int numBins) {
@@ -89,12 +91,12 @@ public class FittingMixture {
         ArrayList<Double> likelihoods = new ArrayList<Double>();
 
         /* initial guess at parameters */
-        double cur_expMean = 5;
-        ExponentialDistribution cur_expDist = new ExponentialDistribution(cur_expMean);
+        GenomixDriver.cur_expMean = 5;
+        ExponentialDistribution cur_expDist = new ExponentialDistribution(GenomixDriver.cur_expMean);
 
-        double cur_normalMean = 20;
-        double cur_normalStd = 5;
-        NormalDistribution cur_normalDist = new NormalDistribution(cur_normalMean, cur_normalStd);
+        GenomixDriver.cur_normalMean = 20;
+        GenomixDriver.cur_normalStd = 5;
+        NormalDistribution cur_normalDist = new NormalDistribution(GenomixDriver.cur_normalMean, GenomixDriver.cur_normalStd);
 
         /* probability of each data point belonging to each class */
         double prob_Exp = 0.5;
@@ -136,24 +138,24 @@ public class FittingMixture {
          * which maximize likelihood*/
         for (int n = 0; n < numOfIterations; n++) {
             // get the weighted means for each mean/std
-            cur_expMean = 0;
-            cur_normalMean = 0;
-            cur_normalStd = 0;
+            GenomixDriver.cur_expMean = 0;
+            GenomixDriver.cur_normalMean = 0;
+            GenomixDriver.cur_normalStd = 0;
             for (int i = 0; i < data.length; i++) {
-                cur_expMean += prob_expMembership[i] * data[i];
-                cur_normalMean += prob_normalMembership[i] * data[i];
+                GenomixDriver.cur_expMean += prob_expMembership[i] * data[i];
+                GenomixDriver.cur_normalMean += prob_normalMembership[i] * data[i];
             }
-            cur_expMean = cur_expMean / exp_overallSum;
-            cur_expDist = new ExponentialDistribution(cur_expMean);
-            cur_normalMean = cur_normalMean / normal_overallSum;
+            GenomixDriver.cur_expMean = GenomixDriver.cur_expMean / exp_overallSum;
+            cur_expDist = new ExponentialDistribution(GenomixDriver.cur_expMean);
+            GenomixDriver.cur_normalMean = GenomixDriver.cur_normalMean / normal_overallSum;
             for (int i = 0; i < data.length; i++) {
-                cur_normalStd += prob_normalMembership[i] * Math.pow(data[i] - cur_normalMean, 2);
+                GenomixDriver.cur_normalStd += prob_normalMembership[i] * Math.pow(data[i] - GenomixDriver.cur_normalMean, 2);
             }
 
-            cur_normalStd = Math.sqrt(cur_normalStd / normal_overallSum);
-            if (cur_normalStd == 0)
-                cur_normalStd = 0.000000001f;
-            cur_normalDist = new NormalDistribution(cur_normalMean, cur_normalStd);
+            GenomixDriver.cur_normalStd = Math.sqrt(GenomixDriver.cur_normalStd / normal_overallSum);
+            if (GenomixDriver.cur_normalStd == 0)
+                GenomixDriver.cur_normalStd = 0.000000001f;
+            cur_normalDist = new NormalDistribution(GenomixDriver.cur_normalMean, GenomixDriver.cur_normalStd);
 
             /* Given a fixed set of parameters, it chooses the probability distribution 
              * which maximizes likelihood */

@@ -39,7 +39,7 @@ public class GenomixJobConf extends JobConf {
 
     public static boolean debug;
     public static ArrayList<VKmer> debugKmers;
-    
+
     public static ArrayList<Integer> readLengths;
     public static HashMap<Byte, Integer> outerDistanceMeans;
     public static HashMap<Byte, Integer> outerDistanceStdDevs;
@@ -73,7 +73,7 @@ public class GenomixJobConf extends JobConf {
 
         @Option(name = "-readLengths", usage = "read lengths for each library, with paired-end libraries first", required = true)
         private String[] readLengths;
-        
+
         @Option(name = "-outerDistMeans", usage = "Average outer distances (from A to B:  A==>    <==B)  for paired-end libraries", required = false)
         private String[] outerDistMeans;
 
@@ -223,8 +223,7 @@ public class GenomixJobConf extends JobConf {
         TIP_ADD,
         BRIDGE_ADD,
         BUBBLE_ADD,
-        BFS,
-        TEST_SET_COVERAGE;
+        BFS;
         /** the jobs that actually mutate the graph */
         public static final EnumSet<Patterns> mutatingJobs = EnumSet.complementOf(EnumSet.of(Patterns.DUMP_FASTA,
                 Patterns.CHECK_SYMMETRY, Patterns.PLOT_SUBGRAPH, Patterns.STATS, Patterns.TIP_ADD, Patterns.BRIDGE_ADD,
@@ -292,7 +291,6 @@ public class GenomixJobConf extends JobConf {
     public static final String EXTRA_CONF_FILES = "genomix.conf.extraConfFiles";
     public static final String RUN_ALL_STATS = "genomix.conf.runAllStats";
     public static final String SET_CUTOFF_COVERAGE = "genomix.conf.setCutoffCoverageByFittingMixture";
-    public static final String MIN_SCAFFOLDING_SEED_LENGTH = "genomix.conf.minScaffoldingSeedLength";
 
     // Graph cleaning   
     public static final String BRIDGE_REMOVE_MAX_LENGTH = "genomix.bridgeRemove.maxLength";
@@ -311,10 +309,12 @@ public class GenomixJobConf extends JobConf {
     public static final String SCAFFOLDING_VERTEX_MIN_LENGTH = "genomix.scaffolding.vertexMinLength";
     public static final String SCAFFOLDING_INITIAL_DIRECTION = "genomix.scaffolding.initialDirection";
     public static final String SCAFFOLDING_SEED_SCORE_THRESHOLD = "genomix.scaffolding.seedScoreThreshold";
+    public static final String SCAFFOLDING_SEED_LENGTH_THRESHOLD = "genomix.scaffolding.seedLengthThreshold";
     public static final String PLOT_SUBGRAPH_START_SEEDS = "genomix.plotSubgraph.startSeeds";
     public static final String PLOT_SUBGRAPH_NUM_HOPS = "genomix.plotSubgraph.numHops";
     public static final String PLOT_SUBGRAPH_GRAPH_VERBOSITY = "genomix.plotSubgraph.graphVerbosity";
-    public static final String MIN_SCAFFOLD_SEED_LENGTH = "genomix.min.scaffolding.seed.length";
+    public static final String COVERAGE_NORMAL_MEAN = "genomix.coverage.normalMean";
+    public static final String COVERAGE_NORMAL_STD = "genomix.coverage.normalStd";
 
     // Hyracks/Pregelix Setup
     public static final String PROFILE = "genomix.conf.profile";
@@ -544,7 +544,7 @@ public class GenomixJobConf extends JobConf {
         }
         if (opts.readLengths != null)
             set(READ_LENGTHS, StringUtils.join(opts.readLengths, ","));
-        
+
         // the distances can still be specified when we're using an intermediate output
         if (opts.outerDistMeans != null)
             set(OUTER_DISTANCE_MEANS, StringUtils.join(opts.outerDistMeans, ","));
@@ -630,14 +630,14 @@ public class GenomixJobConf extends JobConf {
         Kmer.setGlobalKmerLength(Integer.parseInt(conf.get(KMER_LENGTH)));
         ExternalableTreeSet.setupManager(conf, new Path(conf.get("hadoop.tmp.dir", "/tmp")));
         ExternalableTreeSet.setCountLimit(1000);
-        
+
         if (conf.get(READ_LENGTHS) != null) {
             readLengths = new ArrayList<>();
             for (String length : conf.get(READ_LENGTHS).split(",")) {
                 readLengths.add(Integer.valueOf(length));
             }
         }
-        
+
         Byte libraryId = 0;
         if (conf.get(OUTER_DISTANCE_MEANS) != null) {
             outerDistanceMeans = new HashMap<>();

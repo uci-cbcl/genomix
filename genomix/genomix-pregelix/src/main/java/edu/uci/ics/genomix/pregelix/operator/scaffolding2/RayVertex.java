@@ -33,6 +33,7 @@ import edu.uci.ics.pregelix.api.job.PregelixJob;
 public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
     private static DIR INITIAL_DIRECTION;
     private int SEED_SCORE_THRESHOLD;
+    private int SEED_LENGTH_THRESHOLD;
     private int COVERAGE_DIST_NORMAL_MEAN;
     private int COVERAGE_DIST_NORMAL_STD;
     private static boolean HAS_PAIRED_END_READS;
@@ -54,6 +55,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         COVERAGE_DIST_NORMAL_MEAN = 0; // TODO set properly once merged
         COVERAGE_DIST_NORMAL_STD = 0;
         SEED_SCORE_THRESHOLD = Integer.parseInt(conf.get(GenomixJobConf.SCAFFOLDING_SEED_SCORE_THRESHOLD));
+        SEED_LENGTH_THRESHOLD = Integer.parseInt(GenomixJobConf.SCAFFOLDING_SEED_LENGTH_THRESHOLD);
         
         HAS_PAIRED_END_READS = GenomixJobConf.outerDistanceMeans != null;
         MAX_READ_LENGTH = Integer.MIN_VALUE;
@@ -90,6 +92,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         return ((coverage >= COVERAGE_DIST_NORMAL_MEAN - COVERAGE_DIST_NORMAL_STD) 
                 && (coverage <= COVERAGE_DIST_NORMAL_MEAN + COVERAGE_DIST_NORMAL_STD)
                 && (getVertexValue().calculateSeedScore() >= SEED_SCORE_THRESHOLD));
+//        return getVertexValue().getKmerLength() >= MIN_SCAFFOLDING_SEED_LENGTH;
     }
 
     /**
