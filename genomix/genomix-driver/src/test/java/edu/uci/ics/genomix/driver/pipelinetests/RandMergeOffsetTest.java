@@ -141,19 +141,30 @@ public class RandMergeOffsetTest {
         }
     }
 
-    public static String runPipeLine(String[] args) throws NumberFormatException, Exception {
-        GenRandMultiReadForMergOffset test = new GenRandMultiReadForMergOffset(5, 6);
+    /**
+     * before test, we need specify the kmerSize, kmerNum
+     * To be noted that, we don't need to specify readLength (automatically already set it to kmerSize+1)
+     * And the number of Reads is: kmerNum - 1
+     * @param args
+     * @return
+     * @throws NumberFormatException
+     * @throws Exception
+     */
+    public static String runPipeLine(String[] args, int kmerSize, int kmerNum) throws NumberFormatException, Exception {
+        GenRandMultiReadForMergOffset test = new GenRandMultiReadForMergOffset(kmerSize, kmerNum);//kmerSize, kmerNum
+        test.cleanDiskFile();
         String originStr = test.generateString();
         test.writeToDisk();
-//        String[] randmergePressureArgs = { "-runLocal", "-kmerLength", String.valueOf(5), "-readLengths",
-//                String.valueOf(6), "-saveIntermediateResults", "-localInput", test.getTestDir(), "-localOutput",
-//                "output", "-pipelineOrder", "BUILD_HYRACKS,MERGE" };
-//        GenomixDriver.main(randmergePressureArgs);
+        String[] randmergePressureArgs = { "-runLocal", "-kmerLength", String.valueOf(5), "-readLengths",
+                String.valueOf(6), "-saveIntermediateResults", "-localInput", test.getTestDir(), "-localOutput",
+                "output", "-pipelineOrder", "BUILD_HYRACKS,MERGE" };
+        GenomixDriver.main(randmergePressureArgs);
+        test.cleanDiskFile();
         return originStr;
     }
 
     public static void main(String[] args) throws NumberFormatException, Exception {
-        String originStr = runPipeLine(args);
+        String originStr = runPipeLine(args, 5, 6);
         readSequenceFileAndCompare("output/FINAL-02-MERGE/bin", originStr);
         System.out.println("complete!");
     }
