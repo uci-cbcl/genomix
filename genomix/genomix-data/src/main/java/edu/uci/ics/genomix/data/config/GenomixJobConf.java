@@ -647,7 +647,7 @@ public class GenomixJobConf extends JobConf {
         }
         libraryId = 0;
         if (conf.get(OUTER_DISTANCE_STD_DEVS) != null) {
-            outerDistanceMeans = new HashMap<>();
+            outerDistanceStdDevs = new HashMap<>();
             for (String stddev : conf.get(OUTER_DISTANCE_STD_DEVS).split(",")) {
                 outerDistanceStdDevs.put(libraryId++, Integer.valueOf(stddev));
             }
