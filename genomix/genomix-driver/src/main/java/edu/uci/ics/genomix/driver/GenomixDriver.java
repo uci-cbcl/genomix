@@ -101,6 +101,10 @@ public class GenomixDriver {
         FileOutputFormat.setOutputPath(conf, new Path(curOutput));
     }
 
+    public static double cur_expMean = -1;
+    public static double cur_normalMean = -1;
+    public static double cur_normalStd = -1;
+
     private void setCutoffCoverageByFittingMixture(GenomixJobConf conf) throws IOException {
         Counters counters = GraphStatistics.run(curOutput, curOutput + "-cov-stats", conf);
         GraphStatistics.drawCoverageStatistics(curOutput + "-cov-stats", counters, conf);
@@ -138,7 +142,7 @@ public class GenomixDriver {
         for (int i = sortedCounter.size() - 1; i >= 0; i--) {
             curNumOfSeeds += sortedCounter.get(i);
             if (curNumOfSeeds > numOfSeeds) {
-                conf.setInt(GenomixJobConf.MIN_SCAFFOLDING_SEED_LENGTH, maxLength - (sortedCounter.size() - 1 - i));
+                conf.setInt(GenomixJobConf.SCAFFOLDING_MIN_SEED_LENGTH, maxLength - (sortedCounter.size() - 1 - i));
                 return;
             }
         }
@@ -170,6 +174,7 @@ public class GenomixDriver {
     private void addStep(GenomixJobConf conf, Patterns step) throws Exception {
         // oh, java, why do you pain me so?
         Counters counters;
+        PregelixJob lastJob;
         switch (step) {
             case BUILD:
             case BUILD_HYRACKS:
@@ -214,6 +219,10 @@ public class GenomixDriver {
                 pregelixJobs.add(BridgeRemoveVertex.getConfiguredJob(conf, BridgeRemoveVertex.class));
                 break;
             case RAY_SCAFFOLD:
+                conf.setFloat(GenomixJobConf.COVERAGE_NORMAL_MEAN, (float) cur_normalMean);
+                conf.setFloat(GenomixJobConf.COVERAGE_NORMAL_STD, (float) cur_normalStd);
+                // TODO calculate score for startSeed
+
                 conf.set(GenomixJobConf.SCAFFOLDING_INITIAL_DIRECTION, DIR.FORWARD.toString());
                 pregelixJobs.add(RayVertex.getConfiguredJob(conf, RayVertex.class));
                 conf.set(GenomixJobConf.SCAFFOLDING_INITIAL_DIRECTION, DIR.REVERSE.toString());
@@ -256,7 +265,7 @@ public class GenomixDriver {
                 stepNum--;
                 break;
             case STATS:
-                PregelixJob lastJob = null;
+                lastJob = null;
                 if (pregelixJobs.size() > 0) {
                     lastJob = pregelixJobs.get(pregelixJobs.size() - 1);
                 }
