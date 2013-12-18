@@ -169,7 +169,7 @@ public class GenomixDriver {
 
     private void addStep(GenomixJobConf conf, Patterns step) throws Exception {
         // oh, java, why do you pain me so?
-        Counters counters;
+        Counters prevStatsCounters = null;
         switch (step) {
             case BUILD:
             case BUILD_HYRACKS:
@@ -214,6 +214,12 @@ public class GenomixDriver {
                 pregelixJobs.add(BridgeRemoveVertex.getConfiguredJob(conf, BridgeRemoveVertex.class));
                 break;
             case RAY_SCAFFOLD:
+                if (!prevOutput.endsWith("-STATS")) {
+                    // need up-to-date stats before we can run
+                    prevStatsCounters = runStatsJob(conf);
+                }
+                conf.setInt(GenomixJobConf.SCAFFOLDING_SEED_SCORE_THRESHOLD,
+                        RayVertex.calculateScoreThreshold(prevStatsCounters, null, 100));
                 conf.set(GenomixJobConf.SCAFFOLDING_INITIAL_DIRECTION, DIR.FORWARD.toString());
                 pregelixJobs.add(RayVertex.getConfiguredJob(conf, RayVertex.class));
                 conf.set(GenomixJobConf.SCAFFOLDING_INITIAL_DIRECTION, DIR.REVERSE.toString());
@@ -238,40 +244,10 @@ public class GenomixDriver {
                 stepNum--;
                 break;
             case PLOT_SUBGRAPH:
-                if (conf.get(GenomixJobConf.PLOT_SUBGRAPH_START_SEEDS) == "") {
-                    // no seed specified-- plot the entire graph
-                    LOG.warning("No starting seed was specified for PLOT_SUBGRAPH.  Plotting the entire graph!!");
-                    curOutput = prevOutput; // use previous job's output
-                } else {
-                    curOutput = prevOutput + "-SUBGRAPH"; // use previous job's output
-                    FileOutputFormat.setOutputPath(conf, new Path(curOutput));
-                    pregelixJobs.add(ExtractSubgraphVertex.getConfiguredJob(conf, ExtractSubgraphVertex.class));
-                }
-                flushPendingJobs(conf);
-                //copy bin to local and append "-PLOT" to the name);
-                GenerateGraphViz.writeHDFSBinToHDFSSvg(conf, curOutput, curOutput + "-PLOT",
-                        GRAPH_TYPE.valueOf(conf.get(GenomixJobConf.PLOT_SUBGRAPH_GRAPH_VERBOSITY)));
-                copyToLocalOutputDir(curOutput + "-PLOT", conf);
-                curOutput = prevOutput; // next job shouldn't use the truncated graph or plots
-                stepNum--;
+                plotSubgraph(conf);
                 break;
             case STATS:
-                PregelixJob lastJob = null;
-                if (pregelixJobs.size() > 0) {
-                    lastJob = pregelixJobs.get(pregelixJobs.size() - 1);
-                }
-                flushPendingJobs(conf);
-                curOutput = prevOutput + "-STATS";
-                counters = GraphStatistics.run(prevOutput, curOutput, conf);
-                GraphStatistics.saveGraphStats(curOutput, counters, conf);
-                GraphStatistics.drawStatistics(curOutput, counters, conf);
-                GraphStatistics.getFastaStatsForGage(curOutput, counters, conf);
-                if (lastJob != null) {
-                    GraphStatistics.saveJobCounters(curOutput, lastJob, conf);
-                }
-                copyToLocalOutputDir(curOutput, conf);
-                curOutput = prevOutput; // use previous job's output
-                stepNum--;
+                prevStatsCounters = runStatsJob(conf);
                 break;
             case TIP_ADD:
                 pregelixJobs.add(TipAddVertex.getConfiguredJob(conf, TipAddVertex.class));
@@ -283,6 +259,45 @@ public class GenomixDriver {
                 pregelixJobs.add(BubbleAddVertex.getConfiguredJob(conf, BubbleAddVertex.class));
                 break;
         }
+    }
+
+    private void plotSubgraph(GenomixJobConf conf) throws IOException, Exception {
+        if (conf.get(GenomixJobConf.PLOT_SUBGRAPH_START_SEEDS) == "") {
+            // no seed specified-- plot the entire graph
+            LOG.warning("No starting seed was specified for PLOT_SUBGRAPH.  Plotting the entire graph!!");
+            curOutput = prevOutput; // use previous job's output
+        } else {
+            curOutput = prevOutput + "-SUBGRAPH"; // use previous job's output
+            FileOutputFormat.setOutputPath(conf, new Path(curOutput));
+            pregelixJobs.add(ExtractSubgraphVertex.getConfiguredJob(conf, ExtractSubgraphVertex.class));
+        }
+        flushPendingJobs(conf);
+        //copy bin to local and append "-PLOT" to the name);
+        GenerateGraphViz.writeHDFSBinToHDFSSvg(conf, curOutput, curOutput + "-PLOT",
+                GRAPH_TYPE.valueOf(conf.get(GenomixJobConf.PLOT_SUBGRAPH_GRAPH_VERBOSITY)));
+        copyToLocalOutputDir(curOutput + "-PLOT", conf);
+        curOutput = prevOutput; // next job shouldn't use the truncated graph or plots
+        stepNum--;
+    }
+
+    private Counters runStatsJob(GenomixJobConf conf) throws Exception, IOException {
+        PregelixJob lastJob = null;
+        if (pregelixJobs.size() > 0) {
+            lastJob = pregelixJobs.get(pregelixJobs.size() - 1);
+        }
+        flushPendingJobs(conf);
+        curOutput = prevOutput + "-STATS";
+        Counters counters = GraphStatistics.run(prevOutput, curOutput, conf);
+        GraphStatistics.saveGraphStats(curOutput, counters, conf);
+        GraphStatistics.drawStatistics(curOutput, counters, conf);
+        GraphStatistics.getFastaStatsForGage(curOutput, counters, conf);
+        if (lastJob != null) {
+            GraphStatistics.saveJobCounters(curOutput, lastJob, conf);
+        }
+        copyToLocalOutputDir(curOutput, conf);
+        curOutput = prevOutput; // use previous job's output
+        stepNum--;
+        return counters;
     }
 
     /**

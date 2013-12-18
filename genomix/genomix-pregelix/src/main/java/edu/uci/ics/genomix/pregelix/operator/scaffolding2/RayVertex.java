@@ -4,11 +4,15 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.Map.Entry;
 import java.util.SortedSet;
+import java.util.TreeMap;
 import java.util.logging.Logger;
 
 import org.apache.commons.collections.SetUtils;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.mapred.Counters;
+import org.apache.hadoop.mapred.Counters.Counter;
 
 import edu.uci.ics.genomix.data.config.GenomixJobConf;
 import edu.uci.ics.genomix.data.types.DIR;
@@ -490,7 +494,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
     private void compareScoresAndPrune(ArrayList<RayMessage> msgs) {
         VKmer id = getVertexId();
         RayValue vertex = getVertexValue();
-        
+
         if (vertex.stopSearch) {
             // one of my candidate nodes was already visited by a different walk
             // I can't proceed with the prune and I have to stop the search entirely :(
@@ -613,7 +617,39 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         job.setVertexOutputFormatClass(RayVertexToNodeOutputFormat.class);
         return job;
     }
-    
+
     public Logger LOG = Logger.getLogger(RayVertex.class.getName());
+
+    @SuppressWarnings("deprecation")
+    public static int calculateScoreThreshold(Counters statsCounters, Float topFraction, Integer topNumber) {
+        if ((topFraction == null && topNumber == null) || (topFraction != null && topNumber != null)) {
+            throw new IllegalArgumentException("Please specify either topFraction or topNumber, but not both!");
+        }
+        TreeMap<Integer, Long> curCounts = new TreeMap<>();
+        int total = 0, count = 0;
+        for (Counter c : statsCounters.getGroup("scaffoldScore-bins")) { // counter name is index; counter value is the count for this index
+            Integer X = Integer.parseInt(c.getName());
+            if (curCounts.get(X) != null) {
+                curCounts.put(X, curCounts.get(X) + c.getCounter());
+            } else {
+                curCounts.put(X, c.getCounter());
+            }
+            total += c.getCounter();
+            count++;
+        }
+        long numSeen = 0;
+        if (topNumber == null) {
+            topNumber = (int) (count * topFraction);
+        }
+        Integer lastSeen = null;
+        for (Entry<Integer, Long> e : curCounts.descendingMap().entrySet()) {
+            numSeen += e.getValue();
+            lastSeen = e.getKey();
+            if (numSeen >= topNumber) {
+                break;
+            }
+        }
+        return lastSeen;
+    }
 
 }
