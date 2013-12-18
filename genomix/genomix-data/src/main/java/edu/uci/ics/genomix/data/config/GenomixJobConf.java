@@ -135,19 +135,6 @@ public class GenomixJobConf extends JobConf {
         @Option(name = "-maxReadIDsPerEdge", usage = "The maximum number of readids that are recored as spanning a single edge", required = false)
         private int maxReadIDsPerEdge = -1;
 
-        // scaffolding
-        @Option(name = "-minScaffoldingTraveralLength", usage = "The minimum length that can be travelled by scaffolding", required = false)
-        private int minScaffoldingTraveralLength = -1;
-
-        @Option(name = "-maxScaffoldingTraveralLength", usage = "The maximum length that can be travelled by scaffolding", required = false)
-        private int maxScaffoldingTraveralLength = -1;
-
-        @Option(name = "-minScaffoldingVertexMinCoverage", usage = "The minimum vertex coverage that can be the head of scaffolding", required = false)
-        private int minScaffoldingVertexMinCoverage = -1;
-
-        @Option(name = "-minScaffoldingVertexMinLength", usage = "The minimum vertex length that can be the head of scaffolding", required = false)
-        private int minScaffoldingVertexMinLength = -1;
-
         @Option(name = "-plotSubgraph_startSeed", usage = "The minimum vertex length that can be the head of scaffolding", required = false)
         private String plotSubgraph_startSeed;
 
@@ -303,10 +290,6 @@ public class GenomixJobConf extends JobConf {
     public static final String REMOVE_LOW_COVERAGE_MAX_COVERAGE = "genomix.removeLowCoverage.maxCoverage";
     public static final String TIP_REMOVE_MAX_LENGTH = "genomix.tipRemove.maxLength";
     public static final String MAX_READIDS_PER_EDGE = "genomix.maxReadidsPerEdge";
-    public static final String SCAFFOLDING_MIN_TRAVERSAL_LENGTH = "genomix.scaffolding.minTraversalLength";
-    public static final String SCAFFOLDING_MAX_TRAVERSAL_LENGTH = "genomix.scaffolding.maxTraversalLength";
-    public static final String SCAFFOLDING_VERTEX_MIN_COVERAGE = "genomix.scaffolding.vertexMinCoverage";
-    public static final String SCAFFOLDING_VERTEX_MIN_LENGTH = "genomix.scaffolding.vertexMinLength";
     public static final String SCAFFOLDING_INITIAL_DIRECTION = "genomix.scaffolding.initialDirection";
     public static final String SCAFFOLDING_SEED_SCORE_THRESHOLD = "genomix.scaffolding.seedScoreThreshold";
     public static final String SCAFFOLDING_SEED_LENGTH_THRESHOLD = "genomix.scaffolding.seedLengthThreshold";
@@ -452,19 +435,6 @@ public class GenomixJobConf extends JobConf {
         if (getInt(MAX_READIDS_PER_EDGE, -1) == -1)
             setInt(MAX_READIDS_PER_EDGE, 250);
 
-        // scaffolding
-        if (getInt(SCAFFOLDING_MIN_TRAVERSAL_LENGTH, -1) == -1)
-            setInt(SCAFFOLDING_MIN_TRAVERSAL_LENGTH, 2);
-
-        if (getInt(SCAFFOLDING_MAX_TRAVERSAL_LENGTH, -1) == -1)
-            setInt(SCAFFOLDING_MAX_TRAVERSAL_LENGTH, 15);
-
-        if (getInt(SCAFFOLDING_VERTEX_MIN_COVERAGE, -1) == -1)
-            setInt(SCAFFOLDING_VERTEX_MIN_COVERAGE, 1);
-
-        if (getInt(SCAFFOLDING_VERTEX_MIN_LENGTH, -1) == -1)
-            setInt(SCAFFOLDING_VERTEX_MIN_LENGTH, 1);
-
         if (get(PIPELINE_ORDER) == null) {
             set(PIPELINE_ORDER,
                     Patterns.stringFromArray(new Patterns[] { Patterns.BUILD, Patterns.MERGE, Patterns.LOW_COVERAGE,
@@ -584,10 +554,6 @@ public class GenomixJobConf extends JobConf {
         setFloat(PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD, opts.pathMergeRandom_probBeingRandomHead);
         setFloat(REMOVE_LOW_COVERAGE_MAX_COVERAGE, opts.removeLowCoverage_maxCoverage);
         setInt(TIP_REMOVE_MAX_LENGTH, opts.tipRemove_maxLength);
-        setInt(SCAFFOLDING_MIN_TRAVERSAL_LENGTH, opts.minScaffoldingTraveralLength);
-        setInt(SCAFFOLDING_MAX_TRAVERSAL_LENGTH, opts.maxScaffoldingTraveralLength);
-        setInt(SCAFFOLDING_VERTEX_MIN_COVERAGE, opts.minScaffoldingVertexMinCoverage);
-        setInt(SCAFFOLDING_VERTEX_MIN_LENGTH, opts.minScaffoldingVertexMinLength);
 
         setInt(STATS_EXPECTED_GENOMESIZE, opts.stats_expectedGenomeSize);
         setInt(STATS_MIN_CONTIGLENGTH, opts.stats_minContigLength);
