@@ -58,6 +58,15 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
 
     public static final Logger LOG = Logger.getLogger(GraphStatistics.class.getName());
     private Reporter reporter;
+    Float COVERAGE_DIST_MEAN;
+    Float COVERAGE_DIST_STD;
+    
+    @Override
+    public void configure(JobConf job) {
+        // TODO fix this.
+        COVERAGE_DIST_MEAN = 0f; // Float.parseFloat(job.get(GenomixJobConf.???)) 
+        COVERAGE_DIST_STD = 0f;
+    }
 
     @Override
     public void map(VKmer key, Node value, OutputCollector<Text, LongWritable> output, Reporter reporter)
@@ -71,6 +80,11 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
         updateStats("coverage", Math.round(value.getAverageCoverage()));
         updateStats("unflippedReadIds", value.getUnflippedReadIds().size());
         updateStats("flippedReadIds", value.getFlippedReadIds().size());
+        
+        float coverage = value.getAverageCoverage();
+        if (coverage > COVERAGE_DIST_MEAN - COVERAGE_DIST_STD && coverage < COVERAGE_DIST_MEAN + COVERAGE_DIST_STD) {
+            updateStats("scaffoldSeedScore", value.calculateSeedScore());
+        }
 
         //        long totalEdgeReads = 0;
         long totalSelf = 0;

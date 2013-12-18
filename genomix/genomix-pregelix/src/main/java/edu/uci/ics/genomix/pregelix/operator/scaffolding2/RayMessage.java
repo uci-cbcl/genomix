@@ -7,6 +7,7 @@ import java.util.ArrayList;
 
 import edu.uci.ics.genomix.data.types.EDGETYPE;
 import edu.uci.ics.genomix.data.types.Kmer;
+import edu.uci.ics.genomix.data.types.Node;
 import edu.uci.ics.genomix.data.types.VKmer;
 import edu.uci.ics.genomix.data.types.VKmerList;
 import edu.uci.ics.genomix.pregelix.base.MessageWritable;
@@ -58,7 +59,7 @@ public class RayMessage extends MessageWritable {
      * @param id
      * @param vertex
      */
-    public void visitNode(VKmer id, RayValue vertex) {
+    public void visitNode(VKmer id, Node vertex) {
         getWalkIds().append(id);
         getWalkOffsets().add(getWalkLength());
         setWalkLength(getWalkLength() + vertex.getKmerLength() - Kmer.getKmerLength() + 1);

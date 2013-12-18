@@ -18,6 +18,7 @@ import edu.uci.ics.genomix.data.config.GenomixJobConf;
 import edu.uci.ics.genomix.data.types.DIR;
 import edu.uci.ics.genomix.data.types.EDGETYPE;
 import edu.uci.ics.genomix.data.types.Kmer;
+import edu.uci.ics.genomix.data.types.Node;
 import edu.uci.ics.genomix.data.types.Node.NeighborInfo;
 import edu.uci.ics.genomix.data.types.ReadHeadInfo;
 import edu.uci.ics.genomix.data.types.ReadHeadSet;
@@ -31,6 +32,9 @@ import edu.uci.ics.pregelix.api.job.PregelixJob;
 
 public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
     private static DIR INITIAL_DIRECTION;
+    private int SEED_SCORE_THRESHOLD;
+    private int COVERAGE_DIST_NORMAL_MEAN;
+    private int COVERAGE_DIST_NORMAL_STD;
     private static boolean HAS_PAIRED_END_READS;
     private static int MAX_READ_LENGTH;
     private static int MAX_OUTER_DISTANCE;
@@ -47,6 +51,10 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         initVertex();
         // TODO maybe have FORWARD and REVERSE happening at the same time?
         INITIAL_DIRECTION = DIR.valueOf(conf.get(GenomixJobConf.SCAFFOLDING_INITIAL_DIRECTION));
+        COVERAGE_DIST_NORMAL_MEAN = 0; // TODO set properly once merged
+        COVERAGE_DIST_NORMAL_STD = 0;
+        SEED_SCORE_THRESHOLD = Integer.parseInt(conf.get(GenomixJobConf.SCAFFOLDING_SEED_SCORE_THRESHOLD));
+        
         HAS_PAIRED_END_READS = GenomixJobConf.outerDistanceMeans != null;
         MAX_READ_LENGTH = Integer.MIN_VALUE;
         MAX_OUTER_DISTANCE = Integer.MIN_VALUE;
@@ -78,8 +86,10 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
      * @return whether or not this node meets the "seed" criteria
      */
     private boolean isStartSeed() {
-        // TODO Auto-generated method stub
-        return getVertexId().toString().equals("CTCTTCTTACCAC");
+        float coverage = getVertexValue().getAverageCoverage(); 
+        return ((coverage >= COVERAGE_DIST_NORMAL_MEAN - COVERAGE_DIST_NORMAL_STD) 
+                && (coverage <= COVERAGE_DIST_NORMAL_MEAN + COVERAGE_DIST_NORMAL_STD)
+                && (getVertexValue().calculateSeedScore() >= SEED_SCORE_THRESHOLD));
     }
 
     /**
@@ -627,7 +637,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         }
         TreeMap<Integer, Long> curCounts = new TreeMap<>();
         int total = 0, count = 0;
-        for (Counter c : statsCounters.getGroup("scaffoldScore-bins")) { // counter name is index; counter value is the count for this index
+        for (Counter c : statsCounters.getGroup("scaffoldSeedScore-bins")) { // counter name is index; counter value is the count for this index
             Integer X = Integer.parseInt(c.getName());
             if (curCounts.get(X) != null) {
                 curCounts.put(X, curCounts.get(X) + c.getCounter());
