@@ -71,6 +71,14 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
             }
         }
         MAX_DISTANCE = Math.max(MAX_OUTER_DISTANCE, MAX_READ_LENGTH);
+        
+        if (getSuperstep() == 1) {
+            // manually clear state
+            getVertexValue().visited = false;
+            getVertexValue().intersection = false;
+            getVertexValue().flippedFromInitialDirection = false;
+            getVertexValue().stopSearch = false;
+        }
     }
 
     @Override
