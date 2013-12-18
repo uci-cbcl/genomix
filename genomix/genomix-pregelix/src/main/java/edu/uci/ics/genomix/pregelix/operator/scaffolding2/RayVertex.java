@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.SortedSet;
+import java.util.logging.Logger;
 
 import org.apache.commons.collections.SetUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -172,6 +173,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
 
         if (vertex.degree(nextDir) == 0) {
             // this walk has reached a dead end!  nothing to do in this case.
+            LOG.info("reached dead end: " + id);
             return;
         } else if (vertex.degree(nextDir) == 1) {
             // one neighbor -> just send him a continue msg w/ me added to the list
@@ -179,6 +181,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
             msg.setEdgeTypeBackToFrontier(next.et.mirror());
             msg.setFrontierFlipped(vertex.flippedFromInitialDirection);
             sendMsg(next.kmer, msg);
+            LOG.info("bouncing over path node: " + id);
         } else {
             // 2+ neighbors -> start evaluating candidates via a REQUEST_KMER msg
             msg.setMessageType(RayMessageType.REQUEST_KMER);
@@ -188,6 +191,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
                 for (VKmer next : vertex.getEdges(et)) {
                     msg.setEdgeTypeBackToFrontier(et.mirror());
                     sendMsg(next, msg);
+                    LOG.info("evaluating branch: " + next);
                 }
             }
         }
@@ -486,8 +490,12 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
     private void compareScoresAndPrune(ArrayList<RayMessage> msgs) {
         VKmer id = getVertexId();
         RayValue vertex = getVertexValue();
-
-        // TODO check if I'm supposed to stop!  if so, don't do anything here.
+        
+        if (vertex.stopSearch) {
+            // one of my candidate nodes was already visited by a different walk
+            // I can't proceed with the prune and I have to stop the search entirely :(
+            return;
+        }
 
         // aggregate scores and walk info from all msgs
         singleEndScores.clear();
@@ -505,6 +513,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
             walkIds.append(msg.getWalkIds().getPosition(0));
             walkOffsets.add(msg.getWalkOffsets().get(0));
         }
+        LOG.info("in prune for " + id + " scores are singleend: " + singleEndScores + " pairedend: " + pairedEndScores);
 
         VKmer dominantKmer = null;
         EDGETYPE dominantEdgeType = null;
@@ -591,6 +600,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
             outgoingMsg.setWalkLength(walkLength);
             outgoingMsg.setFrontierFlipped(vertex.flippedFromInitialDirection); // TODO make sure this is correct
             sendMsg(dominantKmer, outgoingMsg);
+            LOG.info("dominant edge found: " + dominantEdgeType + ":" + dominantKmer);
         }
     }
 
@@ -603,5 +613,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         job.setVertexOutputFormatClass(RayVertexToNodeOutputFormat.class);
         return job;
     }
+    
+    public Logger LOG = Logger.getLogger(RayVertex.class.getName());
 
 }
