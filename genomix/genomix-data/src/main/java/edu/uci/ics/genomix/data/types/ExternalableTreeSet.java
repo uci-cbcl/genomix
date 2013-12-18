@@ -58,16 +58,15 @@ public abstract class ExternalableTreeSet<T extends WritableComparable<T> & Seri
     }
 
     public ExternalableTreeSet(boolean isLocal) {
-        this(null);
-        this.isLocal = isLocal;
+        this(null, isLocal);
     }
 
-    protected ExternalableTreeSet(Path path) {
+    protected ExternalableTreeSet(Path path, boolean local) {
         inMemorySet = new TreeSet<T>();
         this.path = path;
         isChanged = false;
         isLoaded = false;
-        isLocal = false;
+        isLocal = local;
     }
 
     /**
