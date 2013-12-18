@@ -21,10 +21,10 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
     private static final int bitsForReadId = totalBits - bitsForOffset - bitsForLibrary - bitsForMate;
     // the offset (position) covers the leading bits, followed by the library, then mate, and finally, the readid
     // to recover each value, >>> by:
-    private static final int offsetShift = bitsForLibrary + bitsForMate + bitsForReadId;
-    private static final int libraryIdShift = bitsForMate + bitsForReadId;
-    private static final int mateIdShift = bitsForReadId;
     private static final int readIdShift = 0;
+    private static final int mateIdShift = bitsForReadId;
+    private static final int libraryIdShift = bitsForMate + bitsForReadId;
+    private static final int offsetShift = bitsForLibrary + bitsForMate + bitsForReadId;
 
     // 2's complement => -1 has all the bits filled
     public static final byte MAX_MATE_VALUE = (byte) (-1 >>> (totalBits - bitsForMate));
@@ -115,7 +115,7 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
                     "byte specified for offset will lose some of its bits when saved! (was: " + offset
                             + " but only allowed " + bitsForOffset + " bits!");
 
-        return ((offset << offsetShift) + (libraryId << libraryIdShift) + (mateId << mateIdShift) + (readId << readIdShift));
+        return ((((long)(offset)) << offsetShift) + (((long)(libraryId)) << libraryIdShift) + (((long)(mateId)) << mateIdShift) + (((long)(readId)) << readIdShift));
     }
 
     public void set(byte mateId, byte libraryId, long readId, int offset) {
@@ -146,19 +146,21 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
     }
 
     public byte getMateId() {
-        return (byte) ((value & ~(-1 << (mateIdShift + bitsForMate))) >>> mateIdShift); // clear leading bits, then shift back to place
+        return (byte) ((value & ~(((long)-1) << (mateIdShift + bitsForMate))) >>> mateIdShift); // clear leading bits, then shift back to place
     }
 
     public byte getLibraryId() {
-        return (byte) ((value & ~(-1 << (libraryIdShift + bitsForLibrary))) >>> libraryIdShift);
+        return (byte) ((value & ~(((long)-1) << (libraryIdShift + bitsForLibrary))) >>> libraryIdShift);
     }
 
     public long getReadId() {
-        return ((value & ~(-1 << (readIdShift + bitsForReadId))) >>> readIdShift);
+        return ((value & ~(((long)-1l) << (readIdShift + bitsForReadId))) >>> readIdShift);
     }
 
     public int getOffset() {
-        return (int) ((value & ~(-1 << (offsetShift + bitsForOffset))) >>> offsetShift);
+    	// holy smokes java... -1 << 64 == -1 ???
+//        return (int) ((value & ~(((long)-1) << (offsetShift + bitsForOffset))) >>> offsetShift);
+    	return (int) (value >>> offsetShift);
     }
 
     public void resetOffset(int offset) {

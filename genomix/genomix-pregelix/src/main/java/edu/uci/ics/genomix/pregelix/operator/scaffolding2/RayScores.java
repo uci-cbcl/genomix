@@ -4,21 +4,50 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.AbstractMap.SimpleEntry;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.hadoop.io.Writable;
 
 import edu.uci.ics.genomix.data.types.EDGETYPE;
 import edu.uci.ics.genomix.data.types.VKmer;
-import edu.uci.ics.genomix.data.types.VKmerList;
 
 public class RayScores implements Writable {
 
     private HashMap<SimpleEntry<EDGETYPE, VKmer>, Rules> scores = new HashMap<>();
-    
+
+    private class Rules {
+        public int ruleA = 0; // the overlap-weighted score (reads that overlap the walk better receive higher ruleA values)
+        public int ruleB = 0; // the raw score
+        public int ruleC = Integer.MAX_VALUE; // the smallest score seen in a single node
+
+        public Rules() {
+        }
+
+        public Rules(int ruleAs, int ruleBs, int ruleCs) {
+            this.ruleA = ruleAs;
+            this.ruleB = ruleBs;
+            this.ruleC = ruleCs;
+        }
+
+        public void readFields(DataInput in) throws IOException {
+            ruleA = in.readInt();
+            ruleB = in.readInt();
+            ruleC = in.readInt();
+        }
+
+        public void write(DataOutput out) throws IOException {
+            out.writeInt(ruleA);
+            out.writeInt(ruleB);
+            out.writeInt(ruleC);
+        }
+
+        @Override
+        public String toString() {
+            return "A:" + ruleA + " B:" + ruleB + " C:" + ruleC;
+        }
+    }
+
     public void addRuleCounts(EDGETYPE et, VKmer kmer, int ruleA, int ruleB, int ruleC) {
         SimpleEntry<EDGETYPE, VKmer> key = new SimpleEntry<>(et, kmer);
         if (scores.containsKey(key)) {
@@ -33,8 +62,8 @@ public class RayScores implements Writable {
 
     public void addAll(RayScores otherScores) {
         for (Entry<SimpleEntry<EDGETYPE, VKmer>, Rules> elem : otherScores.scores.entrySet()) {
-            addRuleCounts(elem.getKey().getKey(), elem.getKey().getValue(), elem.getValue().ruleA, elem.getValue().ruleB,
-                    elem.getValue().ruleC);
+            addRuleCounts(elem.getKey().getKey(), elem.getKey().getValue(), elem.getValue().ruleA,
+                    elem.getValue().ruleB, elem.getValue().ruleC);
         }
     }
 
@@ -42,20 +71,21 @@ public class RayScores implements Writable {
      * Return true iff queryKmer is "better than" targetKmer according to my scores.
      * Specifically, each of the rule values must be "factor" times larger than the corresponding values for targetKmer
      */
-    public boolean dominates(EDGETYPE queryET, VKmer queryKmer, EDGETYPE targetET, VKmer targetKmer, float frontierCoverage) {
+    public boolean dominates(EDGETYPE queryET, VKmer queryKmer, EDGETYPE targetET, VKmer targetKmer,
+            float frontierCoverage) {
         double factor = getMFactor(frontierCoverage);
         SimpleEntry<EDGETYPE, VKmer> queryKey = new SimpleEntry<>(queryET, queryKmer);
         SimpleEntry<EDGETYPE, VKmer> targetKey = new SimpleEntry<>(targetET, targetKmer);
         if (!scores.containsKey(queryKey)) {
             return false;
         } else if (!scores.containsKey(targetKey)) {
-            scores.put(targetKey, new Rules());  // fill all rules with 0
+            scores.put(targetKey, new Rules()); // fill all rules with 0 // TODO what will 0 mean for ruleC?
         }
         Rules queryRule = scores.get(queryKey);
         Rules targetRule = scores.get(targetKey);
-        return (((queryRule.ruleA) > targetRule.ruleA * factor)     // overlap-weighted score  
-                && ((queryRule.ruleB) > targetRule.ruleB * factor)  // raw score 
-        && ((queryRule.ruleC) > targetRule.ruleC * factor));        // smallest non-zero element of the walk
+        return (((queryRule.ruleA) > targetRule.ruleA * factor) // overlap-weighted score  
+                && ((queryRule.ruleB) > targetRule.ruleB * factor) // raw score 
+        && ((queryRule.ruleC) > targetRule.ruleC * factor)); // smallest non-zero element of the walk
         // TODO ruleC again doesn't make much sense in our case-- the min is over nodes currently which may represent long kmers  
     }
 
@@ -108,36 +138,15 @@ public class RayScores implements Writable {
         addAll(otherScores);
     }
 
-    private class Rules {
-        public int ruleA = 0;
-        public int ruleB = 0;
-        public int ruleC = Integer.MAX_VALUE;
-
-        public Rules() {
-
+    @Override
+    public String toString() {
+        StringBuilder s = new StringBuilder();
+        String delim = "";
+        for (Entry<SimpleEntry<EDGETYPE, VKmer>, Rules> elem : scores.entrySet()) {
+            s.append(delim).append("(").append(elem.getKey().getKey()).append(":").append(elem.getKey().getValue())
+                    .append(")").append("=").append(elem.getValue());
+            delim = ", ";
         }
-
-        public Rules(int ruleAs, int ruleBs, int ruleCs) {
-            this.ruleA = ruleAs;
-            this.ruleB = ruleBs;
-            this.ruleC = ruleCs;
-        }
-
-        public void readFields(DataInput in) throws IOException {
-            ruleA = in.readInt();
-            ruleB = in.readInt();
-            ruleC = in.readInt();
-        }
-
-        public void write(DataOutput out) throws IOException {
-            out.writeInt(ruleA);
-            out.writeInt(ruleB);
-            out.writeInt(ruleC);
-        }
-        
-        @Override
-        public String toString() {
-            return ruleA + " " + ruleB + " " + ruleC;
-        }
+        return s.toString();
     }
 }

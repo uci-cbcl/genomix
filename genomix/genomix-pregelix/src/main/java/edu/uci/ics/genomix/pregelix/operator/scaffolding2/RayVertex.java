@@ -2,11 +2,11 @@ package edu.uci.ics.genomix.pregelix.operator.scaffolding2;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.SortedSet;
 
+import org.apache.commons.collections.SetUtils;
 import org.apache.hadoop.conf.Configuration;
 
 import edu.uci.ics.genomix.data.config.GenomixJobConf;
@@ -15,6 +15,7 @@ import edu.uci.ics.genomix.data.types.EDGETYPE;
 import edu.uci.ics.genomix.data.types.Kmer;
 import edu.uci.ics.genomix.data.types.Node.NeighborInfo;
 import edu.uci.ics.genomix.data.types.ReadHeadInfo;
+import edu.uci.ics.genomix.data.types.ReadHeadSet;
 import edu.uci.ics.genomix.data.types.VKmer;
 import edu.uci.ics.genomix.data.types.VKmerList;
 import edu.uci.ics.genomix.pregelix.base.DeBruijnGraphCleanVertex;
@@ -59,7 +60,6 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
     @Override
     public void compute(Iterator<RayMessage> msgIterator) throws Exception {
         if (getSuperstep() == 1) {
-            initVertex();
             if (isStartSeed()) {
                 msgIterator = getStartMessage();
             }
@@ -73,7 +73,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
      */
     private boolean isStartSeed() {
         // TODO Auto-generated method stub
-        return getVertexId().toString().equals("AGGTCC");
+        return getVertexId().toString().equals("CTCTTCTTACCAC");
     }
 
     /**
@@ -122,14 +122,10 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
                     break;
                 case REQUEST_SCORE:
                     // batch-process these (have to truncate to min length)
-                    RayMessage reqMsg = new RayMessage();
-                    reqMsg.setAsCopy(msg);
-                    requestScoreMsgs.add(reqMsg);
+                    requestScoreMsgs.add(new RayMessage(msg));
                     break;
                 case AGGREGATE_SCORE:
-                    RayMessage aggMsg = new RayMessage();
-                    aggMsg.setAsCopy(msg);
-                    aggregateScoreMsgs.add(aggMsg);
+                    aggregateScoreMsgs.add(new RayMessage(msg));
                     break;
                 case PRUNE_EDGE:
                     // remove the given edge back towards the frontier node.  Also, clear the "visited" state of this node
@@ -167,7 +163,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
             return;
         }
         vertex.visited = true;
-        // if the prev frontier was flipped and I came across a FR/RF, I'm back to unflipped
+        // I am the new frontier but this message is coming from the previous frontier; I was the "candidate"
         vertex.flippedFromInitialDirection = msg.isCandidateFlipped();
         DIR nextDir = msg.getEdgeTypeBackToFrontier().mirror().neighborDir();
 
@@ -269,9 +265,11 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         }
 
         // get the smallest kmer in all the messages I've received
-        int minLength = msgs.get(0).getWalkIds().getPosition(0).getKmerLetterLength();
+        // since the candidates may be of different lengths, we have to use the shortest candidate
+        // that way, long candidates don't receive higher scores simply for being long
+        int minLength = msgs.get(0).getToScoreKmer().getKmerLetterLength();
         for (int i = 1; i < msgs.size(); i++) {
-            minLength = Math.min(minLength, msgs.get(i).getWalkIds().getPosition(0).getKmerLetterLength());
+            minLength = Math.min(minLength, msgs.get(i).getToScoreKmer().getKmerLetterLength());
         }
         minLength = minLength - Kmer.getKmerLength() + 1;
 
@@ -292,29 +290,77 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
 
     /**
      * use the reads present in this vertex to score the kmers in this message list.
+     * For example, we are a walk node with readSeqs:
+     * readHeadSet:
+     * - (r1, offset 0, AAATTTGGGCCC)
+     * - (r2, offset 2, ATTTGGTCCCCC)
+     * and are asked to score two msgs with kmers and offsets:
+     * candidateMsgs:
+     * - (c1, 4, TTGGGCCC)
+     * - (c2, 4, TTGGTCCC)
+     * - (c3, 4, TTGGTCCCC)
+     * with an (original) Kmer.length of K=4,
+     * .
+     * r1 appears earlier in the overall walk and so has more weight for ruleA
+     * (specifically, ruleA_r1_factor = walkLength - offset 0 = 4)
+     * whereas r2 is later in the walk (ruleA_r2_factor = walkLength - offset 2 = 2)
+     * .
+     * The msgKmerLength will be the shortest of the given kmers (in this case, |c1| = |c2| = 8),
+     * meaning only the first 8 letters of the candidates will be compared.
+     * .
+     * candidate c1 matches r1 at TTGG, TGGG, GGGC, GGCC, and GCCC but r2 only at TTGG
+     * so c1 has an overall score of:
+     * - ruleA = 4 (matches) * 4 (r1_factor) + 1 (match) * 2 (r2_factor) = 18
+     * - ruleB = 4 (matches) + 1 (match) = 5
+     * .
+     * candidate c2 matches r1 only at TTGG but matches r2 at TTGG, TGGT, GGTC, GTCC, and TCCC
+     * so c2 has an overall score of:
+     * - ruleA = 1 (match) * 4 (r1_factor) + 4 (matches) * 2 (r2_factor) = 10
+     * - ruleB = 1 (match) + 4 (match) = 5
+     * .
+     * candidate c3 would have the same score as c2 since its last letter is skipped (msgKmerLength=8)
+     * .
+     * ruleC is the minimum non-zero ruleB contribution from individual nodes (of which, we are but one).
+     * If 1 other node scored these same candidates but its 1 read (r3) only contained the end TCCC..., then
+     * that read's ruleA_r3_factor = 1, making:
+     * c1 have:
+     * - ruleA = 18 + 0
+     * - ruleB = 5 + 0
+     * and c2 would have:
+     * - ruleA = 10 + 1
+     * - ruleB = 5 + 1
+     * and finally,
+     * - c1.ruleC = 5
+     * - c2.ruleC = 1
+     * As you can see, ruleC is actually penalizing the node that has more support here!
+     * ruleC doesn't make sense when you're comparing nodes containing multiple kmers.
+     * .
+     * In this case, no candidate dominates the others (see {@link RayScores.dominates}).
+     * .
+     * .
+     * The overall algorithm look like this:
      * For each message,
-     * | for each read in a subset of reads in this vertex
+     * | for each read in the reads oriented with the search
      * | | run a sliding window of length (original) Kmer.length
      * | | | see if all the letters in the sliding window match the read
      * So somehow, we've turned this into a n**4 operation :(
      * // TODO for single-end reads, we could alternatively count how many letters in the VKmers match
      * // or we could base the score on something like edit distance
      */
-    private static RayScores voteFromReads(boolean singleEnd, RayValue vertex, ArrayList<RayMessage> msgs,
+    private static RayScores voteFromReads(boolean singleEnd, RayValue vertex, ArrayList<RayMessage> candidateMsgs,
             int nodeOffset, int walkLength, int msgKmerLength) {
         SortedSet<ReadHeadInfo> readSubsetOrientedWithSearch = getReadSubsetOrientedWithSearch(singleEnd, vertex,
                 nodeOffset, walkLength);
 
         // nothing like nested for loops 4 levels deep (!)
         RayScores scores = new RayScores();
-        for (RayMessage msg : msgs) {
+        for (RayMessage msg : candidateMsgs) {
             VKmer candidateKmer;
             if (singleEnd) {
-                // for single-end reads, we need the candidate in the same orientation as the readheads
-                boolean sameOrientationAsMe = vertex.flippedFromInitialDirection == msg.isCandidateFlipped();
-                candidateKmer = sameOrientationAsMe ? msg.getToScoreKmer() : msg.getToScoreKmer().reverse();
+                // for single-end reads, we need the candidate in the same orientation as the search
+                candidateKmer = msg.isCandidateFlipped() ? msg.getToScoreKmer().reverse() : msg.getToScoreKmer();
             } else {
-                // for paired-end reads, we place the candidate in the same orientation as the search started
+                // for paired-end reads, the mate sequence is revcomp'ed; need the candidate the opposite orientation as the search
                 candidateKmer = msg.isCandidateFlipped() ? msg.getToScoreKmer() : msg.getToScoreKmer().reverse();
             }
             int ruleATotal = 0, ruleBTotal = 0, ruleCTotal = 0;
@@ -341,11 +387,9 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
                         // since read.thisSeq is in the same orientation as the search direction, 
                         // the mate sequence is flipped wrt search direction. we reverse it to be in 
                         // the same direction as the search direction.
-                        if (read.getMateReadSequence()
-                                .reverse()
-                                .matchesInRange(candidateInMate - outerDistanceStd,
-                                        candidateInMate + outerDistanceStd + Kmer.getKmerLength(), candidateKmer,
-                                        kmerIndex, Kmer.getKmerLength())) {
+                        if (read.getMateReadSequence().matchesInRange(candidateInMate - outerDistanceStd,
+                                candidateInMate + outerDistanceStd + Kmer.getKmerLength(), candidateKmer, kmerIndex,
+                                Kmer.getKmerLength())) {
                             match = true;
                         }
                     }
@@ -365,6 +409,10 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
             return null;
         }
     }
+
+    // local variables for getReadSubsetOrientedWithSearch
+    @SuppressWarnings("unchecked")
+    private static final SortedSet<ReadHeadInfo> EMPTY_SORTED_SET = SetUtils.EMPTY_SORTED_SET;
 
     private static SortedSet<ReadHeadInfo> getReadSubsetOrientedWithSearch(boolean singleEnd, RayValue vertex,
             int nodeOffset, int walkLength) {
@@ -388,32 +436,32 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         // and any paired-end reads that aren't in the right range.
         // TODO do we want to separate different libraries into different lists?  
         // That way, we would be able to skip checking D1 in the query
-        if (!vertex.flippedFromInitialDirection) {
-            // oriented with me. SE reads < read length away are removed
-            if (singleEnd) {
-                int numBasesToSkipStart = Math.max(0, walkLength - nodeOffset - MAX_READ_LENGTH);
-                return vertex.getUnflippedReadIds().getOffSetRange(numBasesToSkipStart, ReadHeadInfo.MAX_OFFSET_VALUE);
-            } else {
-                int numBasesToSkipStart = Math.max(0, walkLength - nodeOffset - MAX_OUTER_DISTANCE);
-                int numBasesToSkipEnd = walkLength - nodeOffset - MIN_OUTER_DISTANCE + MAX_READ_LENGTH;
-                return vertex.getUnflippedReadIds().getOffSetRange(numBasesToSkipStart, numBasesToSkipEnd);
-            }
+        int myLength = vertex.getKmerLength() - Kmer.getKmerLength() + 1;
+        int startOffset;
+        int endOffset;
+        if (singleEnd) {
+            startOffset = walkLength - MAX_READ_LENGTH - nodeOffset;
+            endOffset = walkLength - nodeOffset;
         } else {
-            // oriented in the opposite way. SE reads > read length are removed
-            // ----------->  <------------  --------------> *
-            //                     A1------------------------->
-            //                B1------------------------>
-            // here, A1 applies and B1 does not but B1's offset is close to the END of the containing node 
-            int myLength = vertex.getKmerLength() - Kmer.getKmerLength() + 1;
-            if (singleEnd) {
-                int numBasesToSkipStart = Math.max(0, walkLength - nodeOffset - MAX_READ_LENGTH);
-                return vertex.getFlippedReadIds().getOffSetRange(Integer.MIN_VALUE, myLength - numBasesToSkipStart);
-            } else {
-                int numBasesToSkipStart = walkLength - nodeOffset - MAX_OUTER_DISTANCE;
-                int numBasesToSkipEnd = walkLength - nodeOffset - MIN_OUTER_DISTANCE + MAX_READ_LENGTH;
-                return vertex.getFlippedReadIds().getOffSetRange(numBasesToSkipEnd, myLength - numBasesToSkipStart);
-            }
+            startOffset = walkLength - MAX_OUTER_DISTANCE - nodeOffset;
+            endOffset = walkLength - MIN_OUTER_DISTANCE + MAX_READ_LENGTH - nodeOffset;
         }
+        ReadHeadSet orientedReads = vertex.getUnflippedReadIds();
+        if (vertex.flippedFromInitialDirection) {
+            orientedReads = vertex.getFlippedReadIds();
+
+            startOffset = myLength - startOffset;
+            endOffset = myLength - endOffset;
+            // swap start and end
+            int tmpOffset = startOffset;
+            startOffset = endOffset;
+            endOffset = tmpOffset;
+        }
+
+        if (startOffset >= myLength || endOffset < 0) {
+            return EMPTY_SORTED_SET;
+        }
+        return orientedReads.getOffSetRange(Math.max(0, startOffset), Math.min(myLength, endOffset));
     }
 
     // local variables for compareScoresAndPrune
@@ -438,6 +486,8 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         VKmer id = getVertexId();
         RayValue vertex = getVertexValue();
 
+        // TODO check if I'm supposed to stop!  if so, don't do anything here.
+
         // aggregate scores and walk info from all msgs
         singleEndScores.clear();
         pairedEndScores.clear();
@@ -460,12 +510,20 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         // need to compare each edge in this dir with every other one.  Unfortunately, this is ugly to do, requiring 
         // us to iterate over edge types, then edges in those types, and keeping track of the indexes ourselves, etc :(
         // this 4 loops are really just two for loops that are tracking 1) the index, 2) the edge type, and 3) the kmer
+        //
+        // the fact we need to compare all candidates vs all others can be captured by this statement:
+        //  (! c1.dominates(c2)) =!=> (c2.dominates(c1))
+        //
+        // that is, just because c1 doesn't dominate c2, doesn't mean that c2 dominates c1.
+        // the extra m factor makes it so we must compare all vs all.
+        //
+        // fortunately, we can quit comparing as soon as one edge doesn't dominate another edge. 
+        //
         int queryIndex = 0, targetIndex = 0;
         boolean equalPairedEdgeFound = false;
         boolean equalSingleEdgeFound = false;
         boolean dominantEdgeFound = false;
-        EDGETYPE[] searchETs = vertex.flippedFromInitialDirection ? INITIAL_DIRECTION.mirror().edgeTypes()
-                : INITIAL_DIRECTION.edgeTypes();
+        EDGETYPE[] searchETs = vertex.flippedFromInitialDirection ? DIR.REVERSE.edgeTypes() : DIR.FORWARD.edgeTypes();
         for (EDGETYPE queryET : searchETs) {
             for (VKmer queryKmer : vertex.getEdges(queryET)) {
                 queryIndex++;
