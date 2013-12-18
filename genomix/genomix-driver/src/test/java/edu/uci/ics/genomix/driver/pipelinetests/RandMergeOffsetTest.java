@@ -3,6 +3,7 @@ package edu.uci.ics.genomix.driver.pipelinetests;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;
@@ -13,6 +14,7 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.junit.Assert;
 
+import edu.uci.ics.genomix.data.types.Kmer;
 import edu.uci.ics.genomix.data.types.Node;
 import edu.uci.ics.genomix.data.types.ReadHeadInfo;
 import edu.uci.ics.genomix.data.types.ReadHeadSet;
@@ -52,15 +54,19 @@ public class RandMergeOffsetTest {
         return new String(output);
     }
 
-    public static void buildExpectedResults(String expectedStr, String expectedFlipStr, boolean isFlipped) {
+    public static void buildExpectedResults(String expectedStr, String expectedFlipStr, boolean isFlipped,
+            int kmerSize, int kmerNum) {
         KmerDir curKmerDir;
-        VKmer curKmer = new VKmer();
-        VKmer curReverseKmer = new VKmer();
-        for (int i = 0; i < 5; i++) {
-            String rawKmer = expectedStr.substring(i, i + 5);
+        Kmer.setGlobalKmerLength(kmerSize);
+        Kmer curKmer = new Kmer();
+        Kmer curReverseKmer = new Kmer();
+        for (int i = 0; i < kmerNum - 1; i++) {
+            String rawKmer = expectedStr.substring(i, i + kmerSize);
             curKmerDir = KmerDir.FORWARD;
             curKmer.setFromStringBytes(rawKmer.getBytes(), 0);
             curReverseKmer.setReversedFromStringBytes(rawKmer.getBytes(), 0);
+            System.out.println(curKmer.toString());
+            System.out.println(curReverseKmer.toString());
             curKmerDir = curKmer.compareTo(curReverseKmer) <= 0 ? KmerDir.FORWARD : KmerDir.REVERSE;
             switch (curKmerDir) {
                 case FORWARD:
@@ -68,7 +74,7 @@ public class RandMergeOffsetTest {
                         int index = expectedStr.indexOf(curKmer.toString());
                         expectedReadHeadOffset.put(i, index);
                     } else {
-                        int index = expectedFlipStr.indexOf(curReverseKmer.toString()) + 5;
+                        int index = expectedFlipStr.indexOf(curReverseKmer.toString()) + kmerSize - 1;
                         expectedReadHeadOffset.put(i, index);
                     }
                     break;
@@ -77,16 +83,15 @@ public class RandMergeOffsetTest {
                         int index = expectedFlipStr.indexOf(curReverseKmer.toString());
                         expectedReadHeadOffset.put(i, index);
                     } else {
-                        int index = expectedStr.indexOf(curKmer.toString()) + 5;
+                        int index = expectedStr.indexOf(curKmer.toString()) + kmerSize - 1;
                         expectedReadHeadOffset.put(i, index);
                     }
                     break;
             }
         }
-
     }
 
-    public static void readSequenceFileAndCompare(String inputGraph, String originStr) throws IOException {
+    public static void readSequenceFileAndCompare(String inputGraph, String originStr, int kmerSize, int kmerNum) throws IOException {
         @SuppressWarnings("deprecation")
         JobConf conf = new JobConf();
         FileSystem dfs = FileSystem.getLocal(conf);
@@ -106,33 +111,33 @@ public class RandMergeOffsetTest {
                         String actualMergeStr = value.getInternalKmer().toString();
                         String originFlipStr = getFlippedGeneStr(originStr);
                         if (originStr.equals(actualMergeStr)) {
-                            buildExpectedResults(originStr, originFlipStr, false);
+                            buildExpectedResults(originStr, originFlipStr, false, kmerSize, kmerNum);
                         } else if (originFlipStr.equals(actualMergeStr)) {
-                            buildExpectedResults(originStr, originFlipStr, true);
+                            buildExpectedResults(originStr, originFlipStr, true, kmerSize, kmerNum);
                         }
                         if (value.getFlippedReadIds().size() != 0) {
                             for (ReadHeadInfo iter : value.getFlippedReadIds().getOffSetRange(0, 6)) {
-                                if(expectedReadHeadOffset.containsKey(iter.getReadId())){
-                                    int expectedOffset = expectedReadHeadOffset.get(iter.getReadId());
+                                if (expectedReadHeadOffset.containsKey((int) iter.getReadId())) {
+                                    int expectedOffset = expectedReadHeadOffset.get((int) iter.getReadId());
                                     Assert.assertEquals(expectedOffset, iter.getOffset());
-                                }else{
+                                } else {
                                     Assert.fail();
                                 }
                             }
                         }
                         if (value.getUnflippedReadIds().size() != 0) {
                             for (ReadHeadInfo iter : value.getUnflippedReadIds().getOffSetRange(0, 6)) {
-                                if(expectedReadHeadOffset.containsKey(iter.getReadId())){
-                                    int expectedOffset = expectedReadHeadOffset.get(iter.getReadId());
+                                if (expectedReadHeadOffset.containsKey((int) iter.getReadId())) {
+                                    int expectedOffset = expectedReadHeadOffset.get((int) iter.getReadId());
                                     Assert.assertEquals(expectedOffset, iter.getOffset());
-                                }else{
+                                } else {
                                     Assert.fail();
                                 }
                             }
                         }
                     }
                 } catch (Exception e) {
-                    System.out.println("Encountered an error getting stats for " + f + ":\n" + e);
+                    System.out.println("Test can not be passed! " + f + ":\n" + e);
                 } finally {
                     if (reader != null)
                         reader.close();
@@ -145,6 +150,7 @@ public class RandMergeOffsetTest {
      * before test, we need specify the kmerSize, kmerNum
      * To be noted that, we don't need to specify readLength (automatically already set it to kmerSize+1)
      * And the number of Reads is: kmerNum - 1
+     * 
      * @param args
      * @return
      * @throws NumberFormatException
@@ -165,7 +171,7 @@ public class RandMergeOffsetTest {
 
     public static void main(String[] args) throws NumberFormatException, Exception {
         String originStr = runPipeLine(args, 5, 6);
-        readSequenceFileAndCompare("output/FINAL-02-MERGE/bin", originStr);
-        System.out.println("complete!");
+        readSequenceFileAndCompare("output/FINAL-02-MERGE/bin", originStr, 5, 6);
+        System.out.println("Test complete!");
     }
 }
