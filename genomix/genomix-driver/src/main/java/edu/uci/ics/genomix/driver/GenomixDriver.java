@@ -47,6 +47,7 @@ import edu.uci.ics.genomix.data.cluster.DriverUtils;
 import edu.uci.ics.genomix.data.cluster.GenomixClusterManager;
 import edu.uci.ics.genomix.data.config.GenomixJobConf;
 import edu.uci.ics.genomix.data.config.GenomixJobConf.Patterns;
+import edu.uci.ics.genomix.data.types.DIR;
 import edu.uci.ics.genomix.data.utils.GenerateGraphViz;
 import edu.uci.ics.genomix.data.utils.GenerateGraphViz.GRAPH_TYPE;
 import edu.uci.ics.genomix.hadoop.buildgraph.GenomixHadoopDriver;
@@ -213,6 +214,9 @@ public class GenomixDriver {
                 pregelixJobs.add(BridgeRemoveVertex.getConfiguredJob(conf, BridgeRemoveVertex.class));
                 break;
             case RAY_SCAFFOLD:
+                conf.set(GenomixJobConf.SCAFFOLDING_INITIAL_DIRECTION, DIR.FORWARD.toString());
+                pregelixJobs.add(RayVertex.getConfiguredJob(conf, RayVertex.class));
+                conf.set(GenomixJobConf.SCAFFOLDING_INITIAL_DIRECTION, DIR.REVERSE.toString());
                 pregelixJobs.add(RayVertex.getConfiguredJob(conf, RayVertex.class));
                 break;
             case DUMP_FASTA:

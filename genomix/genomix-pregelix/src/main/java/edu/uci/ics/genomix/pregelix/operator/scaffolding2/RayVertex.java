@@ -40,7 +40,8 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
     public void configure(Configuration conf) {
         super.configure(conf);
         initVertex();
-        INITIAL_DIRECTION = DIR.FORWARD; // TODO set the INITIAL-DIRECTION appropriately
+        // TODO maybe have FORWARD and REVERSE happening at the same time?
+        INITIAL_DIRECTION = DIR.valueOf(conf.get(GenomixJobConf.SCAFFOLDING_INITIAL_DIRECTION));
         HAS_PAIRED_END_READS = GenomixJobConf.outerDistanceMeans != null;
         MAX_READ_LENGTH = Integer.MIN_VALUE;
         MAX_OUTER_DISTANCE = Integer.MIN_VALUE;
