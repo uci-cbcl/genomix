@@ -65,7 +65,7 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
     public void configure(JobConf job) {
         // TODO fix this.
         COVERAGE_DIST_MEAN = 0f; // Float.parseFloat(job.get(GenomixJobConf.???)) 
-        COVERAGE_DIST_STD = 0f;
+        COVERAGE_DIST_STD = 1000f;
     }
 
     @Override

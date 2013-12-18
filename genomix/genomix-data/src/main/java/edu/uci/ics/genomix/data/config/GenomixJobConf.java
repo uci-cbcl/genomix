@@ -146,6 +146,13 @@ public class GenomixJobConf extends JobConf {
                 + "Default is 1.", required = false)
         private int plotSubgraph_verbosity = -1;
 
+        // scaffolding
+        @Option(name = "-scaffold_seedScorePercentile", usage = "Choose scaffolding seeds as the highest 'seed score', currently (length * numReads).  If this is 0 < percentile < 1, this value will be interpreted as a fraction of the graph (so .01 will mean 1% of the graph will be a seed).  For fraction >= 1, it will be interpreted as the (approximate) *number* of seeds to include. Mutually exclusive with -scaffold_seedLengthPercentile.", required = false)
+        private float scaffold_seedScorePercentile = -1;
+
+        @Option(name = "-scaffold_seedLengthPercentile", usage = "Choose scaffolding seeds as the nodes with longest kmer length.  If this is 0 < percentile < 1, this value will be interpreted as a fraction of the graph (so .01 will mean 1% of the graph will be a seed).  For fraction >= 1, it will be interpreted as the (approximate) *number* of seeds to include. Mutually exclusive with -scaffold_seedScorePercentile.", required = false)
+        private float scaffold_seedLengthPercentile = -1;
+
         // Hyracks/Pregelix Setup
         @Option(name = "-profile", usage = "Whether or not to do runtime profifling", required = false)
         private boolean profile = false;
@@ -291,6 +298,8 @@ public class GenomixJobConf extends JobConf {
     public static final String TIP_REMOVE_MAX_LENGTH = "genomix.tipRemove.maxLength";
     public static final String MAX_READIDS_PER_EDGE = "genomix.maxReadidsPerEdge";
     public static final String SCAFFOLDING_INITIAL_DIRECTION = "genomix.scaffolding.initialDirection";
+    public static final String SCAFFOLD_SEED_SCORE_PERCENTILE = "genomix.scaffolding.seedScorePercentile";
+    public static final String SCAFFOLD_SEED_LENGTH_PERCENTILE = "genomix.scaffolding.seedLengthPercentile";
     public static final String SCAFFOLDING_SEED_SCORE_THRESHOLD = "genomix.scaffolding.seedScoreThreshold";
     public static final String SCAFFOLDING_SEED_LENGTH_THRESHOLD = "genomix.scaffolding.seedLengthThreshold";
     public static final String PLOT_SUBGRAPH_START_SEEDS = "genomix.plotSubgraph.startSeeds";
@@ -394,6 +403,14 @@ public class GenomixJobConf extends JobConf {
         if (Integer.parseInt(conf.get(MAX_READIDS_PER_EDGE)) < 0)
             throw new IllegalArgumentException("maxReadIDsPerEdge must be non-negative!");
 
+        if (conf.get(SCAFFOLD_SEED_SCORE_PERCENTILE) != null && conf.get(SCAFFOLD_SEED_LENGTH_PERCENTILE) != null)
+            throw new IllegalArgumentException(
+                    "Can't set both -scaffold_scoreSeedPercentile and -scaffold_scoreLengthPercentile!");
+        if (conf.getFloat(SCAFFOLD_SEED_SCORE_PERCENTILE, 1) <= 0)
+            throw new IllegalArgumentException("-scaffold_seedScorePercentile must be greater than 0!");
+        if (conf.getFloat(SCAFFOLD_SEED_LENGTH_PERCENTILE, 1) <= 0)
+            throw new IllegalArgumentException("-scaffold_seedLengthPercentile must be greater than 0!");
+
         Patterns.verifyPatterns(Patterns.arrayFromString(conf.get(GenomixJobConf.PIPELINE_ORDER)));
     }
 
@@ -431,6 +448,9 @@ public class GenomixJobConf extends JobConf {
 
         if (getInt(TIP_REMOVE_MAX_LENGTH, -1) == -1 && kmerLength != -1)
             setInt(TIP_REMOVE_MAX_LENGTH, kmerLength);
+
+        if (getFloat(SCAFFOLD_SEED_SCORE_PERCENTILE, -1) == -1 && getFloat(SCAFFOLD_SEED_LENGTH_PERCENTILE, -1) == -1)
+            setFloat(SCAFFOLD_SEED_SCORE_PERCENTILE, .01f); // use top 100 nodes by score
 
         if (getInt(MAX_READIDS_PER_EDGE, -1) == -1)
             setInt(MAX_READIDS_PER_EDGE, 250);
@@ -554,6 +574,10 @@ public class GenomixJobConf extends JobConf {
         setFloat(PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD, opts.pathMergeRandom_probBeingRandomHead);
         setFloat(REMOVE_LOW_COVERAGE_MAX_COVERAGE, opts.removeLowCoverage_maxCoverage);
         setInt(TIP_REMOVE_MAX_LENGTH, opts.tipRemove_maxLength);
+        if (opts.scaffold_seedScorePercentile != -1)
+            setFloat(SCAFFOLD_SEED_SCORE_PERCENTILE, opts.scaffold_seedScorePercentile);
+        if (opts.scaffold_seedLengthPercentile != -1)
+            setFloat(SCAFFOLD_SEED_LENGTH_PERCENTILE, opts.scaffold_seedLengthPercentile);
 
         setInt(STATS_EXPECTED_GENOMESIZE, opts.stats_expectedGenomeSize);
         setInt(STATS_MIN_CONTIGLENGTH, opts.stats_minContigLength);

@@ -53,9 +53,9 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         // TODO maybe have FORWARD and REVERSE happening at the same time?
         INITIAL_DIRECTION = DIR.valueOf(conf.get(GenomixJobConf.SCAFFOLDING_INITIAL_DIRECTION));
         COVERAGE_DIST_NORMAL_MEAN = 0; // TODO set properly once merged
-        COVERAGE_DIST_NORMAL_STD = 0;
+        COVERAGE_DIST_NORMAL_STD = 1000;
         SEED_SCORE_THRESHOLD = Integer.parseInt(conf.get(GenomixJobConf.SCAFFOLDING_SEED_SCORE_THRESHOLD));
-        SEED_LENGTH_THRESHOLD = Integer.parseInt(GenomixJobConf.SCAFFOLDING_SEED_LENGTH_THRESHOLD);
+        SEED_LENGTH_THRESHOLD = Integer.parseInt(conf.get(GenomixJobConf.SCAFFOLDING_SEED_LENGTH_THRESHOLD));
         
         HAS_PAIRED_END_READS = GenomixJobConf.outerDistanceMeans != null;
         MAX_READ_LENGTH = Integer.MIN_VALUE;
@@ -179,6 +179,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         if (vertex.visited) {
             vertex.intersection = true;
             vertex.stopSearch = true;
+            LOG.info("start branch comparison had to stop at " + id);
             return;
         }
         vertex.visited = true;
@@ -511,6 +512,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         if (vertex.stopSearch) {
             // one of my candidate nodes was already visited by a different walk
             // I can't proceed with the prune and I have to stop the search entirely :(
+            LOG.info("prune and search had to stop at " + id);
             return;
         }
 
@@ -558,7 +560,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
                 equalPairedEdgeFound = false;
                 equalSingleEdgeFound = false;
                 for (EDGETYPE targetET : searchETs) {
-                    for (VKmer targetKmer : vertex.getEdges(targetET)) {
+                     for (VKmer targetKmer : vertex.getEdges(targetET)) {
                         targetIndex++;
                         if (queryIndex == targetIndex) {
                             // don't compare vs self
