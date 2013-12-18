@@ -4,16 +4,13 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.AbstractMap.SimpleEntry;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.hadoop.io.Writable;
 
 import edu.uci.ics.genomix.data.types.EDGETYPE;
 import edu.uci.ics.genomix.data.types.VKmer;
-import edu.uci.ics.genomix.data.types.VKmerList;
 
 public class RayScores implements Writable {
 
@@ -140,13 +137,14 @@ public class RayScores implements Writable {
         clear();
         addAll(otherScores);
     }
-    
+
     @Override
     public String toString() {
         StringBuilder s = new StringBuilder();
         String delim = "";
         for (Entry<SimpleEntry<EDGETYPE, VKmer>, Rules> elem : scores.entrySet()) {
-            s.append(delim).append("(").append(elem.getKey().getKey()).append(":").append(elem.getKey().getValue()).append(")").append("=").append(elem.getValue());
+            s.append(delim).append("(").append(elem.getKey().getKey()).append(":").append(elem.getKey().getValue())
+                    .append(")").append("=").append(elem.getValue());
             delim = ", ";
         }
         return s.toString();
