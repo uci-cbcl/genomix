@@ -32,8 +32,8 @@ import edu.uci.ics.pregelix.api.job.PregelixJob;
 
 public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
     private static DIR INITIAL_DIRECTION;
-    private int SEED_SCORE_THRESHOLD;
-    private int SEED_LENGTH_THRESHOLD;
+    private Integer SEED_SCORE_THRESHOLD;
+    private Integer SEED_LENGTH_THRESHOLD;
     private int COVERAGE_DIST_NORMAL_MEAN;
     private int COVERAGE_DIST_NORMAL_STD;
     private static boolean HAS_PAIRED_END_READS;
@@ -54,9 +54,12 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         INITIAL_DIRECTION = DIR.valueOf(conf.get(GenomixJobConf.SCAFFOLDING_INITIAL_DIRECTION));
         COVERAGE_DIST_NORMAL_MEAN = 0; // TODO set properly once merged
         COVERAGE_DIST_NORMAL_STD = 1000;
-        SEED_SCORE_THRESHOLD = Integer.parseInt(conf.get(GenomixJobConf.SCAFFOLDING_SEED_SCORE_THRESHOLD));
-        SEED_LENGTH_THRESHOLD = Integer.parseInt(conf.get(GenomixJobConf.SCAFFOLDING_SEED_LENGTH_THRESHOLD));
-        
+        try {
+            SEED_SCORE_THRESHOLD = Integer.parseInt(conf.get(GenomixJobConf.SCAFFOLDING_SEED_SCORE_THRESHOLD));
+        } catch (NumberFormatException e) {
+            SEED_LENGTH_THRESHOLD = Integer.parseInt(conf.get(GenomixJobConf.SCAFFOLDING_SEED_LENGTH_THRESHOLD));
+        }
+
         HAS_PAIRED_END_READS = GenomixJobConf.outerDistanceMeans != null;
         MAX_READ_LENGTH = Integer.MIN_VALUE;
         MAX_OUTER_DISTANCE = Integer.MIN_VALUE;
@@ -71,7 +74,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
             }
         }
         MAX_DISTANCE = Math.max(MAX_OUTER_DISTANCE, MAX_READ_LENGTH);
-        
+
         if (getSuperstep() == 1) {
             // manually clear state
             getVertexValue().visited = false;
@@ -96,11 +99,14 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
      * @return whether or not this node meets the "seed" criteria
      */
     private boolean isStartSeed() {
-        float coverage = getVertexValue().getAverageCoverage(); 
-        return ((coverage >= COVERAGE_DIST_NORMAL_MEAN - COVERAGE_DIST_NORMAL_STD) 
-                && (coverage <= COVERAGE_DIST_NORMAL_MEAN + COVERAGE_DIST_NORMAL_STD)
-                && (getVertexValue().calculateSeedScore() >= SEED_SCORE_THRESHOLD));
-//        return getVertexValue().getKmerLength() >= MIN_SCAFFOLDING_SEED_LENGTH;
+        if (SEED_SCORE_THRESHOLD != null) {
+            float coverage = getVertexValue().getAverageCoverage();
+            return ((coverage >= COVERAGE_DIST_NORMAL_MEAN - COVERAGE_DIST_NORMAL_STD)
+                    && (coverage <= COVERAGE_DIST_NORMAL_MEAN + COVERAGE_DIST_NORMAL_STD) && (getVertexValue()
+                    .calculateSeedScore() >= SEED_SCORE_THRESHOLD));
+        } else {
+            return getVertexValue().getKmerLength() >= SEED_LENGTH_THRESHOLD;
+        }
     }
 
     /**
@@ -568,7 +574,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
                 equalPairedEdgeFound = false;
                 equalSingleEdgeFound = false;
                 for (EDGETYPE targetET : searchETs) {
-                     for (VKmer targetKmer : vertex.getEdges(targetET)) {
+                    for (VKmer targetKmer : vertex.getEdges(targetET)) {
                         targetIndex++;
                         if (queryIndex == targetIndex) {
                             // don't compare vs self
@@ -659,7 +665,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
             }
             total += c.getCounter();
         }
-        
+
         if (topNumber == null) {
             topNumber = (int) (total * topFraction);
         }
