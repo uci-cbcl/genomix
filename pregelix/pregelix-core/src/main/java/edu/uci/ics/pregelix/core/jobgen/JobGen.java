@@ -66,6 +66,9 @@ import edu.uci.ics.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.file.ConstantFileSplitProvider;
 import edu.uci.ics.hyracks.dataflow.std.file.FileSplit;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
+import edu.uci.ics.hyracks.dataflow.std.group.HashSpillableTableFactory;
+import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
+import edu.uci.ics.hyracks.dataflow.std.group.external.ExternalGroupOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.misc.ConstantTupleSourceOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.sort.Algorithm;
 import edu.uci.ics.hyracks.dataflow.std.sort.ExternalSortOperatorDescriptor;
@@ -114,6 +117,8 @@ import edu.uci.ics.pregelix.dataflow.VertexFileScanOperatorDescriptor;
 import edu.uci.ics.pregelix.dataflow.VertexFileWriteOperatorDescriptor;
 import edu.uci.ics.pregelix.dataflow.VertexWriteOperatorDescriptor;
 import edu.uci.ics.pregelix.dataflow.base.IConfigurationFactory;
+import edu.uci.ics.pregelix.dataflow.group.ClusteredGroupOperatorDescriptor;
+import edu.uci.ics.pregelix.dataflow.group.IClusteredAggregatorDescriptorFactory;
 import edu.uci.ics.pregelix.dataflow.std.RuntimeHookOperatorDescriptor;
 import edu.uci.ics.pregelix.dataflow.std.TreeIndexBulkReLoadOperatorDescriptor;
 import edu.uci.ics.pregelix.dataflow.std.TreeSearchFunctionUpdateOperatorDescriptor;
@@ -889,7 +894,7 @@ public abstract class JobGen implements IJobGen {
     public void setLocationConstraint(JobSpecification spec, IOperatorDescriptor operator) {
         optimizer.setOptimizedLocationConstraints(spec, operator);
     }
-    
+
     /**
      * get the file split provider
      * 
@@ -897,8 +902,86 @@ public abstract class JobGen implements IJobGen {
      * @param indexName
      * @return the IFileSplitProvider instance
      */
-    public IFileSplitProvider getFileSplitProvider(String jobId, String indexName){
+    public IFileSplitProvider getFileSplitProvider(String jobId, String indexName) {
         return optimizer.getOptimizedFileSplitProvider(jobId, indexName);
     }
 
+    /**
+     * Generate the pipeline for local grouping
+     * 
+     * @param spec
+     *            the JobSpecification
+     * @param sortOrHash
+     *            sort-based algorithm or hash-based algorithm
+     * @return the start and end (if any) operators of the grouping pipeline
+     */
+    protected Pair<IOperatorDescriptor, IOperatorDescriptor> generateGroupingOperators(JobSpecification spec,
+            boolean sortOrHash, int iteration, Class<? extends Writable> vertexIdClass,
+            Class<? extends Writable> messageValueClass) throws HyracksException {
+        int[] keyFields = new int[] { 0 };
+        INormalizedKeyComputerFactory nkmFactory = JobGenUtil.getINormalizedKeyComputerFactory(conf);
+        IBinaryComparatorFactory[] sortCmpFactories = new IBinaryComparatorFactory[1];
+        sortCmpFactories[0] = JobGenUtil.getIBinaryComparatorFactory(iteration, vertexIdClass);
+        RecordDescriptor rdUnnestedMessage = DataflowUtils.getRecordDescriptorFromKeyValueClasses(conf,
+                vertexIdClass.getName(), messageValueClass.getName());
+        RecordDescriptor rdFinal = DataflowUtils.getRecordDescriptorFromKeyValueClasses(conf, vertexIdClass.getName(),
+                MsgList.class.getName());
+
+        if (sortOrHash) {
+            /**
+             * construct local sort operator
+             */
+            IOperatorDescriptor localSort = new ExternalSortOperatorDescriptor(spec, maxFrameNumber, keyFields,
+                    nkmFactory, sortCmpFactories, rdUnnestedMessage, Algorithm.QUICK_SORT);
+            setLocationConstraint(spec, localSort);
+
+            /**
+             * construct local pre-clustered group-by operator
+             */
+            IClusteredAggregatorDescriptorFactory aggregatorFactory = DataflowUtils.getAccumulatingAggregatorFactory(
+                    conf, false, false);
+            IOperatorDescriptor localGby = new ClusteredGroupOperatorDescriptor(spec, keyFields, sortCmpFactories,
+                    aggregatorFactory, rdUnnestedMessage);
+            setLocationConstraint(spec, localGby);
+
+            /**
+             * construct global group-by operator
+             */
+            IClusteredAggregatorDescriptorFactory aggregatorFactoryFinal = DataflowUtils
+                    .getAccumulatingAggregatorFactory(conf, true, true);
+            IOperatorDescriptor globalGby = new ClusteredGroupOperatorDescriptor(spec, keyFields, sortCmpFactories,
+                    aggregatorFactoryFinal, rdFinal);
+            setLocationConstraint(spec, globalGby);
+
+            ITuplePartitionComputerFactory partionFactory = getVertexPartitionComputerFactory();
+            spec.connect(new OneToOneConnectorDescriptor(spec), localSort, 0, localGby, 0);
+            spec.connect(new MToNPartitioningMergingConnectorDescriptor(spec, partionFactory, keyFields,
+                    sortCmpFactories, nkmFactory), localGby, 0, globalGby, 0);
+            return Pair.of(localSort, globalGby);
+        } else {
+            /**
+             * construct local group-by operator
+             */
+            ITuplePartitionComputerFactory partionFactory = getVertexPartitionComputerFactory();
+            IAggregatorDescriptorFactory aggregatorFactory = DataflowUtils.getSerializableAggregatorFactory(conf,
+                    false, false);
+            IAggregatorDescriptorFactory mergeFactory = DataflowUtils
+                    .getSerializableAggregatorFactory(conf, true, true);
+            IOperatorDescriptor localGby = new ExternalGroupOperatorDescriptor(spec, keyFields, maxFrameNumber,
+                    sortCmpFactories, nkmFactory, aggregatorFactory, aggregatorFactory, rdUnnestedMessage,
+                    new HashSpillableTableFactory(partionFactory, tableSize), false);
+            setLocationConstraint(spec, localGby);
+
+            /**
+             * construct global group-by operator
+             */
+            IOperatorDescriptor globalGby = new ExternalGroupOperatorDescriptor(spec, keyFields, maxFrameNumber,
+                    sortCmpFactories, nkmFactory, aggregatorFactory, mergeFactory, rdUnnestedMessage,
+                    new HashSpillableTableFactory(partionFactory, tableSize), true);
+            setLocationConstraint(spec, globalGby);
+
+            spec.connect(new MToNPartitioningConnectorDescriptor(spec, partionFactory), localGby, 0, globalGby, 0);
+            return Pair.of(localGby, globalGby);
+        }
+    }
 }

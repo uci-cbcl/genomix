@@ -115,4 +115,14 @@ public abstract class MessageCombiner<I extends WritableComparable, M extends Wr
     public int estimateAccumulatedStateByteSizeFinal(I vertexIndex, P partialAggregate) throws HyracksDataException {
         return 0;
     }
+
+    /**
+     * set the intermediate combine result
+     * 
+     * @param p
+     *            the intermediate combine result
+     */
+    public void setPartialCombineState(P p) {
+
+    }
 }

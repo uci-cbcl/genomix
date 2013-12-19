@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.pregelix.runtime.simpleagg;
+package edu.uci.ics.pregelix.runtime.agg;
 
 import java.io.DataInput;
 import java.io.DataInputStream;
