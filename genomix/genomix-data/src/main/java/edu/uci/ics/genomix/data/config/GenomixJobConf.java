@@ -451,9 +451,6 @@ public class GenomixJobConf extends JobConf {
         if (getInt(TIP_REMOVE_MAX_LENGTH, -1) == -1 && kmerLength != -1)
             setInt(TIP_REMOVE_MAX_LENGTH, kmerLength);
 
-        if (getFloat(SCAFFOLD_SEED_SCORE_PERCENTILE, -1) == -1 && getFloat(SCAFFOLD_SEED_LENGTH_PERCENTILE, -1) == -1)
-            setFloat(SCAFFOLD_SEED_SCORE_PERCENTILE, .01f); // use top 100 nodes by score
-
         if (getInt(MAX_READIDS_PER_EDGE, -1) == -1)
             setInt(MAX_READIDS_PER_EDGE, 250);
 
@@ -576,10 +573,14 @@ public class GenomixJobConf extends JobConf {
         setFloat(PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD, opts.pathMergeRandom_probBeingRandomHead);
         setFloat(REMOVE_LOW_COVERAGE_MAX_COVERAGE, opts.removeLowCoverage_maxCoverage);
         setInt(TIP_REMOVE_MAX_LENGTH, opts.tipRemove_maxLength);
-        if (opts.scaffold_seedScorePercentile != -1)
+        if (opts.scaffold_seedScorePercentile != -1) {
             setFloat(SCAFFOLD_SEED_SCORE_PERCENTILE, opts.scaffold_seedScorePercentile);
-        if (opts.scaffold_seedLengthPercentile != -1)
+        } else if (opts.scaffold_seedLengthPercentile != -1) {
             setFloat(SCAFFOLD_SEED_LENGTH_PERCENTILE, opts.scaffold_seedLengthPercentile);
+        } else {
+            // use a default score percentile of .01
+            setFloat(SCAFFOLD_SEED_SCORE_PERCENTILE, .01f);
+        }
 
         setInt(STATS_EXPECTED_GENOMESIZE, opts.stats_expectedGenomeSize);
         setInt(STATS_MIN_CONTIGLENGTH, opts.stats_minContigLength);
