@@ -621,7 +621,8 @@ public class GenomixJobConf extends JobConf {
 
     public static void setGlobalStaticConstants(Configuration conf) throws IOException {
         Kmer.setGlobalKmerLength(Integer.parseInt(conf.get(KMER_LENGTH)));
-        ExternalableTreeSet.setupManager(conf, new Path(conf.get("hadoop.tmp.dir", "/tmp")));
+        //        ExternalableTreeSet.setupManager(conf, new Path(conf.get("hadoop.tmp.dir", "/tmp")));
+        ExternalableTreeSet.setupManager(conf, new Path("/user/tmp"));
         ExternalableTreeSet.setCountLimit(1000);
 
         if (conf.get(READ_LENGTHS) != null) {

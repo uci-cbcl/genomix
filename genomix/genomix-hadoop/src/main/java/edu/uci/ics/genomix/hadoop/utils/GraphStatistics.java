@@ -60,10 +60,17 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
     private Reporter reporter;
     Float COVERAGE_DIST_MEAN;
     Float COVERAGE_DIST_STD;
-    
+
     @Override
     public void configure(JobConf job) {
         // TODO fix this.
+        try {
+            GenomixJobConf.setGlobalStaticConstants((Configuration) job);
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
         COVERAGE_DIST_MEAN = 0f; // Float.parseFloat(job.get(GenomixJobConf.???)) 
         COVERAGE_DIST_STD = 1000f;
     }
@@ -73,6 +80,7 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
             throws IOException {
 
         this.reporter = reporter;
+        System.err.println("Inside the Map");
         reporter.incrCounter("totals", "nodes", 1);
         updateStats("degree", value.inDegree() + value.outDegree());
         updateStats("kmerLength", value.getInternalKmer().getKmerLetterLength() == 0 ? key.getKmerLetterLength()
@@ -80,7 +88,7 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
         updateStats("coverage", Math.round(value.getAverageCoverage()));
         updateStats("unflippedReadIds", value.getUnflippedReadIds().size());
         updateStats("flippedReadIds", value.getFlippedReadIds().size());
-        
+
         float coverage = value.getAverageCoverage();
         if (coverage >= COVERAGE_DIST_MEAN - COVERAGE_DIST_STD && coverage <= COVERAGE_DIST_MEAN + COVERAGE_DIST_STD) {
             updateStats("scaffoldSeedScore", value.calculateSeedScore());
@@ -130,6 +138,7 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
         JobConf conf = new JobConf(baseConf);
         conf.setJobName("Graph Statistics");
         conf.setMapperClass(GraphStatistics.class);
+        conf.set("mapred.child.java.opts", "-Xmx50g");
         conf.setNumReduceTasks(0); // no reducer
 
         conf.setInputFormat(SequenceFileInputFormat.class);
@@ -145,7 +154,7 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
         return job.getCounters();
     }
 
-    public static double getMaxCoverage(Counters jobCounters){
+    public static double getMaxCoverage(Counters jobCounters) {
         double maxCoverage = 0;
         for (Group g : jobCounters) {
             if (g.getName().equals("coverage-bins")) {
@@ -158,6 +167,7 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
         }
         return maxCoverage;
     }
+
     /**
      * run a map-reduce job on the given input graph and return an array of coverage
      */
@@ -175,7 +185,7 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
             }
         }
         double[] resultArray = new double[resultArrayList.size()];
-        for(int i = 0; i < resultArrayList.size(); i++)
+        for (int i = 0; i < resultArrayList.size(); i++)
             resultArray[i] = resultArrayList.get(i);
         return resultArray;
     }
@@ -186,7 +196,7 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
     public static void saveGraphStats(String outputDir, Counters jobCounters, GenomixJobConf conf) throws IOException {
         // get relevant counters
 
-        TreeMap<String, Long> sortedCounters = new TreeMap<String, Long>(); 
+        TreeMap<String, Long> sortedCounters = new TreeMap<String, Long>();
         for (Group g : jobCounters) {
             if (!g.getName().endsWith("-bins")) {
                 for (Counter c : g) {
@@ -204,8 +214,9 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
         }
         writer.close();
     }
-    
-    public static void drawCoverageStatistics(String outputDir, Counters jobCounters, GenomixJobConf conf) throws IOException {
+
+    public static void drawCoverageStatistics(String outputDir, Counters jobCounters, GenomixJobConf conf)
+            throws IOException {
         HashMap<String, TreeMap<Integer, Long>> allHists = new HashMap<String, TreeMap<Integer, Long>>();
         TreeMap<Integer, Long> curCounts;
 
@@ -247,7 +258,7 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
             outstream.close();
         }
     }
-    
+
     /**
      * generate a histogram from the *-bins values
      * for example, the coverage counters have the group "coverage-bins", the counter name "5" and the count 10
