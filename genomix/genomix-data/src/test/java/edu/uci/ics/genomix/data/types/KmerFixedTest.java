@@ -25,7 +25,7 @@ import org.junit.Test;
 import edu.uci.ics.genomix.data.types.Kmer;
 import edu.uci.ics.genomix.data.utils.GeneCode;
 
-public class KmerTest {
+public class KmerFixedTest {
     static byte[] array = { 'A', 'A', 'T', 'A', 'G', 'A', 'A', 'G' };
     static int k = 7;
 
