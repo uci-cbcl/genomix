@@ -18,4 +18,8 @@ public class FrameHelper {
     public static int getTupleCountOffset(int frameSize) {
         return frameSize - 4;
     }
+
+    public static int getTupleEndOffsetOffset(int frameSize, int idx) {
+        return FrameHelper.getTupleCountOffset(frameSize) - 4 * (idx + 1);
+    }
 }
