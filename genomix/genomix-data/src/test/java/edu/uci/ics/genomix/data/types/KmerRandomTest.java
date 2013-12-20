@@ -87,10 +87,8 @@ public class KmerRandomTest {
     public void TestGetGene() {
         int strLength = RandomTestHelper.genRandomInt(strMinLength, strMaxLength);
         String input = RandomTestHelper.generateGeneString(strLength);
-        int kmerSize = RandomTestHelper.genRandomInt(1, strLength);
-        String actualKmerStr = input.substring(0, kmerSize);
-        Kmer.setGlobalKmerLength(kmerSize);
-        Kmer kmer = new Kmer();
+        Kmer kmer = getRandomKmer(strMinLength, strMaxLength, input, strLength);
+        String actualKmerStr = input.substring(0, kmer.getKmerLength());
         kmer.setFromStringBytes(actualKmerStr.getBytes(), 0);
         for (int i = 0; i < kmer.getKmerLength(); i++) {
             Assert.assertEquals(actualKmerStr.charAt(i),
@@ -102,18 +100,14 @@ public class KmerRandomTest {
     public void TestGetOneByteFromKmer() {
         int strLength = RandomTestHelper.genRandomInt(strMinLength, strMaxLength);
         String input = RandomTestHelper.generateGeneString(strLength);
-        int kmerSize = RandomTestHelper.genRandomInt(1, strLength);
-        String actualKmerStr = input.substring(0, kmerSize);
-        Kmer.setGlobalKmerLength(kmerSize);
-        Kmer kmer = new Kmer();
-        kmer.setFromStringBytes(actualKmerStr.getBytes(), 0);
+        Kmer kmer = getRandomKmer(strMinLength, strMaxLength, input, strLength);
+        String actualKmerStr = input.substring(0, kmer.getKmerLength());
         Kmer kmerAppend = new Kmer();
-        kmer.setFromStringBytes(actualKmerStr.getBytes(), 0);
         for (int i = 0; i < kmer.getKmerLength(); i++) {
             byte byteActual = Kmer.getOneByteFromKmerAtPosition(i, kmer.getBytes(), kmer.getOffset(), kmer.getLength());
             byte byteExpect = GeneCode.getCodeFromSymbol((byte) (actualKmerStr.charAt(i)));
             for (int j = 1; j < 4 && i + j < kmer.getKmerLength(); j++) {
-                byteExpect += GeneCode.getCodeFromSymbol((byte) (actualKmerStr.charAt(i + j))) << (i * 2);
+                byteExpect += GeneCode.getCodeFromSymbol((byte) (actualKmerStr.charAt(i + j))) << (j * 2);
             }
             Assert.assertEquals(byteActual, byteExpect);
             Kmer.appendOneByteAtPosition(i, byteActual, kmerAppend.getBytes(), kmerAppend.getOffset(),
