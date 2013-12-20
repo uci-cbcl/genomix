@@ -34,14 +34,6 @@ public class KmerFixedTest {
         Kmer.setGlobalKmerLength(k);
         Kmer kmer = new Kmer();
         kmer.setFromStringBytes(array, 0);
-//        byte[] test = kmer.getBytes();
-//        for (int i = 0; i < test.length; i++) {
-//            String s1 = String.format("%8s", Integer.toBinaryString(test[i] & 0xFF)).replace(' ', '0');
-//            System.out.print(s1 + "\t");
-//        }
-//        System.out.println();
-//        System.out.println(Arrays.toString(test));
-//        System.out.println(kmer.toString());
         Assert.assertEquals(kmer.toString(), "AATAGAA");
         kmer.setFromStringBytes(array, 1);
         Assert.assertEquals(kmer.toString(), "ATAGAAG");
@@ -53,11 +45,6 @@ public class KmerFixedTest {
         Kmer kmer = new Kmer();
         kmer.setFromStringBytes(array, 0);
         Assert.assertEquals(kmer.toString(), "AATAGAA");
-
-        for (int i = k; i < array.length - 1; i++) {
-            kmer.shiftKmerWithNextCode(array[i]);
-            Assert.assertTrue(false);
-        }
 
         byte out = kmer.shiftKmerWithNextChar(array[array.length - 1]);
         Assert.assertEquals(out, GeneCode.getCodeFromSymbol((byte) 'A'));
