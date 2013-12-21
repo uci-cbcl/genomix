@@ -38,7 +38,7 @@ public class KmerRandomTest {
         }
     }
 
-    public static Kmer getRandomKmer(int strMinLength, int strMaxLength, String input, int strLength) {
+    public static Kmer getRandomKmer(String input, int strLength) {
         int kmerSize = RandomTestHelper.genRandomInt(1, strLength);
         String actualKmerStr = input.substring(0, kmerSize);
         Kmer.setGlobalKmerLength(kmerSize);
@@ -63,7 +63,7 @@ public class KmerRandomTest {
     public void TestMoveKmer() {
         int strLength = RandomTestHelper.genRandomInt(strMinLength, strMaxLength);
         String input = RandomTestHelper.generateGeneString(strLength);
-        Kmer kmer = getRandomKmer(strMinLength, strMaxLength, input, strLength);
+        Kmer kmer = getRandomKmer(input, strLength);
         int kmerLength = kmer.getKmerLength();
         for (int i = kmerLength; i < strLength - 1; i++) {
             kmer.shiftKmerWithNextChar((byte) (input.charAt(i)));
@@ -87,7 +87,7 @@ public class KmerRandomTest {
     public void TestGetGene() {
         int strLength = RandomTestHelper.genRandomInt(strMinLength, strMaxLength);
         String input = RandomTestHelper.generateGeneString(strLength);
-        Kmer kmer = getRandomKmer(strMinLength, strMaxLength, input, strLength);
+        Kmer kmer = getRandomKmer(input, strLength);
         String actualKmerStr = input.substring(0, kmer.getKmerLength());
         kmer.setFromStringBytes(actualKmerStr.getBytes(), 0);
         for (int i = 0; i < kmer.getKmerLength(); i++) {
@@ -100,7 +100,7 @@ public class KmerRandomTest {
     public void TestGetOneByteFromKmer() {
         int strLength = RandomTestHelper.genRandomInt(strMinLength, strMaxLength);
         String input = RandomTestHelper.generateGeneString(strLength);
-        Kmer kmer = getRandomKmer(strMinLength, strMaxLength, input, strLength);
+        Kmer kmer = getRandomKmer(input, strLength);
         String actualKmerStr = input.substring(0, kmer.getKmerLength());
         Kmer kmerAppend = new Kmer();
         for (int i = 0; i < kmer.getKmerLength(); i++) {

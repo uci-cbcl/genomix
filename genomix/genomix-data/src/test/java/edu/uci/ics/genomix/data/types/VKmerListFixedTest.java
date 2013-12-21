@@ -29,7 +29,7 @@ public class VKmerListFixedTest {
     }
 
     @Test
-    public void TestInitial() {
+    public void TestAppend() {
         VKmerList kmerList = new VKmerList();
         Assert.assertEquals(kmerList.size(), 0);
         //one kmer in list and reset each time
