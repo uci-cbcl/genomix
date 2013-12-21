@@ -13,7 +13,7 @@ import org.junit.Test;
 import edu.uci.ics.genomix.data.types.VKmer;
 import edu.uci.ics.genomix.data.types.VKmerList;
 
-public class VKmerListTest {
+public class VKmerListFixedTest {
 
     public static String generaterRandomString(int n) {
         char[] chars = "ACGT".toCharArray();
