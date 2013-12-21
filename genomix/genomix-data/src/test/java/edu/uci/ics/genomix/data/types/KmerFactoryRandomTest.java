@@ -35,10 +35,10 @@ public class KmerFactoryRandomTest {
         strMaxLength = 15;
         strMinLength = 13;
         if ((strMinLength <= 0) || (strMaxLength <= 0)) {
-            throw new IllegalStateException("strMinLength or strMaxLength can not be less than 0!");
+            throw new IllegalArgumentException("strMinLength or strMaxLength can not be less than 0!");
         }
         if (strMinLength > strMaxLength) {
-            throw new IllegalStateException("strMinLength can not be larger than strMaxLength!");
+            throw new IllegalArgumentException("strMinLength can not be larger than strMaxLength!");
         }
     }
 

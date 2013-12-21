@@ -15,6 +15,8 @@ import edu.uci.ics.genomix.data.types.VKmerList;
 
 public class VKmerListFixedTest {
 
+    static byte[] array = { 'A', 'A', 'T', 'A', 'G', 'A', 'A', 'G' };
+    
     public static String generaterRandomString(int n) {
         char[] chars = "ACGT".toCharArray();
         StringBuilder sb = new StringBuilder();
@@ -30,40 +32,21 @@ public class VKmerListFixedTest {
     public void TestInitial() {
         VKmerList kmerList = new VKmerList();
         Assert.assertEquals(kmerList.size(), 0);
-
         //one kmer in list and reset each time
-        VKmer kmer;
-        for (int i = 1; i < 200; i++) {
-            kmer = new VKmer(i);
-            String randomString = generaterRandomString(i);
-            byte[] array = randomString.getBytes();
-            kmer.setFromStringBytes(i, array, 0);
-            kmerList.clear();
-            kmerList.append(kmer);
-            Assert.assertEquals(randomString, kmerList.getPosition(0).toString());
-            Assert.assertEquals(1, kmerList.size());
-        }
-
+        VKmer kmer = new VKmer();
+        kmer.setFromStringBytes(8, array, 0);
+        kmerList.append(kmer);
+        Assert.assertEquals("AATAGAAG", kmerList.getPosition(0).toString());
+        Assert.assertEquals(1, kmerList.size());
         kmerList.clear();
         //add one more kmer each time and fix kmerSize
-        for (int i = 0; i < 200; i++) {
-            kmer = new VKmer(5);
-            String randomString = generaterRandomString(5);
-            byte[] array = randomString.getBytes();
-            kmer.setFromStringBytes(5, array, 0);
+        for (int i = 0; i < 8; i++) {
+            kmer.setFromStringBytes(i, array, 0);
             kmerList.append(kmer);
-            Assert.assertEquals(kmerList.getPosition(i).toString(), randomString);
-            Assert.assertEquals(i + 1, kmerList.size());
+            Assert.assertEquals("AATAGAAG".substring(0, i), kmerList.getPosition(i).toString());
         }
+        Assert.assertEquals(8, kmerList.size());
 
-        byte[] another = new byte[kmerList.getLengthInBytes() * 2];
-        int start = 20;
-        System.arraycopy(kmerList.getByteArray(), kmerList.getStartOffset(), another, start,
-                kmerList.getLengthInBytes());
-        VKmerList plist2 = new VKmerList(another, start);
-        for (int i = 0; i < plist2.size(); i++) {
-            Assert.assertEquals(kmerList.getPosition(i).toString(), plist2.getPosition(i).toString());
-        }
     }
 
     @Test
@@ -72,7 +55,7 @@ public class VKmerListFixedTest {
         Assert.assertEquals(kmerList.size(), 0);
 
         int i;
-        VKmer kmer;
+        VKmer kmer = new VKmer();
         for (i = 0; i < 200; i++) {
             kmer = new VKmer(5);
             String randomString = generaterRandomString(5);
