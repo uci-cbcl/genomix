@@ -31,7 +31,7 @@ import edu.uci.ics.genomix.data.types.VKmer;
 import edu.uci.ics.genomix.data.types.VKmerList;
 import edu.uci.ics.genomix.data.utils.GeneCode;
 
-public class VKmerTest {
+public class VKmerFixedTest {
     static byte[] array = { 'A', 'A', 'T', 'A', 'G', 'A', 'A', 'G' };
     static int k = 7;
 
