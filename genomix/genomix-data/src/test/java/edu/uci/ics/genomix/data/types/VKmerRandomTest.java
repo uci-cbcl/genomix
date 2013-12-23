@@ -120,4 +120,25 @@ public class VKmerRandomTest {
         }
         Assert.assertEquals(vkmer.toString(), kmerAppend.toString());
     }
+    
+    @Test
+    public void TestMergeFFKmer() {
+        int strLength = RandomTestHelper.genRandomInt(strMinLength, strMaxLength);
+        String input = RandomTestHelper.generateGeneString(strLength);
+        VKmer kmer1 = new VKmer();
+        kmer1.setFromStringBytes(strLength - 1, input.getBytes(), 0);
+        Assert.assertEquals(input.substring(0, strLength - 1), kmer1.toString());
+        VKmer kmer2 = new VKmer();
+        kmer2.setFromStringBytes(strLength - 1, input.getBytes(), 1);
+        Assert.assertEquals(input.substring(1, strLength), kmer2.toString());
+        VKmer merge = new VKmer(kmer1);
+        merge.mergeWithFFKmer(strLength - 1, kmer2);
+        Assert.assertEquals(input, merge.toString());
+        for (int i = 1; i < strLength - 1; i++) {
+            merge.setAsCopy(kmer1);
+            merge.mergeWithFFKmer(i, kmer2);
+            Assert.assertEquals(kmer1.toString() + kmer2.toString().substring(i - 1), merge.toString());
+        }
+
+    }
 }
