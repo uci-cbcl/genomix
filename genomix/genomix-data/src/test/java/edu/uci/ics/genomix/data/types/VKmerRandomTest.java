@@ -5,6 +5,8 @@ import junit.framework.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import edu.uci.ics.genomix.data.utils.GeneCode;
+
 
 public class VKmerRandomTest {
     
@@ -58,5 +60,34 @@ public class VKmerRandomTest {
             vkmer.shiftKmerWithNextChar((byte) (input.charAt(i)));
             Assert.assertEquals(input.substring(1 + i - kmerLength, 1 + i - kmerLength + kmerLength), vkmer.toString());
         }
+    }
+    
+    @Test
+    public void TestCompressKmerReverse() {
+        int strLength = RandomTestHelper.genRandomInt(strMinLength, strMaxLength);
+        String input = RandomTestHelper.generateGeneString(strLength);
+        int kmerSize = RandomTestHelper.genRandomInt(1, strLength);
+        String actualKmerStr = input.substring(0, kmerSize);
+        VKmer vkmer = new VKmer();
+        vkmer.setReversedFromStringBytes(kmerSize, input.getBytes(), 0);
+        Assert.assertEquals(RandomTestHelper.getFlippedGeneStr(actualKmerStr), vkmer.toString());
+    }
+    
+    @Test
+    public void TestMoveKmerReverse() {
+        int strLength = RandomTestHelper.genRandomInt(strMinLength, strMaxLength);
+        String input = RandomTestHelper.generateGeneString(strLength);
+        VKmer vkmer = new VKmer();
+        vkmer = getRandomKmer(input, strLength);
+        int kmerLength = vkmer.getKmerLetterLength();
+        System.out.println(vkmer.toString());
+        String expectedStr = input.substring(0, vkmer.getKmerLetterLength());
+        for (int i = kmerLength; i < strLength - 1; i++) {
+            expectedStr = input.charAt(i) + expectedStr;
+            expectedStr.substring(0, expectedStr.length() - 2);
+            vkmer.shiftKmerWithPreChar((byte) (input.charAt(i)));
+            Assert.assertEquals(expectedStr, vkmer.toString());
+        }
+        
     }
 }
