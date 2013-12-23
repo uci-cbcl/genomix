@@ -80,7 +80,6 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
             throws IOException {
 
         this.reporter = reporter;
-        System.err.println("Inside the Map");
         reporter.incrCounter("totals", "nodes", 1);
         updateStats("degree", value.inDegree() + value.outDegree());
         updateStats("kmerLength", value.getInternalKmer().getKmerLetterLength() == 0 ? key.getKmerLetterLength()
@@ -138,7 +137,6 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
         JobConf conf = new JobConf(baseConf);
         conf.setJobName("Graph Statistics");
         conf.setMapperClass(GraphStatistics.class);
-        conf.set("mapred.child.java.opts", "-Xmx50g");
         conf.setNumReduceTasks(0); // no reducer
 
         conf.setInputFormat(SequenceFileInputFormat.class);

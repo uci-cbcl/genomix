@@ -254,7 +254,6 @@ public abstract class ExternalableTreeSet<T extends WritableComparable<T> & Seri
             } else if (isChanged) {
                 save(path, inMemorySet);
             }
-            System.err.println("Write to HDFS:" + path);
             out.writeUTF(path.toString());
         }
         isChanged = false;
