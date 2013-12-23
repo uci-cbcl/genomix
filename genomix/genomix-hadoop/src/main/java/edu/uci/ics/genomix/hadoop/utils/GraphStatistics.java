@@ -203,6 +203,13 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
             writer.println(e.getKey() + " = " + e.getValue());
         }
         writer.close();
+        
+        outstream = fileSys.create(new Path(outputDir + File.separator + "kmerLengths.txt"), true);
+        writer = new PrintWriter(outstream);
+        for (Counter c : jobCounters.getGroup("kmerLength-bins")) {
+            writer.println(c);
+        }
+        writer.close();
     }
     
     public static void drawCoverageStatistics(String outputDir, Counters jobCounters, GenomixJobConf conf) throws IOException {
