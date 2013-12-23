@@ -5,7 +5,6 @@ import junit.framework.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import edu.uci.ics.genomix.data.utils.GeneCode;
 
 public class VKmerRandomTest {
     
@@ -28,7 +27,7 @@ public class VKmerRandomTest {
         int kmerSize = RandomTestHelper.genRandomInt(1, strLength);
         String actualKmerStr = input.substring(0, kmerSize);
         VKmer vkmer = new VKmer();
-        vkmer.setFromStringBytes(actualKmerStr.getBytes(), 0);
+        vkmer.setFromStringBytes(kmerSize, actualKmerStr.getBytes(), 0);
         return vkmer;
     }
     
@@ -36,8 +35,7 @@ public class VKmerRandomTest {
     public void TestCompressKmer() {
         int strLength = RandomTestHelper.genRandomInt(strMinLength, strMaxLength);
         String input = RandomTestHelper.generateGeneString(strLength);
-        VKmer vkmer = new VKmer();
-        vkmer = getRandomKmer(input, strLength);
+        VKmer vkmer = getRandomKmer(input, strLength);
         Assert.assertEquals(input.substring(0, vkmer.getKmerLetterLength()), vkmer.toString());
     }
     
