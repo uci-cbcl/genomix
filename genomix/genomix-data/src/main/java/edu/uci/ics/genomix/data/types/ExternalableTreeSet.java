@@ -29,7 +29,8 @@ public abstract class ExternalableTreeSet<T extends WritableComparable<T> & Seri
      */
     private static final long serialVersionUID = 1L;
     static FileManager manager;
-    static private int countLimit = Integer.MAX_VALUE;
+//    static private int countLimit = Integer.MAX_VALUE;
+    static private int countLimit = 1000;
 
     public static synchronized void setupManager(Configuration conf, Path workPath) throws IOException {
         if (manager == null) {
@@ -253,6 +254,7 @@ public abstract class ExternalableTreeSet<T extends WritableComparable<T> & Seri
             } else if (isChanged) {
                 save(path, inMemorySet);
             }
+            System.err.println("Write to HDFS:" + path);
             out.writeUTF(path.toString());
         }
         isChanged = false;

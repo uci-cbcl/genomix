@@ -8,6 +8,7 @@ import java.util.logging.Logger;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Counters;
 
+import org.apache.hadoop.conf.Configuration;
 import edu.uci.ics.genomix.data.config.GenomixJobConf;
 import edu.uci.ics.genomix.data.types.DIR;
 import edu.uci.ics.genomix.data.types.EDGETYPE;
@@ -100,6 +101,11 @@ public abstract class DeBruijnGraphCleanVertex<V extends VertexValueWritable, M 
         return counters;
     }
     
+    @Override
+    public void configure(Configuration conf) {
+        super.configure(conf);
+        initVertex();
+    }
     @Override
     public void open() {
         super.open();

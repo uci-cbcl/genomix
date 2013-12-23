@@ -198,8 +198,8 @@ public class GenomixDriver {
             case MERGE:
             case MERGE_P4:
                 pregelixJobs.add(P4ForPathMergeVertex.getConfiguredJob(conf, P4ForPathMergeVertex.class));
-                flushPendingJobs(conf);
-                setMinScaffoldingSeedLength(conf);
+               // flushPendingJobs(conf);
+               // setMinScaffoldingSeedLength(conf);
                 break;
             case UNROLL_TANDEM:
                 pregelixJobs.add(UnrollTandemRepeat.getConfiguredJob(conf, UnrollTandemRepeat.class));
