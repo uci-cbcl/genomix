@@ -8,6 +8,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
+import java.net.InetAddress;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -327,7 +328,10 @@ public abstract class ExternalableTreeSet<T extends WritableComparable<T> & Seri
                 Path workPath) throws IOException {
             Path path;
             do {
-                path = new Path(workPath, ExternalableTreeSet.class.getName() + simpleDateFormat.format(new Date()));
+                String hostName = "";
+                hostName = InetAddress.getLocalHost().getHostName();
+                path = new Path(workPath, ExternalableTreeSet.class.getName() + hostName
+                        + simpleDateFormat.format(new Date()));
             } while (fs.exists(path));
             validation.put(path, fs.create(path, (short) 1));
             return path;
