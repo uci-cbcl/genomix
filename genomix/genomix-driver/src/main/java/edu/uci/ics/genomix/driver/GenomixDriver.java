@@ -47,6 +47,7 @@ import edu.uci.ics.genomix.data.cluster.DriverUtils;
 import edu.uci.ics.genomix.data.cluster.GenomixClusterManager;
 import edu.uci.ics.genomix.data.config.GenomixJobConf;
 import edu.uci.ics.genomix.data.config.GenomixJobConf.Patterns;
+import edu.uci.ics.genomix.data.types.DIR;
 import edu.uci.ics.genomix.data.utils.GenerateGraphViz;
 import edu.uci.ics.genomix.data.utils.GenerateGraphViz.GRAPH_TYPE;
 import edu.uci.ics.genomix.hadoop.buildgraph.GenomixHadoopDriver;
@@ -54,12 +55,13 @@ import edu.uci.ics.genomix.hadoop.utils.ConvertToFasta;
 import edu.uci.ics.genomix.hadoop.utils.GraphStatistics;
 import edu.uci.ics.genomix.hyracks.graph.driver.GenomixHyracksDriver;
 import edu.uci.ics.genomix.hyracks.graph.driver.GenomixHyracksDriver.Plan;
+import edu.uci.ics.genomix.mixture.model.FittingMixture;
 import edu.uci.ics.genomix.pregelix.operator.bridgeremove.BridgeRemoveVertex;
 import edu.uci.ics.genomix.pregelix.operator.extractsubgraph.ExtractSubgraphVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.P1ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.P4ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.removelowcoverage.RemoveLowCoverageVertex;
-import edu.uci.ics.genomix.pregelix.operator.scaffolding.RayVertex;
+import edu.uci.ics.genomix.pregelix.operator.scaffolding2.RayVertex;
 import edu.uci.ics.genomix.pregelix.operator.simplebubblemerge.SimpleBubbleMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.symmetrychecker.SymmetryCheckerVertex;
 import edu.uci.ics.genomix.pregelix.operator.test.BridgeAddVertex;
@@ -83,6 +85,7 @@ public class GenomixDriver {
     private String curOutput;
     private int stepNum;
     private List<PregelixJob> pregelixJobs;
+    Counters prevStatsCounters = null;
     private boolean runLocal = false;
     private int threadsPerMachine;
     private int numMachines;
@@ -97,6 +100,29 @@ public class GenomixDriver {
         curOutput = conf.get(GenomixJobConf.HDFS_WORK_PATH) + File.separator + String.format("%02d-", stepNum) + step;
         FileInputFormat.setInputPaths(conf, new Path(prevOutput));
         FileOutputFormat.setOutputPath(conf, new Path(curOutput));
+    }
+
+    public static double cur_expMean = -1;
+    public static double cur_normalMean = -1;
+    public static double cur_normalStd = -1;
+
+    private void setCutoffCoverageByFittingMixture(GenomixJobConf conf) throws IOException {
+        Counters counters = GraphStatistics.run(curOutput, curOutput + "-cov-stats", conf);
+        GraphStatistics.drawCoverageStatistics(curOutput + "-cov-stats", counters, conf);
+        copyToLocalOutputDir(curOutput + "-cov-stats", conf);
+
+        double maxCoverage = GraphStatistics.getMaxCoverage(counters);
+        double[] coverageData = GraphStatistics.getCoverageStats(counters);
+        if (maxCoverage == 0 || coverageData.length == 0)
+            throw new IllegalStateException("No information for coverage!");
+        long cutoffCoverage = (long) FittingMixture.fittingMixture(coverageData, maxCoverage, 10);
+
+        if (cutoffCoverage > 0) {
+            LOG.info("Set the cutoffCoverage to " + cutoffCoverage);
+            conf.setFloat(GenomixJobConf.REMOVE_LOW_COVERAGE_MAX_COVERAGE, cutoffCoverage);
+        } else {
+            LOG.info("The generated cutoffCoverage is " + cutoffCoverage + "! It's not set.");
+        }
     }
 
     private void setMinScaffoldingSeedLength(GenomixJobConf conf) throws IOException {
@@ -115,15 +141,17 @@ public class GenomixDriver {
         int maxLength = sortCounters(counters.getGroup("kmerLength-bins"), sortedCounter);
         long curNumOfSeeds = 0;
         for (int i = sortedCounter.size() - 1; i >= 0; i--) {
-            curNumOfSeeds += sortedCounter.get(i);
+            if (sortedCounter.get(i) != null)
+                curNumOfSeeds += sortedCounter.get(i);
             if (curNumOfSeeds > numOfSeeds) {
-                conf.setInt(GenomixJobConf.MIN_SCAFFOLDING_SEED_LENGTH, maxLength - (sortedCounter.size() - 1 - i));
+                conf.setInt(GenomixJobConf.SCAFFOLDING_SEED_LENGTH_THRESHOLD, maxLength
+                        - (sortedCounter.size() - 1 - i));
                 return;
             }
         }
         throw new IllegalStateException("It is impossible to reach here!");
     }
-    
+
     // bucket sort to sort Counters
     private int sortCounters(Group group, ArrayList<Long> sortedCounter) {
         int minLength = 0;
@@ -139,9 +167,9 @@ public class GenomixDriver {
         for (Counter c : group) {
             sortedCounterArray[Integer.parseInt(c.getName()) - minLength] = c.getValue();
         }
-        
+
         sortedCounter.clear();
-        for(int i = 0; i < sortedCounterArray.length; i++)
+        for (int i = 0; i < sortedCounterArray.length; i++)
             sortedCounter.add(sortedCounterArray[i]);
         return maxLength;
     }
@@ -153,6 +181,8 @@ public class GenomixDriver {
             case BUILD_HYRACKS:
                 flushPendingJobs(conf);
                 buildGraphWithHyracks(conf);
+                if (Boolean.parseBoolean(conf.get(GenomixJobConf.SET_CUTOFF_COVERAGE)))
+                    setCutoffCoverageByFittingMixture(conf);
                 break;
             case BUILD_HADOOP:
                 flushPendingJobs(conf);
@@ -168,8 +198,8 @@ public class GenomixDriver {
             case MERGE:
             case MERGE_P4:
                 pregelixJobs.add(P4ForPathMergeVertex.getConfiguredJob(conf, P4ForPathMergeVertex.class));
-                flushPendingJobs(conf);
-                setMinScaffoldingSeedLength(conf);
+               // flushPendingJobs(conf);
+               // setMinScaffoldingSeedLength(conf);
                 break;
             case UNROLL_TANDEM:
                 pregelixJobs.add(UnrollTandemRepeat.getConfiguredJob(conf, UnrollTandemRepeat.class));
@@ -190,6 +220,30 @@ public class GenomixDriver {
                 pregelixJobs.add(BridgeRemoveVertex.getConfiguredJob(conf, BridgeRemoveVertex.class));
                 break;
             case RAY_SCAFFOLD:
+                throw new IllegalStateException(
+                        "RAY_SCAFFOLD should have been expanded to RAY_SCAFFOLD_FORWARD and *_REVERSE!");
+            case RAY_SCAFFOLD_FORWARD:
+            case RAY_SCAFFOLD_REVERSE:
+                if (step == Patterns.RAY_SCAFFOLD_FORWARD) {
+                    conf.set(GenomixJobConf.SCAFFOLDING_INITIAL_DIRECTION, DIR.FORWARD.toString());
+                } else {
+                    conf.set(GenomixJobConf.SCAFFOLDING_INITIAL_DIRECTION, DIR.REVERSE.toString());
+                }
+                Float scorePercentile = conf.getFloat(GenomixJobConf.SCAFFOLD_SEED_SCORE_PERCENTILE, -1);
+                Float lengthPercentile = conf.getFloat(GenomixJobConf.SCAFFOLD_SEED_LENGTH_PERCENTILE, -1);
+                if (scorePercentile > 0) {
+                    Float topFraction = (scorePercentile > 0 && scorePercentile < 1) ? scorePercentile : null;
+                    Integer topCount = (scorePercentile >= 1) ? ((int) scorePercentile.floatValue()) : null;
+                    conf.setInt(GenomixJobConf.SCAFFOLDING_SEED_SCORE_THRESHOLD,
+                            RayVertex.calculateScoreThreshold(prevStatsCounters, topFraction, topCount));
+                } else {
+                    Float topFraction = (lengthPercentile > 0 && lengthPercentile < 1) ? lengthPercentile : null;
+                    Integer topCount = (lengthPercentile >= 1) ? ((int) lengthPercentile.floatValue()) : null;
+                    conf.setInt(GenomixJobConf.SCAFFOLDING_SEED_LENGTH_THRESHOLD,
+                            RayVertex.calculateScoreThreshold(prevStatsCounters, topFraction, topCount));
+                }
+                conf.setFloat(GenomixJobConf.COVERAGE_NORMAL_MEAN, (float) cur_normalMean);
+                conf.setFloat(GenomixJobConf.COVERAGE_NORMAL_STD, (float) cur_normalStd);
                 pregelixJobs.add(RayVertex.getConfiguredJob(conf, RayVertex.class));
                 break;
             case DUMP_FASTA:
@@ -211,40 +265,10 @@ public class GenomixDriver {
                 stepNum--;
                 break;
             case PLOT_SUBGRAPH:
-                if (conf.get(GenomixJobConf.PLOT_SUBGRAPH_START_SEEDS) == "") {
-                    // no seed specified-- plot the entire graph
-                    LOG.warning("No starting seed was specified for PLOT_SUBGRAPH.  Plotting the entire graph!!");
-                    curOutput = prevOutput; // use previous job's output
-                } else {
-                    curOutput = prevOutput + "-SUBGRAPH"; // use previous job's output
-                    FileOutputFormat.setOutputPath(conf, new Path(curOutput));
-                    pregelixJobs.add(ExtractSubgraphVertex.getConfiguredJob(conf, ExtractSubgraphVertex.class));
-                }
-                flushPendingJobs(conf);
-                //copy bin to local and append "-PLOT" to the name);
-                GenerateGraphViz.writeHDFSBinToHDFSSvg(conf, curOutput, curOutput + "-PLOT",
-                        GRAPH_TYPE.valueOf(conf.get(GenomixJobConf.PLOT_SUBGRAPH_GRAPH_VERBOSITY)));
-                copyToLocalOutputDir(curOutput + "-PLOT", conf);
-                curOutput = prevOutput; // next job shouldn't use the truncated graph or plots
-                stepNum--;
+                plotSubgraph(conf);
                 break;
             case STATS:
-                PregelixJob lastJob = null;
-                if (pregelixJobs.size() > 0) {
-                    lastJob = pregelixJobs.get(pregelixJobs.size() - 1);
-                }
-                flushPendingJobs(conf);
-                curOutput = prevOutput + "-STATS";
-                Counters counters = GraphStatistics.run(prevOutput, curOutput, conf);
-                GraphStatistics.saveGraphStats(curOutput, counters, conf);
-                GraphStatistics.drawStatistics(curOutput, counters, conf);
-                GraphStatistics.getFastaStatsForGage(curOutput, counters, conf);
-                if (lastJob != null) {
-                    GraphStatistics.saveJobCounters(curOutput, lastJob, conf);
-                }
-                copyToLocalOutputDir(curOutput, conf);
-                curOutput = prevOutput; // use previous job's output
-                stepNum--;
+                prevStatsCounters = runStatsJob(conf);
                 break;
             case TIP_ADD:
                 pregelixJobs.add(TipAddVertex.getConfiguredJob(conf, TipAddVertex.class));
@@ -256,6 +280,45 @@ public class GenomixDriver {
                 pregelixJobs.add(BubbleAddVertex.getConfiguredJob(conf, BubbleAddVertex.class));
                 break;
         }
+    }
+
+    private void plotSubgraph(GenomixJobConf conf) throws IOException, Exception {
+        if (conf.get(GenomixJobConf.PLOT_SUBGRAPH_START_SEEDS) == "") {
+            // no seed specified-- plot the entire graph
+            LOG.warning("No starting seed was specified for PLOT_SUBGRAPH.  Plotting the entire graph!!");
+            curOutput = prevOutput; // use previous job's output
+        } else {
+            curOutput = prevOutput + "-SUBGRAPH"; // use previous job's output
+            FileOutputFormat.setOutputPath(conf, new Path(curOutput));
+            pregelixJobs.add(ExtractSubgraphVertex.getConfiguredJob(conf, ExtractSubgraphVertex.class));
+        }
+        flushPendingJobs(conf);
+        //copy bin to local and append "-PLOT" to the name);
+        GenerateGraphViz.writeHDFSBinToHDFSSvg(conf, curOutput, curOutput + "-PLOT",
+                GRAPH_TYPE.valueOf(conf.get(GenomixJobConf.PLOT_SUBGRAPH_GRAPH_VERBOSITY)));
+        copyToLocalOutputDir(curOutput + "-PLOT", conf);
+        curOutput = prevOutput; // next job shouldn't use the truncated graph or plots
+        stepNum--;
+    }
+
+    private Counters runStatsJob(GenomixJobConf conf) throws Exception, IOException {
+        PregelixJob lastJob = null;
+        if (pregelixJobs.size() > 0) {
+            lastJob = pregelixJobs.get(pregelixJobs.size() - 1);
+        }
+        flushPendingJobs(conf);
+        curOutput = prevOutput + "-STATS";
+        Counters counters = GraphStatistics.run(prevOutput, curOutput, conf);
+        GraphStatistics.saveGraphStats(curOutput, counters, conf);
+        GraphStatistics.drawStatistics(curOutput, counters, conf);
+        GraphStatistics.getFastaStatsForGage(curOutput, counters, conf);
+        if (lastJob != null) {
+            GraphStatistics.saveJobCounters(curOutput, lastJob, conf);
+        }
+        copyToLocalOutputDir(curOutput, conf);
+        curOutput = prevOutput; // use previous job's output
+        stepNum--;
+        return counters;
     }
 
     /**
@@ -324,7 +387,7 @@ public class GenomixDriver {
                     pregelixDriver.runJob(pregelixJobs.get(i), masterIP, pregelixPort);
 
                     LOG.info("Finished job " + pregelixJobs.get(i).getJobName() + " in "
-                            + GenomixJobConf.tock("pregelix-job"));
+                            + GenomixJobConf.tock("pregelix-job") + "ms");
                 }
                 LOG.info("Finished job series in " + GenomixJobConf.tock("pregelix-runJob-one-by-one"));
             } else {
@@ -377,15 +440,35 @@ public class GenomixDriver {
         // currently, we just iterate over the jobs set in conf[PIPELINE_ORDER].  In the future, we may want more logic to iterate multiple times, etc
         String pipelineSteps = conf.get(GenomixJobConf.PIPELINE_ORDER);
         List<Patterns> allPatterns = new ArrayList<>(Arrays.asList(Patterns.arrayFromString(pipelineSteps)));
+
+        // break up SCAFFOLD into FORWARD and REVERSE steps and insert STATS and MERGE between jobs
+        for (int i = 0; i < allPatterns.size(); i++) {
+            if (allPatterns.get(i) == Patterns.RAY_SCAFFOLD) {
+                if (i == 0 || allPatterns.get(i - 1) != Patterns.STATS) {
+                    allPatterns.set(i, Patterns.STATS);
+                    i++;
+                } else {
+                    allPatterns.remove(i);
+                }
+                // replace
+                allPatterns.add(i, Patterns.RAY_SCAFFOLD_FORWARD);
+                allPatterns.add(i + 1, Patterns.MERGE);
+                allPatterns.add(i + 2, Patterns.STATS);
+                allPatterns.add(i + 3, Patterns.RAY_SCAFFOLD_REVERSE);
+            }
+        }
+
         if (Boolean.parseBoolean(conf.get(GenomixJobConf.RUN_ALL_STATS))) {
             // insert a STATS step between all jobs that mutate the graph
             for (int i = 0; i < allPatterns.size(); i++) {
-                if (Patterns.mutatingJobs.contains(allPatterns.get(i))) {
+                if (((i + 1) == allPatterns.size() || allPatterns.get(i + 1) != Patterns.STATS)
+                        && Patterns.mutatingJobs.contains(allPatterns.get(i))) {
                     allPatterns.add(i + 1, Patterns.STATS);
                     i++; // skip the STATS job we just added
                 }
             }
         }
+
         for (Patterns step : allPatterns) {
             stepNum++;
             setOutput(conf, step);

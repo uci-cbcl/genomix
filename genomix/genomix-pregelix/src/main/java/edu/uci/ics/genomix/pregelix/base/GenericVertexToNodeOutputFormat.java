@@ -44,6 +44,7 @@ public abstract class GenericVertexToNodeOutputFormat<V extends Node> extends
             if (node.getInternalKmer().getKmerLetterLength() == Kmer.getKmerLength()) {
                 node.setInternalKmer(null);
             }
+            node.forceWriteEntireBody(true);
             getRecordWriter().write(vertex.getVertexId(), node);
         }
     }

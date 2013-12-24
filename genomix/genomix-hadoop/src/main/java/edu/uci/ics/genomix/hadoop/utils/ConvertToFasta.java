@@ -4,6 +4,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.logging.Logger;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -32,6 +33,19 @@ public class ConvertToFasta extends MapReduceBase implements Mapper<VKmer, Node,
 
     public static Text textKey = new Text();
     public static Text textValue = new Text();
+
+    @Override
+    public void configure(JobConf job) {
+        // TODO Auto-generated method stub
+        super.configure(job);
+        try {
+            GenomixJobConf.setGlobalStaticConstants((Configuration) job);
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+    }
 
     @Override
     public void map(VKmer key, Node value, OutputCollector<Text, Text> output, Reporter reporter) throws IOException {

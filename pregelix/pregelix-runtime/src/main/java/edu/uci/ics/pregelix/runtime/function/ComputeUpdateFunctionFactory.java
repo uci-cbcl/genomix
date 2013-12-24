@@ -107,6 +107,7 @@ public class ComputeUpdateFunctionFactory implements IUpdateFunctionFactory {
             private final List<ArrayTupleBuilder> tbs = new ArrayList<ArrayTupleBuilder>();
             private Configuration conf;
             private boolean dynamicStateLength;
+            private boolean userConfigured;
 
             @Override
             public void open(IHyracksTaskContext ctx, RecordDescriptor rd, IFrameWriter... writers)
@@ -115,6 +116,7 @@ public class ComputeUpdateFunctionFactory implements IUpdateFunctionFactory {
                 //LSM index does not have in-place update
                 this.dynamicStateLength = BspUtils.getDynamicVertexValueSize(conf) || BspUtils.useLSM(conf);
                 this.aggregators = BspUtils.createGlobalAggregators(conf);
+                this.userConfigured = false;
                 for (int i = 0; i < aggregators.size(); i++) {
                     this.aggregators.get(i).init();
                 }
@@ -195,6 +197,10 @@ public class ComputeUpdateFunctionFactory implements IUpdateFunctionFactory {
                 }
 
                 try {
+                    if (!userConfigured) {
+                        vertex.configure(conf);
+                        userConfigured = true;
+                    }
                     if (msgContentList.segmentStart()) {
                         vertex.open();
                     }
