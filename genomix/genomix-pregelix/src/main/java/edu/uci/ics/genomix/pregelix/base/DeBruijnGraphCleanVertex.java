@@ -8,6 +8,7 @@ import java.util.logging.Logger;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Counters;
 
+import org.apache.hadoop.conf.Configuration;
 import edu.uci.ics.genomix.data.config.GenomixJobConf;
 import edu.uci.ics.genomix.data.types.DIR;
 import edu.uci.ics.genomix.data.types.EDGETYPE;
@@ -99,6 +100,26 @@ public abstract class DeBruijnGraphCleanVertex<V extends VertexValueWritable, M 
     public Counters getCounters() {
         return counters;
     }
+    
+    @Override
+    public void configure(Configuration conf) {
+        super.configure(conf);
+        initVertex();
+    }
+    @Override
+    public void open() {
+        super.open();
+        checkDebug();
+    }
+    
+    public void checkDebug() {
+        verbose = false;
+        if (GenomixJobConf.debug) {
+            for (VKmer debugKmer : GenomixJobConf.debugKmers) {
+                verbose |= (getVertexValue().findEdge(debugKmer) != null || getVertexId().equals(debugKmer));
+            }
+        }
+    }
 
     /**
      * initiate kmerSize, maxIteration
@@ -119,13 +140,6 @@ public abstract class DeBruijnGraphCleanVertex<V extends VertexValueWritable, M 
             } catch (IOException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
-            }
-        }
-
-        verbose = false;
-        if (GenomixJobConf.debug) {
-            for (VKmer debugKmer : GenomixJobConf.debugKmers) {
-                verbose |= (getVertexValue().findEdge(debugKmer) != null || getVertexId().equals(debugKmer));
             }
         }
     }

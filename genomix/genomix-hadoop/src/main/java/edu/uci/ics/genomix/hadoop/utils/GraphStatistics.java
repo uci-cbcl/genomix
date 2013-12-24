@@ -58,6 +58,22 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
 
     public static final Logger LOG = Logger.getLogger(GraphStatistics.class.getName());
     private Reporter reporter;
+    Float COVERAGE_DIST_MEAN;
+    Float COVERAGE_DIST_STD;
+
+    @Override
+    public void configure(JobConf job) {
+        // TODO fix this.
+        try {
+            GenomixJobConf.setGlobalStaticConstants((Configuration) job);
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+        COVERAGE_DIST_MEAN = 0f; // Float.parseFloat(job.get(GenomixJobConf.???)) 
+        COVERAGE_DIST_STD = 1000f;
+    }
 
     @Override
     public void map(VKmer key, Node value, OutputCollector<Text, LongWritable> output, Reporter reporter)
@@ -71,6 +87,11 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
         updateStats("coverage", Math.round(value.getAverageCoverage()));
         updateStats("unflippedReadIds", value.getUnflippedReadIds().size());
         updateStats("flippedReadIds", value.getFlippedReadIds().size());
+
+        float coverage = value.getAverageCoverage();
+        if (coverage >= COVERAGE_DIST_MEAN - COVERAGE_DIST_STD && coverage <= COVERAGE_DIST_MEAN + COVERAGE_DIST_STD) {
+            updateStats("scaffoldSeedScore", value.calculateSeedScore());
+        }
 
         //        long totalEdgeReads = 0;
         long totalSelf = 0;
@@ -131,6 +152,42 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
         return job.getCounters();
     }
 
+    public static double getMaxCoverage(Counters jobCounters) {
+        double maxCoverage = 0;
+        for (Group g : jobCounters) {
+            if (g.getName().equals("coverage-bins")) {
+                for (Counter c : g) {
+                    double cov = Double.parseDouble(c.getName());
+                    if (maxCoverage < cov)
+                        maxCoverage = cov;
+                }
+            }
+        }
+        return maxCoverage;
+    }
+
+    /**
+     * run a map-reduce job on the given input graph and return an array of coverage
+     */
+    public static double[] getCoverageStats(Counters jobCounters) {
+        ArrayList<Double> resultArrayList = new ArrayList<Double>();
+        // get Coverage counter
+        for (Group g : jobCounters) {
+            if (g.getName().equals("coverage-bins")) {
+                for (Counter c : g) {
+                    double cov = Double.parseDouble(c.getName());
+                    for (long i = 0; i < c.getValue(); i++) {
+                        resultArrayList.add(cov);
+                    }
+                }
+            }
+        }
+        double[] resultArray = new double[resultArrayList.size()];
+        for (int i = 0; i < resultArrayList.size(); i++)
+            resultArray[i] = resultArrayList.get(i);
+        return resultArray;
+    }
+
     /**
      * run a map-reduce job on the given input graph and save a simple text file of the relevant counters
      */
@@ -154,6 +211,57 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
             writer.println(e.getKey() + " = " + e.getValue());
         }
         writer.close();
+        
+        outstream = fileSys.create(new Path(outputDir + File.separator + "kmerLengths.txt"), true);
+        writer = new PrintWriter(outstream);
+        for (Counter c : jobCounters.getGroup("kmerLength-bins")) {
+            writer.println(c);
+        }
+        writer.close();
+    }
+
+    public static void drawCoverageStatistics(String outputDir, Counters jobCounters, GenomixJobConf conf)
+            throws IOException {
+        HashMap<String, TreeMap<Integer, Long>> allHists = new HashMap<String, TreeMap<Integer, Long>>();
+        TreeMap<Integer, Long> curCounts;
+
+        // build up allHists to be {coverage : {1: 50, 2: 20, 3:5}, kmerLength : {55: 100}, ...}
+        for (Group g : jobCounters) {
+            if (g.getName().equals("coverage-bins") || g.getName().equals("kmerLength-bins")) {
+                String baseName = g.getName().replace("-bins", "");
+                if (allHists.containsKey(baseName)) {
+                    curCounts = allHists.get(baseName);
+                } else {
+                    curCounts = new TreeMap<Integer, Long>();
+                    allHists.put(baseName, curCounts);
+                }
+                for (Counter c : g) { // counter name is the X value of the histogram; its count is the Y value
+                    Integer X = Integer.parseInt(c.getName());
+                    if (curCounts.get(X) != null) {
+                        curCounts.put(X, curCounts.get(X) + c.getCounter());
+                    } else {
+                        curCounts.put(X, c.getCounter());
+                    }
+                }
+            }
+        }
+
+        for (String graphType : allHists.keySet()) {
+            curCounts = allHists.get(graphType);
+            XYSeries series = new XYSeries(graphType);
+            for (Entry<Integer, Long> pair : curCounts.entrySet()) {
+                series.add(pair.getKey().floatValue(), pair.getValue().longValue());
+            }
+            XYSeriesCollection xyDataset = new XYSeriesCollection(series);
+            JFreeChart chart = ChartFactory.createXYBarChart(graphType, graphType, false, "Count", xyDataset,
+                    PlotOrientation.VERTICAL, true, true, false);
+            // Write the data to the output stream:
+            FileSystem fileSys = FileSystem.get(conf);
+            FSDataOutputStream outstream = fileSys.create(
+                    new Path(outputDir + File.separator + graphType + "-hist.png"), true);
+            ChartUtilities.writeChartAsPNG(outstream, chart, 800, 600);
+            outstream.close();
+        }
     }
 
     /**
