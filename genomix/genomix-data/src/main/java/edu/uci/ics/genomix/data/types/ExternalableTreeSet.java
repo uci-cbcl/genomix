@@ -21,6 +21,8 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 
+import edu.uci.ics.pregelix.api.util.BspUtils;
+
 public abstract class ExternalableTreeSet<T extends WritableComparable<T> & Serializable> implements Writable,
         Serializable {
 
@@ -51,22 +53,27 @@ public abstract class ExternalableTreeSet<T extends WritableComparable<T> & Seri
     protected Path path;
     protected boolean isChanged;
     protected boolean isLoaded;
-    protected boolean isLocal;
+    protected boolean writeToLocal;
+    protected boolean readFromLocal;
+    private boolean writeEntireBody;
+    private boolean readEntireBody;
 
     public ExternalableTreeSet() {
         this(false);
     }
 
-    public ExternalableTreeSet(boolean isLocal) {
-        this(null, isLocal);
+    public ExternalableTreeSet(boolean writeToLocal) {
+        this(null, writeToLocal);
     }
 
-    protected ExternalableTreeSet(Path path, boolean local) {
+    protected ExternalableTreeSet(Path path, boolean writeTolocal) {
         inMemorySet = new TreeSet<T>();
         this.path = path;
         isChanged = false;
         isLoaded = false;
-        isLocal = local;
+        this.writeToLocal = writeTolocal;
+        this.readFromLocal = this.writeToLocal;
+        this.writeEntireBody = false;
     }
 
     /**
@@ -77,7 +84,7 @@ public abstract class ExternalableTreeSet<T extends WritableComparable<T> & Seri
     private void loadInMemorySetFromPath() {
         if (!isLoaded && path != null) {
             try {
-                inMemorySet = (TreeSet<T>) load(path, isLocal);
+                inMemorySet = (TreeSet<T>) load(path, readFromLocal);
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
                 throw new RuntimeException(e);
@@ -202,16 +209,16 @@ public abstract class ExternalableTreeSet<T extends WritableComparable<T> & Seri
         return new ReadIterator(inMemorySet.iterator());
     }
 
-    protected static TreeSet<?> load(Path path, boolean local) throws IOException, ClassNotFoundException {
-        InputStream fis = manager.getInputStream(path, local);
+    protected static TreeSet<?> load(Path path, boolean readFromLocal) throws IOException, ClassNotFoundException {
+        InputStream fis = manager.getInputStream(path, readFromLocal);
         ObjectInputStream ois = new ObjectInputStream(fis);
         TreeSet<?> set = (TreeSet<?>) ois.readObject();
         ois.close();
         return set;
     }
 
-    protected static void save(Path path, final TreeSet<?> set, boolean local) throws IOException {
-        OutputStream fos = manager.getOutputStream(path, local);
+    protected static void save(Path path, final TreeSet<?> set, boolean writeToLocal) throws IOException {
+        OutputStream fos = manager.getOutputStream(path, writeToLocal);
         ObjectOutputStream oos = new ObjectOutputStream(fos);
         oos.writeObject(set);
         oos.close();
@@ -226,12 +233,12 @@ public abstract class ExternalableTreeSet<T extends WritableComparable<T> & Seri
         int size = in.readInt();
         inMemorySet.clear();
         path = null;
-        if (size < countLimit) {
+        if (size < countLimit || readEntireBody) {
             for (int i = 0; i < size; ++i) {
                 inMemorySet.add(readNonGenericElement(in));
             }
         } else {
-            isLocal = in.readBoolean();
+            readFromLocal = in.readBoolean();
             path = new Path(in.readUTF());
         }
 
@@ -241,33 +248,35 @@ public abstract class ExternalableTreeSet<T extends WritableComparable<T> & Seri
     @Override
     public void write(DataOutput out) throws IOException {
         out.writeInt(inMemorySet.size());
-        if (!isLoaded && path != null) {
+        if (!writeEntireBody && !isLoaded && path != null && readFromLocal == writeToLocal) {
+            out.writeBoolean(writeToLocal);
             out.writeUTF(path.toString());
             return;
         }
-        if (inMemorySet.size() < countLimit) {
+        if (inMemorySet.size() < countLimit || writeEntireBody) {
+            loadInMemorySetFromPath();
             for (T t : inMemorySet) {
                 writeNonGenericElement(out, t);
             }
             if (path != null) {
-                manager.deleteFile(path, isLocal);
+                manager.deleteFile(path, writeToLocal);
                 path = null;
             }
         } else {
             if (path == null) {
-                path = manager.createFile(isLocal);
-                save(path, inMemorySet, isLocal);
+                path = manager.createFile(writeToLocal);
+                save(path, inMemorySet, writeToLocal);
             } else if (isChanged) {
-                save(path, inMemorySet, isLocal);
+                save(path, inMemorySet, writeToLocal);
             }
-            out.writeBoolean(isLocal);
+            out.writeBoolean(writeToLocal);
             out.writeUTF(path.toString());
         }
         isChanged = false;
     }
 
     public void destroy() throws IOException {
-        manager.deleteFile(path, isLocal);
+        manager.deleteFile(path, writeToLocal);
     }
 
     protected static class FileManager {
@@ -283,7 +292,7 @@ public abstract class ExternalableTreeSet<T extends WritableComparable<T> & Seri
             hfs = FileSystem.get(conf);
             lfs = FileSystem.getLocal(conf);
             hdfsWorkPath = hdfsWorkingPath;
-            localWorkPath = new Path(System.getProperty("java.io.tmpdir"));
+            localWorkPath = new Path(BspUtils.TMP_DIR);
             allocatedHdfsPath = new HashMap<Path, OutputStream>();
             allocatedLocalPath = new HashMap<Path, OutputStream>();
             this.conf = conf;
@@ -364,4 +373,11 @@ public abstract class ExternalableTreeSet<T extends WritableComparable<T> & Seri
         }
     }
 
+    public void forceWriteEntireBody(boolean entire) {
+        writeEntireBody = entire;
+    }
+
+    public void forceReadEntireBody(boolean entire) {
+        readEntireBody = entire;
+    }
 }
