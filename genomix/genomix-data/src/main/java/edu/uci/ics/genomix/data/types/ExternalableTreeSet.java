@@ -8,13 +8,11 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
-import java.net.InetAddress;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.UUID;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -314,8 +312,6 @@ public abstract class ExternalableTreeSet<T extends WritableComparable<T> & Seri
             return conf;
         }
 
-        protected static final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyy-hhmmssSS");
-
         public Path createFile(boolean local) throws IOException {
             if (local) {
                 return createOneFile(allocatedLocalPath, lfs, localWorkPath);
@@ -328,10 +324,7 @@ public abstract class ExternalableTreeSet<T extends WritableComparable<T> & Seri
                 Path workPath) throws IOException {
             Path path;
             do {
-                String hostName = "";
-                hostName = InetAddress.getLocalHost().getHostName();
-                path = new Path(workPath, ExternalableTreeSet.class.getName() + hostName
-                        + simpleDateFormat.format(new Date()));
+                path = new Path(workPath, "ExternalableTreeSet" + UUID.randomUUID());
             } while (fs.exists(path));
             validation.put(path, fs.create(path, (short) 1));
             return path;
