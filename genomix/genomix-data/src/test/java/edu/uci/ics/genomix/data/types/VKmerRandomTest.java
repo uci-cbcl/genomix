@@ -145,15 +145,12 @@ public class VKmerRandomTest {
     public void TestMergeFRKmer() {
         int strLength = RandomTestHelper.genRandomInt(strMinLength, strMaxLength);
         String input = RandomTestHelper.generateGeneString(strLength);
-        
         VKmer kmer1 = new VKmer();
         kmer1.setFromStringBytes(strLength - 1, input.getBytes(), 0);
         Assert.assertEquals(input.substring(0, strLength - 1), kmer1.toString());
-        
         VKmer kmer2 = new VKmer();
         kmer2.setFromStringBytes(strLength - 1 , RandomTestHelper.getFlippedGeneStr(input.substring(1, strLength)).getBytes(), 0);
         Assert.assertEquals(RandomTestHelper.getFlippedGeneStr(input.substring(1, strLength)), kmer2.toString());
-        
         VKmer merge = new VKmer();
         merge.setAsCopy(kmer1);
         merge.mergeWithFRKmer(strLength - 1, kmer2);
@@ -162,7 +159,104 @@ public class VKmerRandomTest {
             merge.setAsCopy(kmer1);
             merge.mergeWithFRKmer(i, kmer2);
             Assert.assertEquals(kmer1.toString() + input.substring(1, strLength).toString().substring(i - 1), merge.toString());
-        }
-        
+        } 
+    }
+    
+    @Test
+    public void TestMergeRFKmer() {
+        int kmerSize = 3;
+        String result = "GGCACAACAACCC";
+        byte[] resultArray = result.getBytes();
+
+        String text1 = "AACAACCC";
+        VKmer kmer1 = new VKmer();
+        kmer1.setFromStringBytes(text1.length(), resultArray, 5);
+        Assert.assertEquals(text1, kmer1.toString());
+
+        // kmer2 is the rc of the end of the read
+        String text2 = "TTGTGCC";
+        VKmer kmer2 = new VKmer();
+        kmer2.setReversedFromStringBytes(text2.length(), resultArray, 0);
+        Assert.assertEquals(text2, kmer2.toString());
+
+        VKmer merge = new VKmer();
+        merge.setAsCopy(kmer1);
+        merge.mergeWithRFKmer(kmerSize, kmer2);
+        Assert.assertEquals(result, merge.toString());
+
+        int i = 1;
+        merge.setAsCopy(kmer1);
+        merge.mergeWithRFKmer(i, kmer2);
+        Assert.assertEquals("GGCACAAAACAACCC", merge.toString());
+
+        i = 2;
+        merge.setAsCopy(kmer1);
+        merge.mergeWithRFKmer(i, kmer2);
+        Assert.assertEquals("GGCACAAACAACCC", merge.toString());
+
+        i = 3;
+        merge.setAsCopy(kmer1);
+        merge.mergeWithRFKmer(i, kmer2);
+        Assert.assertEquals("GGCACAACAACCC", merge.toString());
+
+        // String test1 = "CTTAT";
+        // String test2 = "AGACC"; // rc = GGTCT
+        // VKmerBytesWritable k1 = new VKmerBytesWritable(5);
+        // VKmerBytesWritable k2 = new VKmerBytesWritable(5);
+        // k1.setByRead(test1.getBytes(), 0);
+        // k2.setByRead(test2.getBytes(), 0);
+        // k1.mergeWithRFKmer(3, k2);
+        // Assert.assertEquals("GGTCTTAT", k1.toString()); //GGTCGTCT ->
+        // AGACGACC ??
+
+        String test3 = "CTA";
+        String test4 = "AGA"; // rc = TCT
+        VKmer k3 = new VKmer();
+        VKmer k4 = new VKmer();
+        k3.setFromStringBytes(3, test3.getBytes(), 0);
+        k4.setFromStringBytes(3, test4.getBytes(), 0);
+        k3.mergeWithRFKmer(3, k4);
+        Assert.assertEquals("TCTA", k3.toString());
+        // Assert.assertEquals("CTAT", k3); // this is an incorrect test case--
+        // the merge always flips the passed-in kmer
+
+        String test1;
+        String test2;
+        test1 = "CTA";
+        test2 = "AGA";
+        VKmer k1 = new VKmer();
+        VKmer k2 = new VKmer();
+        k1.setFromStringBytes(3, test1.getBytes(), 0);
+        k2.setFromStringBytes(3, test2.getBytes(), 0);
+        k1.mergeWithRFKmer(3, k2);
+        Assert.assertEquals("TCTA", k1.toString());
+
+        test1 = "CTA";
+        test2 = "ATA"; //TAT
+        k1 = new VKmer();
+        k2 = new VKmer();
+        k1.setFromStringBytes(3, test1.getBytes(), 0);
+        k2.setFromStringBytes(3, test2.getBytes(), 0);
+        k1.mergeWithFRKmer(3, k2);
+        Assert.assertEquals("CTAT", k1.toString());
+
+        test1 = "ATA";
+        test2 = "CTA"; //TAT
+        k1 = new VKmer();
+        k2 = new VKmer();
+        k1.setFromStringBytes(3, test1.getBytes(), 0);
+        k2.setFromStringBytes(3, test2.getBytes(), 0);
+        k1.mergeWithFRKmer(3, k2);
+        Assert.assertEquals("ATAG", k1.toString());
+
+        test1 = "TCTAT";
+        test2 = "GAAC";
+        k1 = new VKmer();
+        k2 = new VKmer();
+        k1.setFromStringBytes(5, test1.getBytes(), 0);
+        k2.setFromStringBytes(4, test2.getBytes(), 0);
+        k1.mergeWithRFKmer(3, k2);
+        Assert.assertEquals("GTTCTAT", k1.toString());
     }
 }
+
