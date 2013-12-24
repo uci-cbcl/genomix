@@ -182,5 +182,56 @@ public class VKmerRandomTest {
             Assert.assertEquals(RandomTestHelper.getFlippedGeneStr(kmer2.toString()).substring(0, kmer1.getKmerLetterLength() - (i - 1)) + kmer1.toString(), merge.toString());
         }
     }
+    
+    @Test
+    public void TestMergeRRKmer() {
+        int strLength = RandomTestHelper.genRandomInt(strMinLength, strMaxLength);
+        String input = RandomTestHelper.generateGeneString(strLength);
+        VKmer kmer1 = new VKmer();
+        kmer1.setFromStringBytes(strLength - 1, input.getBytes(), 1);
+        Assert.assertEquals(input.substring(1, strLength), kmer1.toString());
+        VKmer kmer2 = new VKmer();
+        kmer2.setFromStringBytes(strLength - 1, input.getBytes(), 0);
+        Assert.assertEquals(input.substring(0, strLength - 1), kmer2.toString());
+        VKmer merge = new VKmer();
+        merge.setAsCopy(kmer1);
+        merge.mergeWithRRKmer(strLength - 1, kmer2);
+        Assert.assertEquals(input, merge.toString());
+        for (int i = 1; i < strLength - 1; i++) {
+            merge.setAsCopy(kmer1);
+            merge.mergeWithRRKmer(i, kmer2);
+            Assert.assertEquals(kmer2.toString().substring(0, kmer1.getKmerLetterLength() - (i - 1)) + kmer1.toString(), merge.toString());
+        }
+    }
+
+    @Test
+    public void TestIndexOfForLongRead() {
+        String testStr1 = RandomTestHelper.generateGeneString(100);
+        VKmer testKmer1 = new VKmer(testStr1);
+        String subStr1 = testStr1.substring(25, 80);
+        VKmer subKmer1 = new VKmer(subStr1);
+        Assert.assertEquals(25, testKmer1.indexOf(subKmer1));
+
+        String testStr2 = RandomTestHelper.generateGeneString(200);
+        VKmer testKmer2 = new VKmer(testStr2);
+        String subStr2 = testStr2.substring(100, 200);
+        VKmer subKmer2 = new VKmer(subStr2);
+        Assert.assertEquals(100, testKmer2.indexOf(subKmer2));
+
+        String testStr3 = RandomTestHelper.generateGeneString(300);
+        VKmer testKmer3 = new VKmer(testStr3);
+        VKmer subKmer3 = new VKmer();
+        for (int i = 0; i < 10; i++) {
+            String subStr3 = testStr3.substring(40 + i * 3, 40 + i * 3 + 55);
+            subKmer3.setAsCopy(subStr3);
+            Assert.assertEquals(40 + i * 3, testKmer3.indexOf(subKmer3));
+        }
+
+        String testStr4 = RandomTestHelper.generateGeneString(55);
+        if (!testStr3.contains(testStr4)) {
+            VKmer testKmer4 = new VKmer(testStr4);
+            Assert.assertEquals(-1, testKmer3.indexOf(testKmer4));
+        }
+    }
 }
 
