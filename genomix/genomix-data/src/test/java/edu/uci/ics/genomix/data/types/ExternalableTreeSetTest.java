@@ -74,6 +74,14 @@ public class ExternalableTreeSetTest implements Serializable {
          */
         private static final long serialVersionUID = 1L;
 
+        public TestExternalableTreeSet() {
+            super();
+        }
+
+        public TestExternalableTreeSet(boolean local) {
+            super(local);
+        }
+
         @Override
         public TestIntWritable readNonGenericElement(DataInput in) throws IOException {
             TestIntWritable iw = new TestIntWritable();
@@ -120,13 +128,13 @@ public class ExternalableTreeSetTest implements Serializable {
         }
 
         Iterator<TestIntWritable> it2 = eSet.readOnlyIterator();
-        while (it2.hasNext()){
+        while (it2.hasNext()) {
             Assert.assertEquals(42, it2.next().get());
         }
     }
 
-    public void testEqual() {
-        ExternalableTreeSet<TestIntWritable> eSetA = new TestExternalableTreeSet();
+    public void testEqual(boolean local, boolean entire) {
+        ExternalableTreeSet<TestIntWritable> eSetA = new TestExternalableTreeSet(local);
         for (int i = 0; i <= limit; i++) {
             eSetA.add(new TestIntWritable(i));
         }
@@ -134,6 +142,7 @@ public class ExternalableTreeSetTest implements Serializable {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         DataOutputStream w = new DataOutputStream(baos);
         try {
+            eSetA.forceWriteEntireBody(entire);
             eSetA.write(w);
         } catch (IOException e) {
             e.printStackTrace();
@@ -141,8 +150,9 @@ public class ExternalableTreeSetTest implements Serializable {
         }
 
         ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-        ExternalableTreeSet<TestIntWritable> eSetB = new TestExternalableTreeSet();
+        ExternalableTreeSet<TestIntWritable> eSetB = new TestExternalableTreeSet(local);
         try {
+            eSetB.forceReadEntireBody(entire);
             eSetB.readFields(new DataInputStream(bais));
         } catch (IOException e) {
             e.printStackTrace();
@@ -163,9 +173,10 @@ public class ExternalableTreeSetTest implements Serializable {
         }
     }
 
+    final String PATH_TO_HADOOP_CONF = "src/test/resources/hadoop/conf";
+
     @Test
     public void TestHDFS() {
-        final String PATH_TO_HADOOP_CONF = "src/test/resources/hadoop/conf";
 
         Configuration conf = new Configuration();
         conf.addResource(new Path(PATH_TO_HADOOP_CONF + "/core-site.xml"));
@@ -205,8 +216,93 @@ public class ExternalableTreeSetTest implements Serializable {
             return;
         }
 
-        testEqual();
+        testEqual(false, false);
+        TestWriteHDFSReadAndWriteToLocal();
         localDFSCluster.shutdown();
     }
 
+    @Test
+    public void TestLocal() {
+
+        Configuration conf = new Configuration();
+        ExternalableTreeSet.setCountLimit(limit);
+
+        try {
+            ExternalableTreeSet.setupManager(conf, null);
+        } catch (IOException e) {
+            e.printStackTrace();
+            Assert.fail(e.getLocalizedMessage());
+            return;
+        }
+
+        testEqual(true, false);
+    }
+
+    @Test
+    public void TestWriteEntireBody() {
+        Configuration conf = new Configuration();
+        ExternalableTreeSet.setCountLimit(limit);
+
+        try {
+            ExternalableTreeSet.setupManager(conf, null);
+        } catch (IOException e) {
+            e.printStackTrace();
+            Assert.fail(e.getLocalizedMessage());
+            return;
+        }
+
+        testEqual(true, true);
+    }
+
+    public void TestWriteHDFSReadAndWriteToLocal() {
+
+        ExternalableTreeSet<TestIntWritable> eSetA = new TestExternalableTreeSet(false);
+        for (int i = 0; i <= limit; i++) {
+            eSetA.add(new TestIntWritable(i));
+        }
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        DataOutputStream w = new DataOutputStream(baos);
+        try {
+            eSetA.write(w);
+        } catch (IOException e) {
+            e.printStackTrace();
+            Assert.fail(e.getMessage());
+        }
+
+        ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+        ExternalableTreeSet<TestIntWritable> eSetB = new TestExternalableTreeSet(true);
+        try {
+            eSetB.readFields(new DataInputStream(bais));
+            eSetB.write(w);
+        } catch (IOException e) {
+            e.printStackTrace();
+            Assert.fail(e.getMessage());
+        }
+
+        bais = new ByteArrayInputStream(baos.toByteArray());
+        ExternalableTreeSet<TestIntWritable> eSetC = new TestExternalableTreeSet(true);
+        try {
+            eSetC.readFields(new DataInputStream(bais));
+        } catch (IOException e) {
+            e.printStackTrace();
+            Assert.fail(e.getMessage());
+        }
+
+        Iterator<TestIntWritable> itA = eSetA.readOnlyIterator();
+        Iterator<TestIntWritable> itB = eSetB.readOnlyIterator();
+        Iterator<TestIntWritable> itC = eSetC.readOnlyIterator();
+        for (int i = 0; i <= limit; i++) {
+            int a = itA.next().get();
+            Assert.assertEquals(a, itB.next().get());
+            Assert.assertEquals(a, itC.next().get());
+        }
+
+        try {
+            ExternalableTreeSet.removeAllExternalFiles();
+        } catch (IOException e) {
+            e.printStackTrace();
+            Assert.fail(e.getMessage());
+        }
+    }
 }

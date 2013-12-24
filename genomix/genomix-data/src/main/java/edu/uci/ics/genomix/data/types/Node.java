@@ -853,4 +853,10 @@ public class Node implements Writable, Serializable {
         int length = getKmerLength() == 0 ? Kmer.getKmerLength() : getKmerLength(); 
         return length * (getUnflippedReadIds().size() + getFlippedReadIds().size());
     }
+
+    
+    public void forceWriteEntireBody(boolean entire) {
+        unflippedReadIds.forceWriteEntireBody(entire);
+        flippedReadIds.forceWriteEntireBody(entire);
+    }
 }

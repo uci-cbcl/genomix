@@ -17,6 +17,10 @@ public class ReadHeadSet extends ExternalableTreeSet<ReadHeadInfo> {
         super();
     }
 
+    public ReadHeadSet(boolean toLocalFile) {
+        super(toLocalFile);
+    }
+
     public void add(byte mateId, byte libraryId, long readId, int offset, VKmer thisReadSequence, VKmer thatReadSequence) {
         super.add(new ReadHeadInfo(mateId, libraryId, readId, offset, thisReadSequence, thatReadSequence));
     }
@@ -62,8 +66,9 @@ public class ReadHeadSet extends ExternalableTreeSet<ReadHeadInfo> {
             ReadIterator iter = setB.readOnlyIterator();
             while (iter.hasNext()) {
                 ReadHeadInfo p = iter.next();
-                this.add(p.getMateId(), p.getLibraryId(), p.getReadId(), (int) ((p.getOffset() + 1) * lengthFactor - lengthFactor),
-                        p.getThisReadSequence(), p.getMateReadSequence());
+                this.add(p.getMateId(), p.getLibraryId(), p.getReadId(),
+                        (int) ((p.getOffset() + 1) * lengthFactor - lengthFactor), p.getThisReadSequence(),
+                        p.getMateReadSequence());
             }
         } else {
             // int newOtherOffset = (int) ((otherLength - 1) * lengthFactor);
@@ -72,8 +77,9 @@ public class ReadHeadSet extends ExternalableTreeSet<ReadHeadInfo> {
             while (iter.hasNext()) {
                 ReadHeadInfo p = iter.next();
                 int newPOffset = otherLength - 1 - p.getOffset();
-                this.add(p.getMateId(), p.getLibraryId(), p.getReadId(), (int) ((newPOffset + 1) * lengthFactor - lengthFactor),
-                        p.getThisReadSequence(), p.getMateReadSequence());
+                this.add(p.getMateId(), p.getLibraryId(), p.getReadId(),
+                        (int) ((newPOffset + 1) * lengthFactor - lengthFactor), p.getThisReadSequence(),
+                        p.getMateReadSequence());
             }
         }
     }
@@ -122,6 +128,11 @@ public class ReadHeadSet extends ExternalableTreeSet<ReadHeadInfo> {
     @Override
     public void writeNonGenericElement(DataOutput out, ReadHeadInfo t) throws IOException {
         t.write(out);
+    }
+
+    public void forceWriteEntireBody(boolean entire) {
+        super.forceWriteEntireBody(entire);
+
     }
 
 }
