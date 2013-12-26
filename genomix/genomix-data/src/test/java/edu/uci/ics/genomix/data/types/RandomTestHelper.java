@@ -18,7 +18,6 @@ package edu.uci.ics.genomix.data.types;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Random;
-import java.util.SortedSet;
 import java.util.AbstractMap.SimpleEntry;
 
 import junit.framework.Assert;
@@ -156,15 +155,57 @@ public class RandomTestHelper {
                 Assert.assertEquals(iter1.toString(), iter2.toString());
             }
         }
-        for (ReadHeadInfo startIter1 : et1.getUnflippedReadIds().getOffSetRange(0, Integer.MAX_VALUE)){
+        for (ReadHeadInfo startIter1 : et1.getUnflippedReadIds().getOffSetRange(0, Integer.MAX_VALUE)) {
             ReadHeadInfo startIter2 = et2.getUnflippedReadIds().getOffSetRange(0, Integer.MAX_VALUE).first();
             Assert.assertEquals(startIter1.toString(), startIter2.toString());
             et2.getUnflippedReadIds().getOffSetRange(0, Integer.MAX_VALUE).remove(startIter2);
         }
-        for (ReadHeadInfo startIter1 : et1.getFlippedReadIds().getOffSetRange(0, Integer.MAX_VALUE)){
+        for (ReadHeadInfo startIter1 : et1.getFlippedReadIds().getOffSetRange(0, Integer.MAX_VALUE)) {
             ReadHeadInfo startIter2 = et2.getFlippedReadIds().getOffSetRange(0, Integer.MAX_VALUE).first();
             Assert.assertEquals(startIter1.toString(), startIter2.toString());
             et2.getUnflippedReadIds().getOffSetRange(0, Integer.MAX_VALUE).remove(startIter2);
+        }
+    }
+
+    public static void getEdgeMapRandomly(VKmerList edge, int orderNum, int min, int max) {
+        for (int i = 0; i < min + (int) (Math.random() * ((max - min) + 1)); i++) {
+            String edgeStr = generateGeneString(orderNum);
+            VKmer edgeKmer = new VKmer(edgeStr);
+            edge.append(edgeKmer);
+        }
+    }
+
+    public static void compareEdgeMap(VKmerList et1, VKmerList et2) {
+        Assert.assertEquals(et1.size(), et2.size());
+        for (int i = 0; i < et1.size(); i++) {
+            VKmer src = et1.getPosition(i);
+            VKmer tgt = et2.getPosition(i);
+            Assert.assertEquals(src.toString(), tgt.toString());
+        }
+    }
+
+    public static void getUnflippedReadIdsAndEndReadsRandomly(ReadHeadSet readSet, int orderNum, int min, int max) {
+        byte mateId;
+        long readId;
+        byte libraryId;
+        int offset;
+        ReadHeadInfo pos;
+        for (long i = 0; i < min + (int) (Math.random() * ((max - min) + 1)); i++) {
+            mateId = (byte) (0);
+            readId = i;
+            offset = (int) (i % (ReadHeadInfo.MAX_OFFSET_VALUE + 1));
+            libraryId = (byte) (i % (ReadHeadInfo.MAX_LIBRARY_VALUE + 1));
+            pos = new ReadHeadInfo(mateId, libraryId, readId, offset, null, null);
+            readSet.add(pos);
+        }
+    }
+
+    public static void compareStartReadsAndEndReads(ReadHeadSet et1, ReadHeadSet et2) {
+        Assert.assertEquals(et1.size(), et2.size());
+        for (ReadHeadInfo iter1 : et1.getOffSetRange(0, Integer.MAX_VALUE)) {
+            ReadHeadInfo iter2 = et2.getOffSetRange(0, Integer.MAX_VALUE).first();
+            Assert.assertEquals(iter1.toString(), iter2.toString());
+            et2.getOffSetRange(0, Integer.MAX_VALUE).remove(iter2);
         }
     }
 }
