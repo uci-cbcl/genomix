@@ -31,6 +31,7 @@ import edu.uci.ics.genomix.data.types.EDGETYPE;
 import edu.uci.ics.genomix.data.types.Kmer;
 import edu.uci.ics.genomix.data.types.Node;
 import edu.uci.ics.genomix.data.types.ReadHeadInfo;
+import edu.uci.ics.genomix.data.types.ReadHeadSet;
 import edu.uci.ics.genomix.data.types.VKmer;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
@@ -75,6 +76,7 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
             e1.printStackTrace();
             throw new HyracksDataException(e1);
         }
+        ReadHeadSet.forceWriteEntireBody(true);
 
         return new IKeyValueParser<LongWritable, Text>() {
 
