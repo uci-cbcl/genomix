@@ -55,8 +55,7 @@ public abstract class ExternalableTreeSet<T extends WritableComparable<T> & Seri
     protected boolean isLoaded;
     protected boolean writeToLocal;
     protected boolean readFromLocal;
-    private boolean writeEntireBody;
-    private boolean readEntireBody;
+    private static boolean writeEntireBody;
 
     public ExternalableTreeSet() {
         this(false);
@@ -73,7 +72,6 @@ public abstract class ExternalableTreeSet<T extends WritableComparable<T> & Seri
         isLoaded = false;
         this.writeToLocal = writeTolocal;
         this.readFromLocal = this.writeToLocal;
-        this.writeEntireBody = false;
     }
 
     /**
@@ -230,10 +228,11 @@ public abstract class ExternalableTreeSet<T extends WritableComparable<T> & Seri
 
     @Override
     public void readFields(DataInput in) throws IOException {
-        int size = in.readInt();
         inMemorySet.clear();
         path = null;
-        if (size < countLimit || readEntireBody) {
+        boolean wholeBodyInStream = in.readBoolean();
+        if (wholeBodyInStream) {
+            int size = in.readInt();
             for (int i = 0; i < size; ++i) {
                 inMemorySet.add(readNonGenericElement(in));
             }
@@ -247,14 +246,18 @@ public abstract class ExternalableTreeSet<T extends WritableComparable<T> & Seri
 
     @Override
     public void write(DataOutput out) throws IOException {
-        out.writeInt(inMemorySet.size());
-        if (!writeEntireBody && !isLoaded && path != null && readFromLocal == writeToLocal) {
+        boolean pathsUnmodified = !writeEntireBody && !isLoaded && path != null && readFromLocal == writeToLocal;
+        boolean wholeBodyInStream = writeEntireBody || inMemorySet.size() < countLimit;
+        out.writeBoolean(wholeBodyInStream);
+        
+        if (pathsUnmodified) {
             out.writeBoolean(writeToLocal);
             out.writeUTF(path.toString());
             return;
         }
-        if (inMemorySet.size() < countLimit || writeEntireBody) {
+        if (wholeBodyInStream) {
             loadInMemorySetFromPath();
+            out.writeInt(inMemorySet.size());
             for (T t : inMemorySet) {
                 writeNonGenericElement(out, t);
             }
@@ -371,11 +374,7 @@ public abstract class ExternalableTreeSet<T extends WritableComparable<T> & Seri
         }
     }
 
-    public void forceWriteEntireBody(boolean entire) {
+    public static void forceWriteEntireBody(boolean entire) {
         writeEntireBody = entire;
-    }
-
-    public void forceReadEntireBody(boolean entire) {
-        readEntireBody = entire;
     }
 }

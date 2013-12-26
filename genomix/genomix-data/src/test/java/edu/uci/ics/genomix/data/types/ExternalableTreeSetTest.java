@@ -142,7 +142,7 @@ public class ExternalableTreeSetTest implements Serializable {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         DataOutputStream w = new DataOutputStream(baos);
         try {
-            eSetA.forceWriteEntireBody(entire);
+            ExternalableTreeSet.forceWriteEntireBody(entire);
             eSetA.write(w);
         } catch (IOException e) {
             e.printStackTrace();
@@ -152,7 +152,6 @@ public class ExternalableTreeSetTest implements Serializable {
         ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
         ExternalableTreeSet<TestIntWritable> eSetB = new TestExternalableTreeSet(local);
         try {
-            eSetB.forceReadEntireBody(entire);
             eSetB.readFields(new DataInputStream(bais));
         } catch (IOException e) {
             e.printStackTrace();
@@ -209,6 +208,7 @@ public class ExternalableTreeSetTest implements Serializable {
         }
 
         try {
+            ExternalableTreeSet.manager = null;
             ExternalableTreeSet.setupManager(conf, tmpPath);
         } catch (IOException e) {
             e.printStackTrace();
@@ -228,6 +228,7 @@ public class ExternalableTreeSetTest implements Serializable {
         ExternalableTreeSet.setCountLimit(limit);
 
         try {
+            ExternalableTreeSet.manager = null;
             ExternalableTreeSet.setupManager(conf, null);
         } catch (IOException e) {
             e.printStackTrace();
@@ -244,6 +245,7 @@ public class ExternalableTreeSetTest implements Serializable {
         ExternalableTreeSet.setCountLimit(limit);
 
         try {
+            ExternalableTreeSet.manager = null;
             ExternalableTreeSet.setupManager(conf, null);
         } catch (IOException e) {
             e.printStackTrace();
