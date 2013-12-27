@@ -235,12 +235,12 @@ public class GenomixDriver {
                     Float topFraction = (scorePercentile > 0 && scorePercentile < 1) ? scorePercentile : null;
                     Integer topCount = (scorePercentile >= 1) ? ((int) scorePercentile.floatValue()) : null;
                     conf.setInt(GenomixJobConf.SCAFFOLDING_SEED_SCORE_THRESHOLD,
-                            RayVertex.calculateScoreThreshold(prevStatsCounters, topFraction, topCount));
+                            RayVertex.calculateScoreThreshold(prevStatsCounters, topFraction, topCount, "scaffoldSeedScore"));
                 } else {
                     Float topFraction = (lengthPercentile > 0 && lengthPercentile < 1) ? lengthPercentile : null;
                     Integer topCount = (lengthPercentile >= 1) ? ((int) lengthPercentile.floatValue()) : null;
                     conf.setInt(GenomixJobConf.SCAFFOLDING_SEED_LENGTH_THRESHOLD,
-                            RayVertex.calculateScoreThreshold(prevStatsCounters, topFraction, topCount));
+                            RayVertex.calculateScoreThreshold(prevStatsCounters, topFraction, topCount, "kmerLength"));
                 }
                 conf.setFloat(GenomixJobConf.COVERAGE_NORMAL_MEAN, (float) cur_normalMean);
                 conf.setFloat(GenomixJobConf.COVERAGE_NORMAL_STD, (float) cur_normalStd);

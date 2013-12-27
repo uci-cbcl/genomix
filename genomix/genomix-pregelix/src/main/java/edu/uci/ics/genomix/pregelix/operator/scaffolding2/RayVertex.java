@@ -89,6 +89,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         if (getSuperstep() == 1) {
             if (isStartSeed()) {
                 msgIterator = getStartMessage();
+                LOG.info("starting seed in " + INITIAL_DIRECTION + ": " + getVertexId() + ", length: " + getVertexValue().getKmerLength() + ", coverge: " + getVertexValue().getAverageCoverage() + ", score: " + getVertexValue().calculateSeedScore());
             }
         }
         scaffold(msgIterator);
@@ -323,6 +324,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         outgoingMsg.setSingleEndScores(singleEndScores);
         outgoingMsg.setPairedEndScores(pairedEndScores);
         sendMsg(frontierNode, outgoingMsg);
+        LOG.info("sending to frontier node: minLength: " + minLength + ", s-e: " + singleEndScores + ", p-e: " + pairedEndScores);
     }
 
     /**
@@ -652,13 +654,13 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
     public Logger LOG = Logger.getLogger(RayVertex.class.getName());
 
     @SuppressWarnings("deprecation")
-    public static int calculateScoreThreshold(Counters statsCounters, Float topFraction, Integer topNumber) {
+    public static int calculateScoreThreshold(Counters statsCounters, Float topFraction, Integer topNumber, String scoreKey) {
         if ((topFraction == null && topNumber == null) || (topFraction != null && topNumber != null)) {
             throw new IllegalArgumentException("Please specify either topFraction or topNumber, but not both!");
         }
         TreeMap<Integer, Long> scoreHistogram = new TreeMap<>();
         int total = 0;
-        for (Counter c : statsCounters.getGroup("scaffoldSeedScore-bins")) { // counter name is index; counter value is the count for this index
+        for (Counter c : statsCounters.getGroup(scoreKey + "-bins")) { // counter name is index; counter value is the count for this index
             Integer X = Integer.parseInt(c.getName());
             if (scoreHistogram.get(X) != null) {
                 scoreHistogram.put(X, scoreHistogram.get(X) + c.getCounter());
