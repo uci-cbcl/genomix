@@ -134,11 +134,11 @@ public class RandomTestHelper {
             System.out.println("-------------------------------------");
         }
         System.out.println("StartReads");
-        for (ReadHeadInfo startIter : srcNode.getUnflippedReadIds().getOffSetRange(0, Integer.MAX_VALUE))
+        for (ReadHeadInfo startIter : srcNode.getUnflippedReadIds().getOffSetRange(0, srcNode.getUnflippedReadIds().size()))
             System.out.println(startIter.toString() + "---");
         System.out.println("");
         System.out.println("EndsReads");
-        for (ReadHeadInfo startIter : srcNode.getFlippedReadIds().getOffSetRange(0, Integer.MAX_VALUE))
+        for (ReadHeadInfo startIter : srcNode.getFlippedReadIds().getOffSetRange(0, srcNode.getUnflippedReadIds().size()))
             System.out.println(startIter.toString() + "---");
         System.out.println("");
         System.out.println("Coverage: " + srcNode.getAverageCoverage());
@@ -155,15 +155,15 @@ public class RandomTestHelper {
                 Assert.assertEquals(iter1.toString(), iter2.toString());
             }
         }
-        for (ReadHeadInfo startIter1 : et1.getUnflippedReadIds().getOffSetRange(0, Integer.MAX_VALUE)) {
-            ReadHeadInfo startIter2 = et2.getUnflippedReadIds().getOffSetRange(0, Integer.MAX_VALUE).first();
+        for (ReadHeadInfo startIter1 : et1.getUnflippedReadIds().getOffSetRange(0, et1.getUnflippedReadIds().size())) {
+            ReadHeadInfo startIter2 = et2.getUnflippedReadIds().getOffSetRange(0, et1.getUnflippedReadIds().size()).first();
             Assert.assertEquals(startIter1.toString(), startIter2.toString());
-            et2.getUnflippedReadIds().getOffSetRange(0, Integer.MAX_VALUE).remove(startIter2);
+            et2.getUnflippedReadIds().getOffSetRange(0, et1.getUnflippedReadIds().size()).remove(startIter2);
         }
-        for (ReadHeadInfo startIter1 : et1.getFlippedReadIds().getOffSetRange(0, Integer.MAX_VALUE)) {
-            ReadHeadInfo startIter2 = et2.getFlippedReadIds().getOffSetRange(0, Integer.MAX_VALUE).first();
+        for (ReadHeadInfo startIter1 : et1.getFlippedReadIds().getOffSetRange(0, et1.getFlippedReadIds().size())) {
+            ReadHeadInfo startIter2 = et2.getFlippedReadIds().getOffSetRange(0, et1.getFlippedReadIds().size()).first();
             Assert.assertEquals(startIter1.toString(), startIter2.toString());
-            et2.getUnflippedReadIds().getOffSetRange(0, Integer.MAX_VALUE).remove(startIter2);
+            et2.getFlippedReadIds().getOffSetRange(0, et1.getFlippedReadIds().size()).remove(startIter2);
         }
     }
 
@@ -202,10 +202,10 @@ public class RandomTestHelper {
 
     public static void compareStartReadsAndEndReads(ReadHeadSet et1, ReadHeadSet et2) {
         Assert.assertEquals(et1.size(), et2.size());
-        for (ReadHeadInfo iter1 : et1.getOffSetRange(0, Integer.MAX_VALUE)) {
-            ReadHeadInfo iter2 = et2.getOffSetRange(0, Integer.MAX_VALUE).first();
+        for (ReadHeadInfo iter1 : et1.getOffSetRange(0, et1.size())) {
+            ReadHeadInfo iter2 = et2.getOffSetRange(0, et1.size()).first();
             Assert.assertEquals(iter1.toString(), iter2.toString());
-            et2.getOffSetRange(0, Integer.MAX_VALUE).remove(iter2);
+            et2.getOffSetRange(0, et1.size()).remove(iter2);
         }
     }
 }
