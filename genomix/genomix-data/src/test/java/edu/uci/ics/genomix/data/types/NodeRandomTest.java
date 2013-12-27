@@ -329,34 +329,104 @@ public class NodeRandomTest {
     }
 
     @Test
-    public void testMergeStartAndEndReadIDsWithFF() {
+    public void testAddEdgesWithNoFlips() {
         int strLength = RandomTestHelper.genRandomInt(strMinLength, strMaxLength);
         Node majorNode = new Node();
-        RandomTestHelper.assembleNodeRandomly(majorNode, strLength, vkmerListNumMin, vkmerListNumMax);
+        RandomTestHelper.assembleNodeRandomly(majorNode, strLength, strMinLength, strMaxLength);
         Node minorNode = new Node();
-        RandomTestHelper.assembleNodeRandomly(minorNode, strLength, vkmerListNumMin, vkmerListNumMax);
-//        Kmer fixedKmer = new Kmer();
-//        fixedKmer.setGlobalKmerLength(13);
-//        ReadHeadSet expectedStartReads = new ReadHeadSet();
-//        expectedStartReads.setAsCopy(majorNode.getUnflippedReadIds());
-//        ReadHeadSet expectedEndReads = new ReadHeadSet();
-//        expectedEndReads.setAsCopy(majorNode.getFlippedReadIds());
-//        int newOtherOffset = majorNode.getKmerLength() - fixedKmer.getKmerLength() + 1;
-//        for (ReadHeadInfo p : minorNode.getUnflippedReadIds().getOffSetRange(0, minorNode.getUnflippedReadIds().size())) {
-//            System.out.println(newOtherOffset + p.getOffset());
-//            expectedStartReads.add(p.getMateId(), p.getLibraryId(), p.getReadId(), newOtherOffset + p.getOffset(),
-//                    null, null);
-            
-//        }
-//        System.out.println("--------------------------------------");
-//        for (ReadHeadInfo p : minorNode.getFlippedReadIds().getOffSetRange(0, minorNode.getFlippedReadIds().size())) {
-//            expectedEndReads.add(p.getMateId(), p.getLibraryId(), p.getReadId(), newOtherOffset + p.getOffset(), null,
-//                    null);
-//            System.out.println(newOtherOffset + p.getOffset());
-//        }
-        majorNode.mergeUnflippedAndFlippedReadIDs(EDGETYPE.FF, minorNode);
-//        RandomTestHelper.printSrcNodeInfo(majorNode);
-//        RandomTestHelper.compareStartReadsAndEndReads(expectedStartReads, majorNode.getUnflippedReadIds());
-//        RandomTestHelper.compareStartReadsAndEndReads(expectedEndReads, majorNode.getFlippedReadIds());
+        RandomTestHelper.assembleNodeRandomly(minorNode, strLength, strMinLength, strMaxLength);
+        VKmerList expectedFF = new VKmerList(majorNode.getEdges(EDGETYPE.FF));
+        VKmerList expectedFR = new VKmerList(majorNode.getEdges(EDGETYPE.FR));
+        VKmerList expectedRF = new VKmerList(majorNode.getEdges(EDGETYPE.RF));
+        VKmerList expectedRR = new VKmerList(majorNode.getEdges(EDGETYPE.RR));
+        expectedFF.unionUpdate(minorNode.getEdges(EDGETYPE.FF));
+        expectedFR.unionUpdate(minorNode.getEdges(EDGETYPE.FR));
+        expectedRF.unionUpdate(minorNode.getEdges(EDGETYPE.RF));
+        expectedRR.unionUpdate(minorNode.getEdges(EDGETYPE.RR));
+        majorNode.addEdges(false, minorNode);
+        RandomTestHelper.compareEdgeMap(expectedFF, majorNode.getEdges(EDGETYPE.FF));
+        RandomTestHelper.compareEdgeMap(expectedFR, majorNode.getEdges(EDGETYPE.FR));
+        RandomTestHelper.compareEdgeMap(expectedRF, majorNode.getEdges(EDGETYPE.RF));
+        RandomTestHelper.compareEdgeMap(expectedRR, majorNode.getEdges(EDGETYPE.RR));
     }
+
+    @Test
+    public void testAddEdgesWithFlips() {
+        int strLength = RandomTestHelper.genRandomInt(strMinLength, strMaxLength);
+        Node majorNode = new Node();
+        RandomTestHelper.assembleNodeRandomly(majorNode, strLength, strMinLength, strMaxLength);
+        Node minorNode = new Node();
+        RandomTestHelper.assembleNodeRandomly(minorNode, strLength, strMinLength, strMaxLength);
+
+        VKmerList expectedFF = new VKmerList(majorNode.getEdges(EDGETYPE.FF));
+        VKmerList expectedFR = new VKmerList(majorNode.getEdges(EDGETYPE.FR));
+        VKmerList expectedRF = new VKmerList(majorNode.getEdges(EDGETYPE.RF));
+        VKmerList expectedRR = new VKmerList(majorNode.getEdges(EDGETYPE.RR));
+        expectedFF.unionUpdate(minorNode.getEdges(EDGETYPE.RF));
+        expectedFR.unionUpdate(minorNode.getEdges(EDGETYPE.RR));
+        expectedRF.unionUpdate(minorNode.getEdges(EDGETYPE.FF));
+        expectedRR.unionUpdate(minorNode.getEdges(EDGETYPE.FR));
+        majorNode.addEdges(true, minorNode);
+        RandomTestHelper.compareEdgeMap(expectedFF, majorNode.getEdges(EDGETYPE.FF));
+        RandomTestHelper.compareEdgeMap(expectedFR, majorNode.getEdges(EDGETYPE.FR));
+        RandomTestHelper.compareEdgeMap(expectedRF, majorNode.getEdges(EDGETYPE.RF));
+        RandomTestHelper.compareEdgeMap(expectedRR, majorNode.getEdges(EDGETYPE.RR));
+    }
+    
+  @Test
+  public void testUpdateEdges() {
+      int strLength = RandomTestHelper.genRandomInt(strMinLength, strMaxLength);
+      Node majorNode = new Node();
+      RandomTestHelper.assembleNodeRandomly(majorNode, strLength, strMinLength, strMaxLength);
+      Node minorNode = new Node();
+      RandomTestHelper.assembleNodeRandomly(minorNode, strLength, strMinLength, strMaxLength);
+      Kmer fixedKmer = new Kmer();
+      fixedKmer.setGlobalKmerLength(13);
+      int ffEdgeCount = majorNode.getEdges(EDGETYPE.FF).size() / 2;
+      VKmerList iterFFList = new VKmerList();
+      iterFFList.setAsCopy(majorNode.getEdges(EDGETYPE.FF));
+
+      int frEdgeCount = majorNode.getEdges(EDGETYPE.FR).size() / 2;
+      VKmerList iterFRList = new VKmerList();
+      iterFRList.setAsCopy(majorNode.getEdges(EDGETYPE.FR));
+
+      int rfEdgeCount = majorNode.getEdges(EDGETYPE.RF).size() / 2;
+      VKmerList iterRFList = new VKmerList();
+      iterRFList.setAsCopy(majorNode.getEdges(EDGETYPE.RF));
+
+      int rrEdgeCount = majorNode.getEdges(EDGETYPE.RR).size() / 2;
+      VKmerList iterRRList = new VKmerList();
+      iterRRList.setAsCopy(majorNode.getEdges(EDGETYPE.RR));
+
+      VKmerList expectedFF = new VKmerList(majorNode.getEdges(EDGETYPE.FF));
+      VKmerList expectedFR = new VKmerList(majorNode.getEdges(EDGETYPE.FR));
+      VKmerList expectedRF = new VKmerList(majorNode.getEdges(EDGETYPE.RF));
+      VKmerList expectedRR = new VKmerList(majorNode.getEdges(EDGETYPE.RR));
+
+      expectedFF.remove(iterFFList.getPosition(ffEdgeCount));
+      expectedFF.unionUpdate(minorNode.getEdges(EDGETYPE.FF));
+
+      expectedFR.remove(iterFRList.getPosition(frEdgeCount));
+      expectedFR.unionUpdate(minorNode.getEdges(EDGETYPE.FR));
+
+      expectedRF.remove(iterRFList.getPosition(rfEdgeCount));
+      expectedRF.unionUpdate(minorNode.getEdges(EDGETYPE.RF));
+
+      expectedRR.remove(iterRRList.getPosition(rrEdgeCount));
+      expectedRR.unionUpdate(minorNode.getEdges(EDGETYPE.RR));
+
+      majorNode.updateEdges(EDGETYPE.FF, iterFFList.getPosition(ffEdgeCount), EDGETYPE.FF, EDGETYPE.FF, minorNode,
+              true);
+      majorNode.updateEdges(EDGETYPE.FR, iterFRList.getPosition(frEdgeCount), EDGETYPE.FR, EDGETYPE.FR, minorNode,
+              true);
+      majorNode.updateEdges(EDGETYPE.RF, iterRFList.getPosition(rfEdgeCount), EDGETYPE.RF, EDGETYPE.RF, minorNode,
+              true);
+      majorNode.updateEdges(EDGETYPE.RR, iterRRList.getPosition(rrEdgeCount), EDGETYPE.RR, EDGETYPE.RR, minorNode,
+              true);
+      RandomTestHelper.compareEdgeMap(expectedFF, majorNode.getEdges(EDGETYPE.FF));
+      RandomTestHelper.compareEdgeMap(expectedFR, majorNode.getEdges(EDGETYPE.FR));
+      RandomTestHelper.compareEdgeMap(expectedRF, majorNode.getEdges(EDGETYPE.RF));
+      RandomTestHelper.compareEdgeMap(expectedRR, majorNode.getEdges(EDGETYPE.RR));
+  }
+
 }
