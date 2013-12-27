@@ -291,4 +291,72 @@ public class NodeRandomTest {
         RandomTestHelper.compareEdgeMap(majorNode.getEdges(EDGETYPE.FF), minorNode.getEdges(EDGETYPE.RF));
         RandomTestHelper.compareEdgeMap(majorNode.getEdges(EDGETYPE.FR), minorNode.getEdges(EDGETYPE.RR));
     }
+
+    @Test
+    public void testMergeEdgeWithRF() {
+        int strLength = RandomTestHelper.genRandomInt(strMinLength, strMaxLength);
+        Node majorNode = new Node();
+        RandomTestHelper.assembleNodeRandomly(majorNode, strLength, vkmerListNumMin, vkmerListNumMax);
+        Node minorNode = new Node();
+        RandomTestHelper.assembleNodeRandomly(minorNode, strLength, vkmerListNumMin, vkmerListNumMax);
+        majorNode.getEdges(EDGETYPE.RF).clear();
+        majorNode.getEdges(EDGETYPE.RR).clear();
+
+        minorNode.getEdges(EDGETYPE.RF).clear();
+        minorNode.getEdges(EDGETYPE.RR).clear();
+
+        majorNode.mergeEdges(EDGETYPE.RF, minorNode);
+        RandomTestHelper.compareEdgeMap(majorNode.getEdges(EDGETYPE.RF), minorNode.getEdges(EDGETYPE.FF));
+        RandomTestHelper.compareEdgeMap(majorNode.getEdges(EDGETYPE.RR), minorNode.getEdges(EDGETYPE.FR));
+    }
+
+    @Test
+    public void testMergeEdgeWithRR() {
+        int strLength = RandomTestHelper.genRandomInt(strMinLength, strMaxLength);
+        Node majorNode = new Node();
+        RandomTestHelper.assembleNodeRandomly(majorNode, strLength, vkmerListNumMin, vkmerListNumMax);
+        Node minorNode = new Node();
+        RandomTestHelper.assembleNodeRandomly(minorNode, strLength, vkmerListNumMin, vkmerListNumMax);
+        majorNode.getEdges(EDGETYPE.RR).clear();
+        majorNode.getEdges(EDGETYPE.RF).clear();
+
+        minorNode.getEdges(EDGETYPE.FF).clear();
+        minorNode.getEdges(EDGETYPE.FR).clear();
+
+        majorNode.mergeEdges(EDGETYPE.RR, minorNode);
+        RandomTestHelper.compareEdgeMap(majorNode.getEdges(EDGETYPE.RF), minorNode.getEdges(EDGETYPE.RF));
+        RandomTestHelper.compareEdgeMap(majorNode.getEdges(EDGETYPE.RR), minorNode.getEdges(EDGETYPE.RR));
+    }
+
+    @Test
+    public void testMergeStartAndEndReadIDsWithFF() {
+        int strLength = RandomTestHelper.genRandomInt(strMinLength, strMaxLength);
+        Node majorNode = new Node();
+        RandomTestHelper.assembleNodeRandomly(majorNode, strLength, vkmerListNumMin, vkmerListNumMax);
+        Node minorNode = new Node();
+        RandomTestHelper.assembleNodeRandomly(minorNode, strLength, vkmerListNumMin, vkmerListNumMax);
+//        Kmer fixedKmer = new Kmer();
+//        fixedKmer.setGlobalKmerLength(13);
+//        ReadHeadSet expectedStartReads = new ReadHeadSet();
+//        expectedStartReads.setAsCopy(majorNode.getUnflippedReadIds());
+//        ReadHeadSet expectedEndReads = new ReadHeadSet();
+//        expectedEndReads.setAsCopy(majorNode.getFlippedReadIds());
+//        int newOtherOffset = majorNode.getKmerLength() - fixedKmer.getKmerLength() + 1;
+//        for (ReadHeadInfo p : minorNode.getUnflippedReadIds().getOffSetRange(0, minorNode.getUnflippedReadIds().size())) {
+//            System.out.println(newOtherOffset + p.getOffset());
+//            expectedStartReads.add(p.getMateId(), p.getLibraryId(), p.getReadId(), newOtherOffset + p.getOffset(),
+//                    null, null);
+            
+//        }
+//        System.out.println("--------------------------------------");
+//        for (ReadHeadInfo p : minorNode.getFlippedReadIds().getOffSetRange(0, minorNode.getFlippedReadIds().size())) {
+//            expectedEndReads.add(p.getMateId(), p.getLibraryId(), p.getReadId(), newOtherOffset + p.getOffset(), null,
+//                    null);
+//            System.out.println(newOtherOffset + p.getOffset());
+//        }
+        majorNode.mergeUnflippedAndFlippedReadIDs(EDGETYPE.FF, minorNode);
+//        RandomTestHelper.printSrcNodeInfo(majorNode);
+//        RandomTestHelper.compareStartReadsAndEndReads(expectedStartReads, majorNode.getUnflippedReadIds());
+//        RandomTestHelper.compareStartReadsAndEndReads(expectedEndReads, majorNode.getFlippedReadIds());
+    }
 }

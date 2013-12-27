@@ -157,62 +157,6 @@ public class NodeFixedTest {
 
 //
 //    @Test
-//    public void testMergeEdgeWithRF() {
-//        Node majorNode = new Node();
-//        NodeFixedTest.assembleNodeRandomly(majorNode, 17);
-//        Node minorNode = new Node();
-//        NodeFixedTest.assembleNodeRandomly(minorNode, 19);
-//        majorNode.getEdgeMap(EDGETYPE.RF).clear();
-//        majorNode.getEdgeMap(EDGETYPE.RR).clear();
-//
-//        minorNode.getEdgeMap(EDGETYPE.RF).clear();
-//        minorNode.getEdgeMap(EDGETYPE.RR).clear();
-//
-//        majorNode.mergeEdges(EDGETYPE.RF, minorNode);
-//        NodeFixedTest.compareEdgeMap(majorNode.getEdgeMap(EDGETYPE.RF), minorNode.getEdgeMap(EDGETYPE.FF));
-//        NodeFixedTest.compareEdgeMap(majorNode.getEdgeMap(EDGETYPE.RR), minorNode.getEdgeMap(EDGETYPE.FR));
-//    }
-//
-//    @Test
-//    public void testMergeEdgeWithRR() {
-//        Node majorNode = new Node();
-//        NodeFixedTest.assembleNodeRandomly(majorNode, 17);
-//        Node minorNode = new Node();
-//        NodeFixedTest.assembleNodeRandomly(minorNode, 19);
-//        majorNode.getEdgeMap(EDGETYPE.RR).clear();
-//        majorNode.getEdgeMap(EDGETYPE.RF).clear();
-//
-//        minorNode.getEdgeMap(EDGETYPE.FF).clear();
-//        minorNode.getEdgeMap(EDGETYPE.FR).clear();
-//
-//        majorNode.mergeEdges(EDGETYPE.RR, minorNode);
-//        NodeFixedTest.compareEdgeMap(majorNode.getEdgeMap(EDGETYPE.RF), minorNode.getEdgeMap(EDGETYPE.RF));
-//        NodeFixedTest.compareEdgeMap(majorNode.getEdgeMap(EDGETYPE.RR), minorNode.getEdgeMap(EDGETYPE.RR));
-//    }
-//
-//    @Test
-//    public void testMergeStartAndEndReadIDsWithFF() {
-//        Node majorNode = new Node();
-//        NodeFixedTest.assembleNodeRandomly(majorNode, 18);
-//        Node minorNode = new Node();
-//        NodeFixedTest.assembleNodeRandomly(minorNode, 20);
-//        Kmer fixedKmer = new Kmer();
-//        fixedKmer.setGlobalKmerLength(13);
-//        ReadHeadSet expectedStartReads = new ReadHeadSet(majorNode.getUnflippedReadIds());
-//        ReadHeadSet expectedEndReads = new ReadHeadSet(majorNode.getFlippedReadIds());
-//        int newOtherOffset = majorNode.getKmerLength() - fixedKmer.getKmerLength() + 1;
-//        for (ReadHeadInfo p : minorNode.getUnflippedReadIds()) {
-//            expectedStartReads.add(p.getMateId(), p.getReadId(), newOtherOffset + p.getOffset());
-//        }
-//        for (ReadHeadInfo p : minorNode.getFlippedReadIds()) {
-//            expectedEndReads.add(p.getMateId(), p.getReadId(), newOtherOffset + p.getOffset());
-//        }
-//        majorNode.mergeUnflippedAndFlippedReadIDs(EDGETYPE.FF, minorNode);
-//        NodeFixedTest.compareStartReadsAndEndReads(expectedStartReads, majorNode.getUnflippedReadIds());
-//        NodeFixedTest.compareStartReadsAndEndReads(expectedEndReads, majorNode.getFlippedReadIds());
-//    }
-//
-//    @Test
 //    public void testMergeStartAndEndReadIDsWithFR() {
 //        Node majorNode = new Node();
 //        NodeFixedTest.assembleNodeRandomly(majorNode, 18);
