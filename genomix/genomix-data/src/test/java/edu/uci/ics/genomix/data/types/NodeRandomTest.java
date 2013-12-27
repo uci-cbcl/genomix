@@ -372,61 +372,143 @@ public class NodeRandomTest {
         RandomTestHelper.compareEdgeMap(expectedRF, majorNode.getEdges(EDGETYPE.RF));
         RandomTestHelper.compareEdgeMap(expectedRR, majorNode.getEdges(EDGETYPE.RR));
     }
-    
-  @Test
-  public void testUpdateEdges() {
-      int strLength = RandomTestHelper.genRandomInt(strMinLength, strMaxLength);
-      Node majorNode = new Node();
-      RandomTestHelper.assembleNodeRandomly(majorNode, strLength, strMinLength, strMaxLength);
-      Node minorNode = new Node();
-      RandomTestHelper.assembleNodeRandomly(minorNode, strLength, strMinLength, strMaxLength);
-      Kmer fixedKmer = new Kmer();
-      fixedKmer.setGlobalKmerLength(13);
-      int ffEdgeCount = majorNode.getEdges(EDGETYPE.FF).size() / 2;
-      VKmerList iterFFList = new VKmerList();
-      iterFFList.setAsCopy(majorNode.getEdges(EDGETYPE.FF));
 
-      int frEdgeCount = majorNode.getEdges(EDGETYPE.FR).size() / 2;
-      VKmerList iterFRList = new VKmerList();
-      iterFRList.setAsCopy(majorNode.getEdges(EDGETYPE.FR));
+    @Test
+    public void testUpdateEdges() {
+        int strLength = RandomTestHelper.genRandomInt(strMinLength, strMaxLength);
+        Node majorNode = new Node();
+        RandomTestHelper.assembleNodeRandomly(majorNode, strLength, strMinLength, strMaxLength);
+        Node minorNode = new Node();
+        RandomTestHelper.assembleNodeRandomly(minorNode, strLength, strMinLength, strMaxLength);
+        Kmer fixedKmer = new Kmer();
+        fixedKmer.setGlobalKmerLength(13);
+        int ffEdgeCount = majorNode.getEdges(EDGETYPE.FF).size() / 2;
+        VKmerList iterFFList = new VKmerList();
+        iterFFList.setAsCopy(majorNode.getEdges(EDGETYPE.FF));
 
-      int rfEdgeCount = majorNode.getEdges(EDGETYPE.RF).size() / 2;
-      VKmerList iterRFList = new VKmerList();
-      iterRFList.setAsCopy(majorNode.getEdges(EDGETYPE.RF));
+        int frEdgeCount = majorNode.getEdges(EDGETYPE.FR).size() / 2;
+        VKmerList iterFRList = new VKmerList();
+        iterFRList.setAsCopy(majorNode.getEdges(EDGETYPE.FR));
 
-      int rrEdgeCount = majorNode.getEdges(EDGETYPE.RR).size() / 2;
-      VKmerList iterRRList = new VKmerList();
-      iterRRList.setAsCopy(majorNode.getEdges(EDGETYPE.RR));
+        int rfEdgeCount = majorNode.getEdges(EDGETYPE.RF).size() / 2;
+        VKmerList iterRFList = new VKmerList();
+        iterRFList.setAsCopy(majorNode.getEdges(EDGETYPE.RF));
 
-      VKmerList expectedFF = new VKmerList(majorNode.getEdges(EDGETYPE.FF));
-      VKmerList expectedFR = new VKmerList(majorNode.getEdges(EDGETYPE.FR));
-      VKmerList expectedRF = new VKmerList(majorNode.getEdges(EDGETYPE.RF));
-      VKmerList expectedRR = new VKmerList(majorNode.getEdges(EDGETYPE.RR));
+        int rrEdgeCount = majorNode.getEdges(EDGETYPE.RR).size() / 2;
+        VKmerList iterRRList = new VKmerList();
+        iterRRList.setAsCopy(majorNode.getEdges(EDGETYPE.RR));
 
-      expectedFF.remove(iterFFList.getPosition(ffEdgeCount));
-      expectedFF.unionUpdate(minorNode.getEdges(EDGETYPE.FF));
+        VKmerList expectedFF = new VKmerList(majorNode.getEdges(EDGETYPE.FF));
+        VKmerList expectedFR = new VKmerList(majorNode.getEdges(EDGETYPE.FR));
+        VKmerList expectedRF = new VKmerList(majorNode.getEdges(EDGETYPE.RF));
+        VKmerList expectedRR = new VKmerList(majorNode.getEdges(EDGETYPE.RR));
 
-      expectedFR.remove(iterFRList.getPosition(frEdgeCount));
-      expectedFR.unionUpdate(minorNode.getEdges(EDGETYPE.FR));
+        expectedFF.remove(iterFFList.getPosition(ffEdgeCount));
+        expectedFF.unionUpdate(minorNode.getEdges(EDGETYPE.FF));
 
-      expectedRF.remove(iterRFList.getPosition(rfEdgeCount));
-      expectedRF.unionUpdate(minorNode.getEdges(EDGETYPE.RF));
+        expectedFR.remove(iterFRList.getPosition(frEdgeCount));
+        expectedFR.unionUpdate(minorNode.getEdges(EDGETYPE.FR));
 
-      expectedRR.remove(iterRRList.getPosition(rrEdgeCount));
-      expectedRR.unionUpdate(minorNode.getEdges(EDGETYPE.RR));
+        expectedRF.remove(iterRFList.getPosition(rfEdgeCount));
+        expectedRF.unionUpdate(minorNode.getEdges(EDGETYPE.RF));
 
-      majorNode.updateEdges(EDGETYPE.FF, iterFFList.getPosition(ffEdgeCount), EDGETYPE.FF, EDGETYPE.FF, minorNode,
-              true);
-      majorNode.updateEdges(EDGETYPE.FR, iterFRList.getPosition(frEdgeCount), EDGETYPE.FR, EDGETYPE.FR, minorNode,
-              true);
-      majorNode.updateEdges(EDGETYPE.RF, iterRFList.getPosition(rfEdgeCount), EDGETYPE.RF, EDGETYPE.RF, minorNode,
-              true);
-      majorNode.updateEdges(EDGETYPE.RR, iterRRList.getPosition(rrEdgeCount), EDGETYPE.RR, EDGETYPE.RR, minorNode,
-              true);
-      RandomTestHelper.compareEdgeMap(expectedFF, majorNode.getEdges(EDGETYPE.FF));
-      RandomTestHelper.compareEdgeMap(expectedFR, majorNode.getEdges(EDGETYPE.FR));
-      RandomTestHelper.compareEdgeMap(expectedRF, majorNode.getEdges(EDGETYPE.RF));
-      RandomTestHelper.compareEdgeMap(expectedRR, majorNode.getEdges(EDGETYPE.RR));
-  }
+        expectedRR.remove(iterRRList.getPosition(rrEdgeCount));
+        expectedRR.unionUpdate(minorNode.getEdges(EDGETYPE.RR));
 
+        majorNode.updateEdges(EDGETYPE.FF, iterFFList.getPosition(ffEdgeCount), EDGETYPE.FF, EDGETYPE.FF, minorNode,
+                true);
+        majorNode.updateEdges(EDGETYPE.FR, iterFRList.getPosition(frEdgeCount), EDGETYPE.FR, EDGETYPE.FR, minorNode,
+                true);
+        majorNode.updateEdges(EDGETYPE.RF, iterRFList.getPosition(rfEdgeCount), EDGETYPE.RF, EDGETYPE.RF, minorNode,
+                true);
+        majorNode.updateEdges(EDGETYPE.RR, iterRRList.getPosition(rrEdgeCount), EDGETYPE.RR, EDGETYPE.RR, minorNode,
+                true);
+        RandomTestHelper.compareEdgeMap(expectedFF, majorNode.getEdges(EDGETYPE.FF));
+        RandomTestHelper.compareEdgeMap(expectedFR, majorNode.getEdges(EDGETYPE.FR));
+        RandomTestHelper.compareEdgeMap(expectedRF, majorNode.getEdges(EDGETYPE.RF));
+        RandomTestHelper.compareEdgeMap(expectedRR, majorNode.getEdges(EDGETYPE.RR));
+    }
+
+    @Test
+    public void testDegree() {
+        int strLength = RandomTestHelper.genRandomInt(strMinLength, strMaxLength);
+        Node node1 = new Node();
+        RandomTestHelper.assembleNodeRandomly(node1, strLength, strMinLength, strMaxLength);
+        Node node2 = new Node();
+        RandomTestHelper.assembleNodeRandomly(node2, strLength, strMinLength, strMaxLength);
+        Node node3 = new Node();
+        RandomTestHelper.assembleNodeRandomly(node3, strLength, strMinLength, strMaxLength);
+        Node node4 = new Node();
+        RandomTestHelper.assembleNodeRandomly(node4, strLength, strMinLength, strMaxLength);
+
+        Assert.assertEquals(node1.getEdges(EDGETYPE.FF).size() + node1.getEdges(EDGETYPE.FR).size(),
+                node1.degree(DIR.FORWARD));
+        Assert.assertEquals(node1.getEdges(EDGETYPE.FF).size() + node1.getEdges(EDGETYPE.FR).size(),
+                node1.degree(DIR.FORWARD));
+        Assert.assertEquals(node1.getEdges(EDGETYPE.RF).size() + node1.getEdges(EDGETYPE.RR).size(),
+                node1.degree(DIR.REVERSE));
+        Assert.assertEquals(node1.getEdges(EDGETYPE.RF).size() + node1.getEdges(EDGETYPE.RR).size(),
+                node1.degree(DIR.REVERSE));
+    }
+
+    @Test
+    public void testInAndOutdegree() {
+        int strLength = RandomTestHelper.genRandomInt(strMinLength, strMaxLength);
+        Node node = new Node();
+        RandomTestHelper.assembleNodeRandomly(node, strLength, strMinLength, strMaxLength);
+        Assert.assertEquals(node.getEdges(EDGETYPE.FF).size() + node.getEdges(EDGETYPE.FR).size(), node.outDegree());
+        Assert.assertEquals(node.getEdges(EDGETYPE.RF).size() + node.getEdges(EDGETYPE.RR).size(), node.inDegree());
+    }
+
+    @Test
+    public void testIsPathNode() {
+        int strLength = RandomTestHelper.genRandomInt(strMinLength, strMaxLength);
+        Node node = new Node();
+        RandomTestHelper.assembleNodeRandomly(node, strLength, strMinLength, strMaxLength);
+        Assert.assertEquals(false, node.isPathNode());
+        node.getEdges(EDGETYPE.FR).clear();
+        node.getEdges(EDGETYPE.RF).clear();
+        int totalSize2 = node.getEdges(EDGETYPE.FF).size();
+        for (int i = 0; i < totalSize2 - 1; i++) {
+            VKmer temp = node.getEdges(EDGETYPE.FF).getPosition(0);
+            node.getEdges(EDGETYPE.FF).remove(temp);
+        }
+
+        int totalSize = node.getEdges(EDGETYPE.RR).size();
+        for (int i = 0; i < totalSize - 1; i++) {
+            VKmer temp = node.getEdges(EDGETYPE.RR).getPosition(0);
+            node.getEdges(EDGETYPE.RR).remove(temp);
+        }
+        Assert.assertEquals(true, node.isPathNode());
+    }
+
+    @Test
+    public void testIsSimpleOrTerminalPath() {
+        int strLength = RandomTestHelper.genRandomInt(strMinLength, strMaxLength);
+        Node node = new Node();
+        RandomTestHelper.assembleNodeRandomly(node, strLength, strMinLength, strMaxLength);
+        Assert.assertEquals(false, node.isPathNode());
+        node.getEdges(EDGETYPE.FR).clear();
+        node.getEdges(EDGETYPE.RF).clear();
+        node.getEdges(EDGETYPE.RR).clear();
+        int totalSize2 = node.getEdges(EDGETYPE.FF).size();
+        for (int i = 0; i < totalSize2 - 1; i++) {
+            VKmer temp = node.getEdges(EDGETYPE.FF).getPosition(0);
+            node.getEdges(EDGETYPE.FF).remove(temp);
+        }
+        Assert.assertEquals(true, node.isSimpleOrTerminalPath());
+
+        Node node2 = new Node();
+        RandomTestHelper.assembleNodeRandomly(node, strLength, strMinLength, strMaxLength);
+        Assert.assertEquals(false, node.isPathNode());
+        node.getEdges(EDGETYPE.FR).clear();
+        node.getEdges(EDGETYPE.FF).clear();
+        node.getEdges(EDGETYPE.RR).clear();
+        int totalSize1 = node.getEdges(EDGETYPE.RF).size();
+        for (int i = 0; i < totalSize1 - 1; i++) {
+            VKmer temp = node.getEdges(EDGETYPE.RF).getPosition(0);
+            node.getEdges(EDGETYPE.RF).remove(temp);
+        }
+        Assert.assertEquals(true, node.isSimpleOrTerminalPath());
+    }
 }
