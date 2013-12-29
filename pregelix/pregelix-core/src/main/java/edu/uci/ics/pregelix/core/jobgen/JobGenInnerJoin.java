@@ -64,6 +64,7 @@ import edu.uci.ics.pregelix.core.data.TypeTraits;
 import edu.uci.ics.pregelix.core.hadoop.config.ConfigurationFactory;
 import edu.uci.ics.pregelix.core.jobgen.clusterconfig.ClusterConfig;
 import edu.uci.ics.pregelix.core.util.DataflowUtils;
+import edu.uci.ics.pregelix.core.util.TreeIndexTypeUtils;
 import edu.uci.ics.pregelix.dataflow.ConnectorPolicyAssignmentPolicy;
 import edu.uci.ics.pregelix.dataflow.EmptySinkOperatorDescriptor;
 import edu.uci.ics.pregelix.dataflow.EmptyTupleSourceOperatorDescriptor;
@@ -78,9 +79,9 @@ import edu.uci.ics.pregelix.dataflow.group.ClusteredGroupOperatorDescriptor;
 import edu.uci.ics.pregelix.dataflow.group.IClusteredAggregatorDescriptorFactory;
 import edu.uci.ics.pregelix.dataflow.std.IndexNestedLoopJoinFunctionUpdateOperatorDescriptor;
 import edu.uci.ics.pregelix.dataflow.std.IndexNestedLoopJoinOperatorDescriptor;
+import edu.uci.ics.pregelix.dataflow.std.KeyChunkValueTreeSearchFunctionUpdateOperatorDescriptor;
 import edu.uci.ics.pregelix.dataflow.std.RuntimeHookOperatorDescriptor;
 import edu.uci.ics.pregelix.dataflow.std.TreeIndexBulkReLoadOperatorDescriptor;
-import edu.uci.ics.pregelix.dataflow.std.TreeSearchFunctionUpdateOperatorDescriptor;
 import edu.uci.ics.pregelix.dataflow.std.base.IRecordDescriptorFactory;
 import edu.uci.ics.pregelix.dataflow.std.base.IRuntimeHookFactory;
 import edu.uci.ics.pregelix.runtime.function.ComputeUpdateFunctionFactory;
@@ -96,7 +97,7 @@ public class JobGenInnerJoin extends JobGen {
     public JobGenInnerJoin(PregelixJob job) {
         super(job);
     }
-    
+
     public JobGenInnerJoin(PregelixJob job, String jobId) {
         super(job, jobId);
     }
@@ -134,9 +135,7 @@ public class JobGenInnerJoin extends JobGen {
         IBinaryComparatorFactory[] comparatorFactories = new IBinaryComparatorFactory[1];
         comparatorFactories[0] = JobGenUtil.getIBinaryComparatorFactory(iteration, vertexIdClass);
 
-        ITypeTraits[] typeTraits = new ITypeTraits[2];
-        typeTraits[0] = new TypeTraits(false);
-        typeTraits[1] = new TypeTraits(false);
+        ITypeTraits[] treeTypeTraits = TreeIndexTypeUtils.TypeTraits;
 
         RecordDescriptor rdDummy = DataflowUtils.getRecordDescriptorFromWritableClasses(conf,
                 VLongWritable.class.getName());
@@ -154,11 +153,14 @@ public class JobGenInnerJoin extends JobGen {
                 vertexClass.getName());
         RecordDescriptor rdDelete = DataflowUtils.getRecordDescriptorFromWritableClasses(conf, vertexIdClass.getName());
 
-        TreeSearchFunctionUpdateOperatorDescriptor scanner = new TreeSearchFunctionUpdateOperatorDescriptor(spec,
-                recordDescriptor, storageManagerInterface, lcManagerProvider, fileSplitProvider, typeTraits,
-                comparatorFactories, JobGenUtil.getForwardScan(iteration), null, null, true, true,
-                getIndexDataflowHelperFactory(), inputRdFactory, 6, new StartComputeUpdateFunctionFactory(confFactory),
-                preHookFactory, null, rdUnnestedMessage, rdDummy, rdPartialAggregate, rdInsert, rdDelete, rdFinal);
+        KeyChunkValueTreeSearchFunctionUpdateOperatorDescriptor scanner = new KeyChunkValueTreeSearchFunctionUpdateOperatorDescriptor(
+                spec, recordDescriptor, storageManagerInterface, lcManagerProvider, fileSplitProvider, treeTypeTraits,
+                comparatorFactories, JobGenUtil.getForwardScan(iteration), TreeIndexTypeUtils.CHUNK_SIZE,
+                TreeIndexTypeUtils.PregelixKeyValueFieldsCount, TreeIndexTypeUtils.PregelixKeyFields, null, null, true,
+                true, getIndexDataflowHelperFactory(), inputRdFactory, 6, new StartComputeUpdateFunctionFactory(
+                        confFactory), preHookFactory, null, rdUnnestedMessage, rdDummy, rdPartialAggregate, rdInsert,
+                rdDelete, rdFinal);
+
         ClusterConfig.setLocationConstraint(spec, scanner);
 
         /**
@@ -180,14 +182,18 @@ public class JobGenInnerJoin extends JobGen {
         /**
          * construct bulk-load index operator
          */
+        ITypeTraits[] bulkLoadTypeTraits = new ITypeTraits[2];
+        bulkLoadTypeTraits[0] = new TypeTraits(false);
+        bulkLoadTypeTraits[1] = new TypeTraits(false);
         int[] fieldPermutation = new int[] { 0, 1 };
         int[] keyFields = new int[] { 0 };
         IBinaryComparatorFactory[] indexCmpFactories = new IBinaryComparatorFactory[1];
         indexCmpFactories[0] = JobGenUtil.getIBinaryComparatorFactory(iteration + 1,
                 WritableComparator.get(vertexIdClass).getClass());
         TreeIndexBulkReLoadOperatorDescriptor btreeBulkLoad = new TreeIndexBulkReLoadOperatorDescriptor(spec,
-                storageManagerInterface, lcManagerProvider, secondaryFileSplitProvider, typeTraits, indexCmpFactories,
-                fieldPermutation, keyFields, DEFAULT_BTREE_FILL_FACTOR, getIndexDataflowHelperFactory());
+                storageManagerInterface, lcManagerProvider, secondaryFileSplitProvider, treeTypeTraits,
+                indexCmpFactories, fieldPermutation, keyFields, DEFAULT_BTREE_FILL_FACTOR,
+                getIndexDataflowHelperFactory());
         ClusterConfig.setLocationConstraint(spec, btreeBulkLoad);
 
         /**
@@ -240,8 +246,9 @@ public class JobGenInnerJoin extends JobGen {
         /**
          * add the insert operator to insert vertexes
          */
+        //TODO : start here
         TreeIndexInsertUpdateDeleteOperatorDescriptor insertOp = new TreeIndexInsertUpdateDeleteOperatorDescriptor(
-                spec, rdInsert, storageManagerInterface, lcManagerProvider, fileSplitProvider, typeTraits,
+                spec, rdInsert, storageManagerInterface, lcManagerProvider, fileSplitProvider, treeTypeTraits,
                 comparatorFactories, null, fieldPermutation, IndexOperation.INSERT, getIndexDataflowHelperFactory(),
                 null, NoOpOperationCallbackFactory.INSTANCE);
         ClusterConfig.setLocationConstraint(spec, insertOp);
@@ -251,7 +258,7 @@ public class JobGenInnerJoin extends JobGen {
          */
         int[] fieldPermutationDelete = new int[] { 0 };
         TreeIndexInsertUpdateDeleteOperatorDescriptor deleteOp = new TreeIndexInsertUpdateDeleteOperatorDescriptor(
-                spec, rdDelete, storageManagerInterface, lcManagerProvider, fileSplitProvider, typeTraits,
+                spec, rdDelete, storageManagerInterface, lcManagerProvider, fileSplitProvider, treeTypeTraits,
                 comparatorFactories, null, fieldPermutationDelete, IndexOperation.DELETE,
                 getIndexDataflowHelperFactory(), null, NoOpOperationCallbackFactory.INSTANCE);
         ClusterConfig.setLocationConstraint(spec, deleteOp);

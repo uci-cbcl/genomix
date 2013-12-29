@@ -73,6 +73,10 @@ public class ArrayTupleBuilder implements IDataOutputProvider {
         return fieldData.getLength();
     }
 
+    public int getAddedFields() {
+        return nextField;
+    }
+
     /**
      * Add a field to the tuple from a field in a frame.
      * 
@@ -161,4 +165,5 @@ public class ArrayTupleBuilder implements IDataOutputProvider {
     public void addFieldEndOffset() {
         fEndOffsets[nextField++] = fieldData.getLength();
     }
+
 }

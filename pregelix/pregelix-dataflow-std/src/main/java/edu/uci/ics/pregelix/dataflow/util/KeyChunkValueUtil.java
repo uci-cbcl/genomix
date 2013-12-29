@@ -5,7 +5,10 @@ import java.io.IOException;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
+import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleReference;
+import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
+import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 
 public class KeyChunkValueUtil {
 
@@ -55,7 +58,7 @@ public class KeyChunkValueUtil {
     }
 
     public static void reset(KeyChunkValueFrameTupleAppender chunkAppender, ArrayTupleBuilder keyBuilder,
-            ArrayTupleBuilder valBuilder, FrameTupleReference originTuple, int[] originKeyFields, int chunksize)
+            ArrayTupleBuilder valBuilder, ITupleReference originTuple, int[] originKeyFields, int chunksize)
             throws HyracksDataException {
         keyBuilder.reset();
         valBuilder.reset();
@@ -83,12 +86,38 @@ public class KeyChunkValueUtil {
         }
 
         ChunkId id = new ChunkId((short) 0);
-        int offset = 0;
-        do {
+        for (int offset = 0; offset < valBuilder.getSize(); offset += valuesize) {
             chunkAppender.append(keyBuilder, id, valBuilder.getByteArray(), offset,
                     Math.min(valuesize, valBuilder.getSize() - offset));
-            offset += valuesize;
             id.increaseId();
-        } while (offset < valBuilder.getSize());
+        }
     }
+
+    public static int recover(RecoverChunkedTupleBuilder chunkTupleBuilder, ArrayTupleBuilder cachedTupleBuilder,
+            ArrayTupleReference lastTuple, IIndexCursor cursor) throws HyracksDataException, IndexException {
+        chunkTupleBuilder.reset(lastTuple);
+        int chunks = 0;
+
+        while (cursor.hasNext()) {
+            cursor.next();
+            ITupleReference tuple = cursor.getTuple();
+            if (chunkTupleBuilder.isNextChunk(tuple)) {
+                chunkTupleBuilder.appendValue(tuple);
+                chunks++;
+            } else {
+                resetTupleBuilder(cachedTupleBuilder, lastTuple);
+                break;
+            }
+        }
+        return chunks;
+    }
+
+    public static void resetTupleBuilder(ArrayTupleBuilder tupleBuilder, ITupleReference tuple)
+            throws HyracksDataException {
+        tupleBuilder.reset();
+        for (int i = 0; i < tuple.getFieldCount(); ++i) {
+            tupleBuilder.addField(tuple.getFieldData(i), tuple.getFieldStart(i), tuple.getFieldLength(i));
+        }
+    }
+
 }

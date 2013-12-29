@@ -27,4 +27,17 @@ public class ChunkId {
     public void increaseId() {
         ++value;
     }
+
+    public void reset(byte[] fieldData, int fieldStart, int fieldLength) {
+        value = ShortPointable.getShort(fieldData, fieldStart);
+    }
+
+    public boolean isFirstChunk() {
+        return value == 0;
+    }
+
+    public boolean checkIfMyNextChunk(byte[] fieldData, int fieldStart) {
+        short next = ShortPointable.getShort(fieldData, fieldStart);
+        return value + 1 == next;
+    }
 }

@@ -13,6 +13,10 @@ public class TreeIndexTypeUtils {
     // TODO find a way to associate with runtime pagesize;
     public static final int CHUNK_SIZE = 64 * 1024;
 
+    public static final int PregelixKeyValueFieldsCount = 2; // (vertexId, vertex);
+
+    public static final int[] PregelixKeyFields = { 0 }; // vertexId is the only key field;
+
     public static ITypeTraits[] TypeTraits = { new TypeTraits(false), ChunkId.TypeTrait, new TypeTraits(false) };
 
     public static int[] KeyFields = new int[] { 0, 1 };
