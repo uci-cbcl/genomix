@@ -907,6 +907,13 @@ public abstract class JobGen implements IJobGen {
     }
 
     /**
+     * @return the PregelixJob configuration
+     */
+    public PregelixJob getPregelixJob() {
+        return pregelixJob;
+    }
+
+    /**
      * Generate the pipeline for local grouping
      * 
      * @param spec
@@ -916,8 +923,8 @@ public abstract class JobGen implements IJobGen {
      * @return the start and end (if any) operators of the grouping pipeline
      */
     protected Pair<IOperatorDescriptor, IOperatorDescriptor> generateGroupingOperators(JobSpecification spec,
-            boolean sortOrHash, int iteration, Class<? extends Writable> vertexIdClass,
-            Class<? extends Writable> messageValueClass) throws HyracksException {
+            int iteration, Class<? extends Writable> vertexIdClass, Class<? extends Writable> messageValueClass)
+            throws HyracksException {
         int[] keyFields = new int[] { 0 };
         INormalizedKeyComputerFactory nkmFactory = JobGenUtil.getINormalizedKeyComputerFactory(conf);
         IBinaryComparatorFactory[] sortCmpFactories = new IBinaryComparatorFactory[1];
@@ -926,6 +933,7 @@ public abstract class JobGen implements IJobGen {
                 vertexIdClass.getName(), messageValueClass.getName());
         RecordDescriptor rdFinal = DataflowUtils.getRecordDescriptorFromKeyValueClasses(conf, vertexIdClass.getName(),
                 MsgList.class.getName());
+        boolean sortOrHash = BspUtils.getGroupingAlgorithm(conf);
 
         if (sortOrHash) {
             /**
@@ -959,6 +967,7 @@ public abstract class JobGen implements IJobGen {
                     sortCmpFactories, nkmFactory), localGby, 0, globalGby, 0);
             return Pair.of(localSort, globalGby);
         } else {
+            int frameLimit = BspUtils.getGroupingMemoryLimit(conf);
             /**
              * construct local group-by operator
              */
@@ -967,7 +976,7 @@ public abstract class JobGen implements IJobGen {
                     false, false);
             IAggregatorDescriptorFactory mergeFactory = DataflowUtils
                     .getSerializableAggregatorFactory(conf, true, true);
-            IOperatorDescriptor localGby = new ExternalGroupOperatorDescriptor(spec, keyFields, maxFrameNumber,
+            IOperatorDescriptor localGby = new ExternalGroupOperatorDescriptor(spec, keyFields, frameLimit,
                     sortCmpFactories, nkmFactory, aggregatorFactory, aggregatorFactory, rdUnnestedMessage,
                     new HashSpillableTableFactory(partionFactory, tableSize), false);
             setLocationConstraint(spec, localGby);
@@ -975,7 +984,7 @@ public abstract class JobGen implements IJobGen {
             /**
              * construct global group-by operator
              */
-            IOperatorDescriptor globalGby = new ExternalGroupOperatorDescriptor(spec, keyFields, maxFrameNumber,
+            IOperatorDescriptor globalGby = new ExternalGroupOperatorDescriptor(spec, keyFields, frameLimit,
                     sortCmpFactories, nkmFactory, aggregatorFactory, mergeFactory, rdUnnestedMessage,
                     new HashSpillableTableFactory(partionFactory, tableSize), true);
             setLocationConstraint(spec, globalGby);

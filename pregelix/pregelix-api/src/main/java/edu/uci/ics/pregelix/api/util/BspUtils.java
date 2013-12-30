@@ -50,7 +50,7 @@ import edu.uci.ics.pregelix.api.job.PregelixJob;
  * them.
  */
 public class BspUtils {
-    
+
     public static final String TMP_DIR = "/tmp/";
     private static final String COUNTERS_VALUE_ON_ITERATION = ".counters.valueOnIter.";
     private static final String COUNTERS_LAST_ITERATION_COMPLETED = ".counters.lastIterCompleted";
@@ -745,6 +745,26 @@ public class BspUtils {
      */
     public static int getCheckpointingInterval(Configuration conf) {
         return conf.getInt(PregelixJob.CKP_INTERVAL, -1);
+    }
+
+    /**
+     * Get the grouping algorithm
+     * 
+     * @param conf
+     * @return true-sort; false-hash
+     */
+    public static boolean getGroupingAlgorithm(Configuration conf) {
+        return conf.getBoolean(PregelixJob.GROUPING_ALGORITHM, true);
+    }
+
+    /**
+     * Get the size memory limit for the grouping algorithm (hash only)
+     * 
+     * @param conf
+     * @return
+     */
+    public static int getGroupingMemoryLimit(Configuration conf) {
+        return conf.getInt(PregelixJob.GROUPING_MEM, 1000);
     }
 
     public static Writable readGlobalAggregateValue(Configuration conf, String jobId, String aggClassName)

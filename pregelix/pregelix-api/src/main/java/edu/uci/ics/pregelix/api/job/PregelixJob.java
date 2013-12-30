@@ -27,9 +27,10 @@ import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.graph.VertexPartitioner;
 import edu.uci.ics.pregelix.api.io.VertexInputFormat;
 import edu.uci.ics.pregelix.api.io.VertexOutputFormat;
-import edu.uci.ics.pregelix.api.util.HadoopCountersGlobalAggregateHook;
-import edu.uci.ics.pregelix.api.util.GlobalCountAggregator;
+import edu.uci.ics.pregelix.api.util.GlobalEdgeCountAggregator;
+import edu.uci.ics.pregelix.api.util.GlobalVertexCountAggregator;
 import edu.uci.ics.pregelix.api.util.HadoopCountersAggregator;
+import edu.uci.ics.pregelix.api.util.HadoopCountersGlobalAggregateHook;
 
 /**
  * This class represents a Pregelix job.
@@ -92,9 +93,14 @@ public class PregelixJob extends Job {
     /** period */
     public static final String PERIOD_STR = ".";
     /** the names of the aggregator classes active for all vertex types */
-    public static final String[] DEFAULT_GLOBAL_AGGREGATOR_CLASSES = { GlobalCountAggregator.class.getName() };
+    public static final String[] DEFAULT_GLOBAL_AGGREGATOR_CLASSES = { GlobalVertexCountAggregator.class.getName(),
+            GlobalEdgeCountAggregator.class.getName() };
     /** The name of an optional class that aggregates all Vertexes into mapreduce.Counters */
     public static final String COUNTERS_AGGREGATOR_CLASS = "pregelix.aggregatedCountersClass";
+    /** the group-by algorithm */
+    public static final String GROUPING_ALGORITHM = "pregelix.groupalg";
+    /** the memory assigned to group-by */
+    public static final String GROUPING_MEM = "pregelix.groupmem";
 
     /**
      * Construct a Pregelix job from an existing configuration
@@ -292,11 +298,30 @@ public class PregelixJob extends Job {
 
     final public void setCounterAggregatorClass(Class<? extends HadoopCountersAggregator<?, ?, ?, ?, ?>> aggClass) {
         if (Modifier.isAbstract(aggClass.getModifiers())) {
-            throw new IllegalArgumentException("Aggregate class must be a concrete class, not an abstract one! (was " + aggClass.getName() + ")");
+            throw new IllegalArgumentException("Aggregate class must be a concrete class, not an abstract one! (was "
+                    + aggClass.getName() + ")");
         }
         getConfiguration().setClass(COUNTERS_AGGREGATOR_CLASS, aggClass, HadoopCountersAggregator.class);
         addGlobalAggregatorClass(aggClass);
         setIterationCompleteReporterHook(HadoopCountersGlobalAggregateHook.class);
+    }
+
+    /**
+     * Set the group-by algorithm: sort-true or hash-false
+     * 
+     * @param sortOrHash
+     */
+    final public void setGroupByAlgorithm(boolean sortOrHash) {
+        getConfiguration().setBoolean(GROUPING_ALGORITHM, sortOrHash);
+    }
+
+    /**
+     * Set the memory buget for group-by operators (only hash-based)
+     * 
+     * @param numberOfPages
+     */
+    final public void setGroupByMemoryLimit(int numberOfPages) {
+        getConfiguration().setInt(GROUPING_MEM, numberOfPages);
     }
 
     @Override

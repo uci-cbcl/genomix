@@ -193,7 +193,7 @@ public class JobGenInnerJoin extends JobGen {
         /**
          * construct group-by operator pipeline
          */
-        Pair<IOperatorDescriptor, IOperatorDescriptor> groupOps = generateGroupingOperators(spec, true, iteration,
+        Pair<IOperatorDescriptor, IOperatorDescriptor> groupOps = generateGroupingOperators(spec, iteration,
                 vertexIdClass, messageValueClass);
         IOperatorDescriptor groupStartOperator = groupOps.getLeft();
         IOperatorDescriptor groupEndOperator = groupOps.getRight();
@@ -375,7 +375,7 @@ public class JobGenInnerJoin extends JobGen {
         /**
          * construct group-by operator pipeline
          */
-        Pair<IOperatorDescriptor, IOperatorDescriptor> groupOps = generateGroupingOperators(spec, true, iteration,
+        Pair<IOperatorDescriptor, IOperatorDescriptor> groupOps = generateGroupingOperators(spec, iteration,
                 vertexIdClass, messageValueClass);
         IOperatorDescriptor groupStartOperator = groupOps.getLeft();
         IOperatorDescriptor groupEndOperator = groupOps.getRight();

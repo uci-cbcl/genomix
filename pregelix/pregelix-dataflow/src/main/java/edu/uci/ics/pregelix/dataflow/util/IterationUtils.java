@@ -22,9 +22,11 @@ import java.util.Map;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 
 import edu.uci.ics.hyracks.api.application.INCApplicationContext;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
@@ -38,6 +40,41 @@ import edu.uci.ics.pregelix.dataflow.context.TaskIterationID;
 
 public class IterationUtils {
     public static final String TMP_DIR = BspUtils.TMP_DIR;
+
+    /**
+     * Get the input files' byte size
+     * 
+     * @param job
+     */
+    public static long getInputFileSize(PregelixJob job) {
+        try {
+            Path[] paths = FileInputFormat.getInputPaths(job);
+            FileSystem dfs = FileSystem.get(job.getConfiguration());
+            long size = 0;
+            for (Path path : paths) {
+                FileStatus fstatus = dfs.getFileStatus(path);
+                size += getFileSize(dfs, fstatus.getPath());
+            }
+            return size;
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    private static long getFileSize(FileSystem dfs, Path path) throws IOException {
+        FileStatus fstatus = dfs.getFileStatus(path);
+        if (fstatus.isDir()) {
+            long totalSize = 0;
+            FileStatus[] children = dfs.listStatus(path);
+            for (FileStatus child : children) {
+                Path childPath = child.getPath();
+                totalSize += getFileSize(dfs, childPath);
+            }
+            return totalSize;
+        } else {
+            return fstatus.getLen();
+        }
+    }
 
     public static void setIterationState(IHyracksTaskContext ctx, String pregelixJobId, int partition, int iteration,
             IStateObject state) {
@@ -144,12 +181,12 @@ public class IterationUtils {
     }
 
     public static Writable readGlobalAggregateValue(Configuration conf, String jobId, String aggClassName)
-    throws HyracksDataException {
+            throws HyracksDataException {
         return BspUtils.readGlobalAggregateValue(conf, jobId, aggClassName);
     }
-    
+
     public static HashMap<String, Writable> readAllGlobalAggregateValues(Configuration conf, String jobId)
-    throws HyracksDataException {
+            throws HyracksDataException {
         return BspUtils.readAllGlobalAggregateValues(conf, jobId);
     }
 
