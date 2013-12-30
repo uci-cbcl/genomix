@@ -8,6 +8,7 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
 
 import edu.uci.ics.genomix.data.types.Kmer;
 import edu.uci.ics.genomix.data.types.Node;
+import edu.uci.ics.genomix.data.types.ReadHeadSet;
 import edu.uci.ics.genomix.data.types.VKmer;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.io.VertexWriter;
@@ -32,6 +33,7 @@ public abstract class GenericVertexToNodeOutputFormat<V extends Node> extends
         public BinaryLoadGraphVertexWriter(RecordWriter<VKmer, Node> lineRecordWriter) {
             super(lineRecordWriter);
             node = new Node();
+            ReadHeadSet.forceWriteEntireBody(true);
         }
 
         @Override
@@ -44,7 +46,6 @@ public abstract class GenericVertexToNodeOutputFormat<V extends Node> extends
             if (node.getInternalKmer().getKmerLetterLength() == Kmer.getKmerLength()) {
                 node.setInternalKmer(null);
             }
-            node.forceWriteEntireBody(true);
             getRecordWriter().write(vertex.getVertexId(), node);
         }
     }
