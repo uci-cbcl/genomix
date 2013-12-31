@@ -40,6 +40,8 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
     private static int MAX_OUTER_DISTANCE;
     private static int MIN_OUTER_DISTANCE;
     private static int MAX_DISTANCE; // the max(readlengths, outerdistances)
+    
+    public static final boolean REMOVE_OTHER_INCOMING = false; // whether to remove other incoming branches when a dominant edge is chosen
 
     public RayVertex() {
         outgoingMsg = new RayMessage();
@@ -203,7 +205,11 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         // I am the new frontier but this message is coming from the previous frontier; I was the "candidate"
         vertex.flippedFromInitialDirection = msg.isCandidateFlipped();
         DIR nextDir = msg.getEdgeTypeBackToFrontier().mirror().neighborDir();
-
+        
+        if (REMOVE_OTHER_INCOMING && getSuperstep() > 1) {
+            removeOtherIncomingEdges(msg, id, vertex);
+        }
+        
         msg.visitNode(id, vertex, INITIAL_DIRECTION);
 
         if (vertex.degree(nextDir) == 0) {
@@ -228,6 +234,37 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
                     msg.setEdgeTypeBackToFrontier(et.mirror());
                     sendMsg(next, msg);
                     LOG.info("evaluating branch: " + next);
+                }
+            }
+        }
+    }
+
+    private void removeOtherIncomingEdges(RayMessage msg, VKmer id, RayValue vertex) {
+        // remove all other "incoming" nodes except the walk we just came from. on first iteration, we haven't really "hopped" from anywhere 
+        // find the most recent node in the walk-- this was the frontier last iteration
+        int lastOffset = Integer.MIN_VALUE;
+        int lastIndex = -1;
+        for (int i=0; i < msg.getWalkIds().size(); i++) {
+            if (msg.getWalkOffsets().get(i) > lastOffset) {
+                lastOffset = msg.getWalkOffsets().get(i);
+                lastIndex = i;
+            }
+        }
+        VKmer lastId = msg.getWalkIds().getPosition(lastIndex);
+        DIR prevDir = msg.getEdgeTypeBackToFrontier().dir();
+        for (EDGETYPE et : prevDir.edgeTypes()) {
+            Iterator<VKmer> it = vertex.getEdges(et).iterator();
+            while(it.hasNext()) {
+                VKmer other = it.next();
+                if (et != msg.getEdgeTypeBackToFrontier() || !other.equals(lastId)) {
+                    // only keep the dominant edge
+                    outgoingMsg.reset();
+                    outgoingMsg.setMessageType(RayMessageType.PRUNE_EDGE);
+                    outgoingMsg.setEdgeTypeBackToFrontier(et.mirror());
+                    outgoingMsg.setSourceVertexId(id);
+                    sendMsg(other, outgoingMsg);
+                    it.remove();
+//                        vertex.getEdges(et).remove(other);
                 }
             }
         }
