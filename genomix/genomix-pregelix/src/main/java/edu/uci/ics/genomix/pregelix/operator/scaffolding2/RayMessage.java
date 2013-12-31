@@ -5,9 +5,9 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import edu.uci.ics.genomix.data.types.DIR;
 import edu.uci.ics.genomix.data.types.EDGETYPE;
 import edu.uci.ics.genomix.data.types.Kmer;
-import edu.uci.ics.genomix.data.types.Node;
 import edu.uci.ics.genomix.data.types.VKmer;
 import edu.uci.ics.genomix.data.types.VKmerList;
 import edu.uci.ics.genomix.pregelix.base.MessageWritable;
@@ -30,6 +30,7 @@ public class RayMessage extends MessageWritable {
     private VKmerList walkIds = null; // the kmer id's of the previous frontiers (now part of this walk)
     private ArrayList<Integer> walkOffsets = null; // for each walk node, its start offset in the complete walk
     private Integer walkLength = null; // total number of bases in this walk including the frontier; the offset for current candidates
+    private VKmer accumulatedWalkKmer = null; // the kmer for this complete walk 
 
     /** for REQUEST_KMER, PRUNE_EDGE, CONTINUE_WALK */
     private EDGETYPE candidateToFrontierEdgeType = null; // the edge type from the candidate's perspective back to the frontier node
@@ -58,11 +59,22 @@ public class RayMessage extends MessageWritable {
      * 
      * @param id
      * @param vertex
+     * @param accumulatedKmerDir
      */
-    public void visitNode(VKmer id, Node vertex) {
+    public void visitNode(VKmer id, RayValue vertex, DIR accumulatedKmerDir) {
         getWalkIds().append(id);
         getWalkOffsets().add(getWalkLength());
         setWalkLength(getWalkLength() + vertex.getKmerLength() - Kmer.getKmerLength() + 1);
+
+        if (accumulatedWalkKmer == null || accumulatedWalkKmer.getKmerLetterLength() == 0) {
+            // kmer oriented st always merge in an F dir (seed's offset always 0)
+            setAccumulatedWalkKmer(accumulatedKmerDir == DIR.FORWARD ? vertex.getInternalKmer() : vertex
+                    .getInternalKmer().reverse());
+        } else {
+            EDGETYPE accumulatedToVertexET = !vertex.flippedFromInitialDirection ? EDGETYPE.FF : EDGETYPE.FR;
+            getAccumulatedWalkKmer().mergeWithKmerInDir(accumulatedToVertexET, Kmer.getKmerLength(),
+                    vertex.getInternalKmer());
+        }
     }
 
     /**
@@ -83,6 +95,9 @@ public class RayMessage extends MessageWritable {
             getWalkOffsets().addAll(other.walkOffsets); // Integer type is immutable; safe for references
         }
         walkLength = other.walkLength;
+        if (other.accumulatedWalkKmer != null && other.accumulatedWalkKmer.getKmerLetterLength() > 0) {
+            getAccumulatedWalkKmer().setAsCopy(other.accumulatedWalkKmer);
+        }
         candidateToFrontierEdgeType = other.candidateToFrontierEdgeType;
         frontierFlipped = other.frontierFlipped;
         if (other.toScoreId != null && other.toScoreId.getKmerLetterLength() > 0) {
@@ -107,6 +122,7 @@ public class RayMessage extends MessageWritable {
             getWalkIds().readFields(in);
             readWalkOffsets(in);
             setWalkLength(in.readInt());
+            getAccumulatedWalkKmer().readFields(in);
         }
         if ((messageFields & FIELDS.EDGETYPE_BACK_TO_FRONTIER) != 0) {
             candidateToFrontierEdgeType = EDGETYPE.fromByte(in.readByte());
@@ -134,6 +150,7 @@ public class RayMessage extends MessageWritable {
             walkIds.write(out);
             writeWalkOffsets(out);
             out.writeInt(getWalkLength());
+            getAccumulatedWalkKmer().write(out);
         }
         if (candidateToFrontierEdgeType != null) {
             out.writeByte(candidateToFrontierEdgeType.get());
@@ -297,11 +314,23 @@ public class RayMessage extends MessageWritable {
         this.pairedEndScores = scores;
     }
 
+    public VKmer getAccumulatedWalkKmer() {
+        if (accumulatedWalkKmer == null) {
+            accumulatedWalkKmer = new VKmer();
+        }
+        return accumulatedWalkKmer;
+    }
+
+    public void setAccumulatedWalkKmer(VKmer accumulatedKmer) {
+        this.accumulatedWalkKmer = accumulatedKmer;
+    }
+
     @Override
     public void reset() {
         super.reset();
         walkIds = null;
         walkOffsets = null;
+        accumulatedWalkKmer = null;
         candidateToFrontierEdgeType = null;
         frontierFlipped = null;
         toScoreKmer = null;
