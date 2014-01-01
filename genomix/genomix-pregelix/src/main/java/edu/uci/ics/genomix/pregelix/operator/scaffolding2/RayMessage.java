@@ -110,7 +110,7 @@ public class RayMessage extends MessageWritable {
             getSingleEndScores().setAsCopy(other.singleEndScores);
         }
         if (other.pairedEndScores != null && other.pairedEndScores.size() > 0) {
-            getSingleEndScores().setAsCopy(other.pairedEndScores);
+            getPairedEndScores().setAsCopy(other.pairedEndScores);
         }
     }
 
