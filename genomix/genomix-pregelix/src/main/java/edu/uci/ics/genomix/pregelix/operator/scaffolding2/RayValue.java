@@ -7,6 +7,7 @@ import java.io.IOException;
 import edu.uci.ics.genomix.data.types.Kmer;
 import edu.uci.ics.genomix.data.types.Node;
 import edu.uci.ics.genomix.data.types.ReadHeadInfo;
+import edu.uci.ics.genomix.data.types.VKmer;
 import edu.uci.ics.genomix.pregelix.base.VertexValueWritable;
 
 public class RayValue extends VertexValueWritable {
@@ -16,6 +17,8 @@ public class RayValue extends VertexValueWritable {
     boolean visited = false;
     boolean intersection = false;
     boolean stopSearch = false;
+
+    public VKmer accumulatedWalkKmer;
 
     protected static class FIELDS {
         public static final byte DIR_FLIPPED_VS_INITIAL = 0b01;

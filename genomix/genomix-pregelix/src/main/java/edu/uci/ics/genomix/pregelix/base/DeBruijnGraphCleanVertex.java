@@ -141,6 +141,9 @@ public abstract class DeBruijnGraphCleanVertex<V extends VertexValueWritable, M 
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
+            
+            // manually clear state
+            getVertexValue().state = 0;
         }
     }
 

@@ -8,13 +8,14 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.UUID;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Writable;
@@ -30,7 +31,7 @@ public abstract class ExternalableTreeSet<T extends WritableComparable<T> & Seri
      */
     private static final long serialVersionUID = 1L;
     static FileManager manager;
-//    static private int countLimit = Integer.MAX_VALUE;
+    //    static private int countLimit = Integer.MAX_VALUE;
     static private int countLimit = 1000;
 
     public static synchronized void setupManager(Configuration conf, Path workPath) throws IOException {
@@ -55,8 +56,7 @@ public abstract class ExternalableTreeSet<T extends WritableComparable<T> & Seri
     protected boolean isLoaded;
     protected boolean writeToLocal;
     protected boolean readFromLocal;
-    private boolean writeEntireBody;
-    private boolean readEntireBody;
+    private static boolean writeEntireBody;
 
     public ExternalableTreeSet() {
         this(false);
@@ -73,7 +73,6 @@ public abstract class ExternalableTreeSet<T extends WritableComparable<T> & Seri
         isLoaded = false;
         this.writeToLocal = writeTolocal;
         this.readFromLocal = this.writeToLocal;
-        this.writeEntireBody = false;
     }
 
     /**
@@ -230,10 +229,11 @@ public abstract class ExternalableTreeSet<T extends WritableComparable<T> & Seri
 
     @Override
     public void readFields(DataInput in) throws IOException {
-        int size = in.readInt();
         inMemorySet.clear();
         path = null;
-        if (size < countLimit || readEntireBody) {
+        boolean wholeBodyInStream = in.readBoolean();
+        if (wholeBodyInStream) {
+            int size = in.readInt();
             for (int i = 0; i < size; ++i) {
                 inMemorySet.add(readNonGenericElement(in));
             }
@@ -247,14 +247,18 @@ public abstract class ExternalableTreeSet<T extends WritableComparable<T> & Seri
 
     @Override
     public void write(DataOutput out) throws IOException {
-        out.writeInt(inMemorySet.size());
-        if (!writeEntireBody && !isLoaded && path != null && readFromLocal == writeToLocal) {
+        boolean pathsUnmodified = !writeEntireBody && !isChanged && path != null && readFromLocal == writeToLocal;
+        boolean wholeBodyInStream = writeEntireBody || inMemorySet.size() < countLimit;
+        out.writeBoolean(wholeBodyInStream);
+
+        if (pathsUnmodified) {
             out.writeBoolean(writeToLocal);
             out.writeUTF(path.toString());
             return;
         }
-        if (inMemorySet.size() < countLimit || writeEntireBody) {
+        if (wholeBodyInStream) {
             loadInMemorySetFromPath();
+            out.writeInt(inMemorySet.size());
             for (T t : inMemorySet) {
                 writeNonGenericElement(out, t);
             }
@@ -285,25 +289,25 @@ public abstract class ExternalableTreeSet<T extends WritableComparable<T> & Seri
         private Path hdfsWorkPath;
         private Path localWorkPath;
         private Configuration conf;
-        private HashMap<Path, OutputStream> allocatedHdfsPath;
-        private HashMap<Path, OutputStream> allocatedLocalPath;
+        private HashSet<Path> allocatedHdfsPath;
+        private HashSet<Path> allocatedLocalPath;
 
         public FileManager(Configuration conf, Path hdfsWorkingPath) throws IOException {
             hfs = FileSystem.get(conf);
             lfs = FileSystem.getLocal(conf);
             hdfsWorkPath = hdfsWorkingPath;
             localWorkPath = new Path(BspUtils.TMP_DIR);
-            allocatedHdfsPath = new HashMap<Path, OutputStream>();
-            allocatedLocalPath = new HashMap<Path, OutputStream>();
+            allocatedHdfsPath = new HashSet<Path>();
+            allocatedLocalPath = new HashSet<Path>();
             this.conf = conf;
         }
 
         public void deleteAll() throws IOException {
-            for (Path path : allocatedHdfsPath.keySet()) {
+            for (Path path : allocatedHdfsPath) {
                 deleteFile(path, false);
             }
             allocatedHdfsPath.clear();
-            for (Path path : allocatedLocalPath.keySet()) {
+            for (Path path : allocatedLocalPath) {
                 deleteFile(path, true);
             }
             allocatedLocalPath.clear();
@@ -321,19 +325,21 @@ public abstract class ExternalableTreeSet<T extends WritableComparable<T> & Seri
             }
         }
 
-        private static synchronized Path createOneFile(HashMap<Path, OutputStream> validation, FileSystem fs,
-                Path workPath) throws IOException {
+        private static synchronized Path createOneFile(HashSet<Path> validation, FileSystem fs, Path workPath)
+                throws IOException {
             Path path;
             do {
                 path = new Path(workPath, "ExternalableTreeSet" + UUID.randomUUID());
             } while (fs.exists(path));
-            validation.put(path, fs.create(path, (short) 1));
+            FSDataOutputStream os = fs.create(path, (short) 1);
+            os.close();
+            validation.add(path);
             return path;
         }
 
-        private static synchronized void deleteOneFile(Path path, final HashMap<Path, OutputStream> validation,
-                FileSystem fs) throws IOException {
-            if (path != null && validation.containsKey(path)) {
+        private static synchronized void deleteOneFile(Path path, final HashSet<Path> validation, FileSystem fs)
+                throws IOException {
+            if (path != null && validation.contains(path)) {
                 fs.delete(path, true);
             }
         }
@@ -346,19 +352,19 @@ public abstract class ExternalableTreeSet<T extends WritableComparable<T> & Seri
             }
         }
 
-        private static OutputStream getOutputStream(Path path, HashMap<Path, OutputStream> validation)
+        private static OutputStream getOutputStream(Path path, HashSet<Path> validation, FileSystem fs)
                 throws IOException {
-            if (!validation.containsKey(path)) {
+            if (!validation.contains(path)) {
                 throw new IOException("File not registered:" + path);
             }
-            return validation.get(path);
+            return fs.create(path, (short) 1);
         }
 
         public OutputStream getOutputStream(Path path, boolean local) throws IOException {
             if (local) {
-                return getOutputStream(path, allocatedLocalPath);
+                return getOutputStream(path, allocatedLocalPath, lfs);
             } else {
-                return getOutputStream(path, allocatedHdfsPath);
+                return getOutputStream(path, allocatedHdfsPath, hfs);
             }
         }
 
@@ -371,11 +377,7 @@ public abstract class ExternalableTreeSet<T extends WritableComparable<T> & Seri
         }
     }
 
-    public void forceWriteEntireBody(boolean entire) {
+    public static void forceWriteEntireBody(boolean entire) {
         writeEntireBody = entire;
-    }
-
-    public void forceReadEntireBody(boolean entire) {
-        readEntireBody = entire;
     }
 }

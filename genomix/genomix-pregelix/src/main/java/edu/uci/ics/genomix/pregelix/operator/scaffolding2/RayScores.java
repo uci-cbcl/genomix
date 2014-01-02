@@ -85,7 +85,8 @@ public class RayScores implements Writable {
         Rules targetRule = scores.get(targetKey);
         return (((queryRule.ruleA) > targetRule.ruleA * factor) // overlap-weighted score  
                 && ((queryRule.ruleB) > targetRule.ruleB * factor) // raw score 
-        && ((queryRule.ruleC) > targetRule.ruleC * factor)); // smallest non-zero element of the walk
+//        && ((queryRule.ruleC) > targetRule.ruleC * factor)
+        ); // smallest non-zero element of the walk
         // TODO ruleC again doesn't make much sense in our case-- the min is over nodes currently which may represent long kmers  
     }
 

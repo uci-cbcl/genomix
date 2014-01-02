@@ -130,9 +130,4 @@ public class ReadHeadSet extends ExternalableTreeSet<ReadHeadInfo> {
         t.write(out);
     }
 
-    public void forceWriteEntireBody(boolean entire) {
-        super.forceWriteEntireBody(entire);
-
-    }
-
 }

@@ -24,6 +24,7 @@ import org.apache.hadoop.mapred.JobConf;
 import edu.uci.ics.genomix.data.config.GenomixJobConf;
 import edu.uci.ics.genomix.data.types.EDGETYPE;
 import edu.uci.ics.genomix.data.types.Node;
+import edu.uci.ics.genomix.data.types.ReadHeadSet;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
@@ -61,6 +62,7 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
             e2.printStackTrace();
             throw new HyracksDataException(e2);
         }
+        ReadHeadSet.forceWriteEntireBody(true);
 
         return new IAggregatorDescriptor() {
 
@@ -205,7 +207,7 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
                                 + "\nNode is:" + localUniNode.toString());
                     }
                 } catch (IOException e) {
-                    throw new HyracksDataException("I/O exception when writing aggregation to the output buffer.");
+                    throw new HyracksDataException("I/O exception when writing aggregation to the output buffer.", e);
                 }
 
                 return true; // FIXME the API doesn't specify what this is supposed to return... 
