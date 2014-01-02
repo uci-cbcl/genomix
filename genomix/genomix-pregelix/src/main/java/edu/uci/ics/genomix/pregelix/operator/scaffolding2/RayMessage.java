@@ -87,6 +87,7 @@ public class RayMessage extends MessageWritable {
 
     public void setAsCopy(RayMessage other) {
         super.setAsCopy(other);
+        messageType = other.messageType;
         if (other.walkIds != null && other.walkIds.size() > 0) {
             getWalkIds().setAsCopy(other.walkIds);
         }
@@ -330,12 +331,13 @@ public class RayMessage extends MessageWritable {
         super.reset();
         walkIds = null;
         walkOffsets = null;
+        walkLength = null;
         accumulatedWalkKmer = null;
         candidateToFrontierEdgeType = null;
         frontierFlipped = null;
+        toScoreId = null;
         toScoreKmer = null;
         singleEndScores = null;
         pairedEndScores = null;
     }
-
 }
