@@ -985,7 +985,7 @@ public abstract class JobGen implements IJobGen {
              * construct global group-by operator
              */
             IOperatorDescriptor globalGby = new ExternalGroupOperatorDescriptor(spec, keyFields, frameLimit,
-                    sortCmpFactories, nkmFactory, aggregatorFactory, mergeFactory, rdUnnestedMessage,
+                    sortCmpFactories, nkmFactory, mergeFactory, mergeFactory, rdUnnestedMessage,
                     new HashSpillableTableFactory(partionFactory, tableSize), true);
             setLocationConstraint(spec, globalGby);
 

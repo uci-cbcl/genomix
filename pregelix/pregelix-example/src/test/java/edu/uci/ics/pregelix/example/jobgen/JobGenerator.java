@@ -80,6 +80,9 @@ public class JobGenerator {
         job.getConfiguration().setLong(PregelixJob.NUM_VERTICE, 20);
         job.setCheckpointHook(ConservativeCheckpointHook.class);
         job.setEnableDynamicOptimization(true);
+        job.setGroupByAlgorithm(false);
+        job.setGroupByMemoryLimit(3);
+        job.setFrameSize(1024);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
 

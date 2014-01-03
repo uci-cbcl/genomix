@@ -56,6 +56,7 @@ public class SerializableAggregateFunction implements ISerializableAggregateFunc
     private WritableComparable key;
     private Writable value;
     private Writable combinedResult;
+    private Writable finalResult;
     private MsgList msgList = new MsgList();
 
     public SerializableAggregateFunction(IHyracksTaskContext ctx, IConfigurationFactory confFactory,
@@ -80,6 +81,8 @@ public class SerializableAggregateFunction implements ISerializableAggregateFunc
             key.readFields(keyInput);
             value.readFields(valueInput);
 
+            combiner.init(msgList);
+
             /**
              * call the step function of the aggregator
              */
@@ -92,7 +95,7 @@ public class SerializableAggregateFunction implements ISerializableAggregateFunc
             /**
              * output state to the array tuple builder
              */
-            combiner.finishPartial();
+            combinedResult = combiner.finishPartial();
             combinedResult.write(state.getDataOutput());
             state.addFieldEndOffset();
         } catch (Exception e) {
@@ -154,7 +157,7 @@ public class SerializableAggregateFunction implements ISerializableAggregateFunc
              * set the partial state
              */
             combiner.setPartialCombineState(combinedResult);
-            combiner.finishPartial();
+            combinedResult = combiner.finishPartial();
             combinedResult.write(output.getDataOutput());
             output.addFieldEndOffset();
         } catch (Exception e) {
@@ -166,6 +169,12 @@ public class SerializableAggregateFunction implements ISerializableAggregateFunc
     public void finishFinal(IFrameTupleReference state, ArrayTupleBuilder output) throws HyracksDataException {
         try {
             /**
+             * bind key and value
+             */
+            bindKeyValue(state);
+            key.readFields(keyInput);
+
+            /**
              * bind state
              */
             bindState(state);
@@ -174,9 +183,15 @@ public class SerializableAggregateFunction implements ISerializableAggregateFunc
             /**
              * set the partial state
              */
-            combiner.setPartialCombineState(combinedResult);
-            combiner.finishPartial();
-            combinedResult.write(output.getDataOutput());
+            if (!partialAggAsInput) {
+                combiner.setPartialCombineState(combinedResult);
+                combinedResult = combiner.finishPartial();
+                combinedResult.write(output.getDataOutput());
+            } else {
+                combiner.setPartialCombineState(combinedResult);
+                finalResult = combiner.finishFinal();
+                finalResult.write(output.getDataOutput());
+            }
             output.addFieldEndOffset();
         } catch (Exception e) {
             throw new HyracksDataException(e);

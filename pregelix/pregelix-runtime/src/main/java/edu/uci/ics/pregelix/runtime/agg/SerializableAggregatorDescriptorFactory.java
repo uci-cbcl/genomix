@@ -51,7 +51,7 @@ public class SerializableAggregatorDescriptorFactory implements IAggregatorDescr
 
                 @Override
                 public AggregateState createAggregateStates() {
-                    return null;
+                    return new AggregateState();
                 }
 
                 @Override
@@ -92,7 +92,7 @@ public class SerializableAggregatorDescriptorFactory implements IAggregatorDescr
 
                 @Override
                 public void close() {
-                    
+
                 }
 
             };

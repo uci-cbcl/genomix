@@ -123,6 +123,7 @@ public abstract class MessageCombiner<I extends WritableComparable, M extends Wr
      *            the intermediate combine result
      */
     public void setPartialCombineState(P p) {
-
+        throw new IllegalStateException("customized message combiner implementation does not implement this method!");
     }
+ 
 }

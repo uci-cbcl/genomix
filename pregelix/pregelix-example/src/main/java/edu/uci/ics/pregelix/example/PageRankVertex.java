@@ -95,6 +95,11 @@ public class PageRankVertex extends Vertex<VLongWritable, DoubleWritable, FloatW
             msgList.add(agg);
             return msgList;
         }
+
+        @Override
+        public void setPartialCombineState(DoubleWritable combineState) {
+            sum = combineState.get();
+        }
     }
 
     @Override

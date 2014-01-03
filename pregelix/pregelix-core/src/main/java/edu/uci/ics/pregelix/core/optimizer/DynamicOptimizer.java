@@ -113,7 +113,7 @@ public class DynamicOptimizer implements IOptimizer {
         for (Entry<String, IntWritable> entry : machineToDegreeOfParallelism.entrySet()) {
             String loc = entry.getKey();
             //reserve one core for heartbeat
-            int load = (int) counterContext.getCounter(Counters.NUM_PROCESSOR, false).get() - 1;
+            int load = (int) counterContext.getCounter(Counters.NUM_PROCESSOR, false).get() - 2;
             IntWritable count = machineToDegreeOfParallelism.get(loc);
             count.set(load);
             dop += load;
