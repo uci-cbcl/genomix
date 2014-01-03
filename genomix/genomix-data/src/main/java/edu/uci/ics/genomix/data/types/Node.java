@@ -729,16 +729,10 @@ public class Node implements Writable, Serializable {
         int otherLength = other.internalKmer.lettersInKmer;
         mergeUnflippedAndFlippedReadIDs(edgeType, other, otherLength);
         if (this.flippedReadIds != null && !this.flippedReadIds.verifySequence()) {
-            IllegalStateException e = new IllegalStateException("verityFilpSequence failed:\n " + this.toString()
-                    + "\n" + other.toString());
-            e.printStackTrace();
-            throw e;
+            System.err.println("verityFilpSequence failed:\n " + this.toString() + "\n" + other.toString());
         }
         if (this.unflippedReadIds != null && !this.unflippedReadIds.verifySequence()) {
-            IllegalStateException e = new IllegalStateException("verityUnFilpSequence failed:\n " + this.toString()
-                    + "\n" + other.toString());
-            e.printStackTrace();
-            throw e;
+            System.err.println("verityUnFilpSequence failed:\n " + this.toString() + "\n" + other.toString());
         }
     }
 
