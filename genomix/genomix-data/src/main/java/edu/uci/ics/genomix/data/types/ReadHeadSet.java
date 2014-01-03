@@ -61,20 +61,17 @@ public class ReadHeadSet extends ExternalableTreeSet<ReadHeadInfo> {
         super.union(setB);
     }
 
-    public boolean verifySequence() {
+    public boolean verifySequence(VKmer internalKmer, boolean flip) {
         Iterator<ReadHeadInfo> iter = super.readOnlyIterator();
-        ReadHeadInfo pre = null;
         while (iter.hasNext()) {
             ReadHeadInfo now = iter.next();
-            if (pre == null) {
-                pre = now;
+            if (now.getThisReadSequence() == null) {
                 continue;
             }
-            if (now.getOffset() == pre.getOffset()) {
-                if (!now.getThisReadSequence().matchesExactly(0, pre.getThisReadSequence(), 0, Kmer.getKmerLength())) {
+            if (!flip) {
+                if (!internalKmer.matchesExactly(now.getOffset(), now.getThisReadSequence(), 0, Kmer.getKmerLength())) {
                     return false;
                 }
-
             }
         }
         return true;
