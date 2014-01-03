@@ -728,8 +728,20 @@ public class Node implements Writable, Serializable {
     protected void mergeUnflippedAndFlippedReadIDs(EDGETYPE edgeType, Node other) {
         int otherLength = other.internalKmer.lettersInKmer;
         mergeUnflippedAndFlippedReadIDs(edgeType, other, otherLength);
+        if (this.flippedReadIds != null && !this.flippedReadIds.verifySequence()) {
+            IllegalStateException e = new IllegalStateException("verityFilpSequence failed:\n " + this.toString()
+                    + "\n" + other.toString());
+            e.printStackTrace();
+            throw e;
+        }
+        if (this.unflippedReadIds != null && !this.unflippedReadIds.verifySequence()) {
+            IllegalStateException e = new IllegalStateException("verityUnFilpSequence failed:\n " + this.toString()
+                    + "\n" + other.toString());
+            e.printStackTrace();
+            throw e;
+        }
     }
-    
+
     protected void mergeUnflippedAndFlippedReadIDs(EDGETYPE edgeType, Node other, int otherLength) {
         int K = Kmer.getKmerLength();
         int thisLength = internalKmer.lettersInKmer;
@@ -850,7 +862,7 @@ public class Node implements Writable, Serializable {
     }
 
     public int calculateSeedScore() {
-        int length = getKmerLength() == 0 ? Kmer.getKmerLength() : getKmerLength(); 
+        int length = getKmerLength() == 0 ? Kmer.getKmerLength() : getKmerLength();
         return length * (getUnflippedReadIds().size() + getFlippedReadIds().size());
     }
 }

@@ -61,6 +61,25 @@ public class ReadHeadSet extends ExternalableTreeSet<ReadHeadInfo> {
         super.union(setB);
     }
 
+    public boolean verifySequence() {
+        Iterator<ReadHeadInfo> iter = super.readOnlyIterator();
+        ReadHeadInfo pre = null;
+        while (iter.hasNext()) {
+            ReadHeadInfo now = iter.next();
+            if (pre == null) {
+                pre = now;
+                continue;
+            }
+            if (now.getOffset() == pre.getOffset()) {
+                if (!now.getThisReadSequence().matchesExactly(0, pre.getThisReadSequence(), 0, Kmer.getKmerLength())) {
+                    return false;
+                }
+
+            }
+        }
+        return true;
+    }
+
     public void unionUpdate(ReadHeadSet setB, float lengthFactor, boolean flipOffset, int otherLength) {
         if (!flipOffset) {
             ReadIterator iter = setB.readOnlyIterator();
@@ -102,10 +121,10 @@ public class ReadHeadSet extends ExternalableTreeSet<ReadHeadInfo> {
 
     public SortedSet<ReadHeadInfo> getOffSetRange(int lowOffset, int highOffset) {
         if (lowOffset < 0 || highOffset > ReadHeadInfo.MAX_OFFSET_VALUE) {
-            throw new IllegalArgumentException("Invalid range specified: must be 0 < " + ReadHeadInfo.MAX_OFFSET_VALUE + " but saw low: " + lowOffset + ", high: " + highOffset);
+            throw new IllegalArgumentException("Invalid range specified: must be 0 < " + ReadHeadInfo.MAX_OFFSET_VALUE
+                    + " but saw low: " + lowOffset + ", high: " + highOffset);
         }
-        return super.rangeSearch(ReadHeadInfo.getLowerBoundInfo(lowOffset),
-                ReadHeadInfo.getUpperBoundInfo(highOffset));
+        return super.rangeSearch(ReadHeadInfo.getLowerBoundInfo(lowOffset), ReadHeadInfo.getUpperBoundInfo(highOffset));
     }
 
     public Set<Long> getReadIdSet() {
