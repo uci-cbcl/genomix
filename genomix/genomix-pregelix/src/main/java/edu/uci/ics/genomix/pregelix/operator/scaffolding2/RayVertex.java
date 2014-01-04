@@ -389,7 +389,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
                         .getInternalKmer().reverse());
             } else {
                 outgoingMsg.setToScoreId(msg.getToScoreId());
-                outgoingMsg.setToScoreKmer(msg.getToScoreKmer());
+                outgoingMsg.setToScoreKmer(new VKmer(msg.getToScoreKmer()));
                 EDGETYPE accumulatedCandidateToVertexET = !msg.getCandidateFlipped() ? EDGETYPE.FF : EDGETYPE.FR;
                 outgoingMsg.getToScoreKmer().mergeWithKmerInDir(accumulatedCandidateToVertexET, Kmer.getKmerLength(),
                         vertex.getInternalKmer());
