@@ -1,7 +1,9 @@
 package edu.uci.ics.genomix.pregelix.operator.scaffolding2;
 
 import java.io.IOException;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -42,8 +44,10 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
     private static int MIN_OUTER_DISTANCE;
     private static int MAX_DISTANCE; // the max(readlengths, outerdistances)
 
+    public static final boolean REMOVE_OTHER_OUTGOING = true; // whether to remove other outgoing branches when a dominant edge is chosen
     public static final boolean REMOVE_OTHER_INCOMING = true; // whether to remove other incoming branches when a dominant edge is chosen
-    public static final boolean CANDIDATES_SCORE_WALK = true; // whether to have the candidates score the walk
+    public static final boolean CANDIDATES_SCORE_WALK = false; // whether to have the candidates score the walk
+    private static final boolean EXPAND_CANDIDATE_BRANCHES = true; // whether to get kmer from all possible candidate branches  
 
     public RayVertex() {
         outgoingMsg = new RayMessage();
@@ -156,8 +160,13 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
                 case CONTINUE_WALK:
                     startBranchComparison(msg);
                     break;
-                case REQUEST_KMER:
-                    sendKmerToWalkNodes(msg);
+                case REQUEST_CANDIDATE_KMER:
+                    sendCandidatesToFrontier(msg);
+                    break;
+                case ASSEMBLE_CANDIDATES:
+                    vertex.getCandidateMsgs().add(new RayMessage(msg));
+                    vertex.pendingCandidateBranches--;
+                    LOG.info("recieved complete candidate. total pending searches:" + vertex.pendingCandidateBranches);
                     break;
                 case REQUEST_SCORE:
                     // batch-process these (have to truncate to min length)
@@ -177,7 +186,10 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
                     // that neighbor is marked "intersection" and I need to remember the stopped state.  No path
                     // can continue out of me in the future, even when I receive aggregate scores
                     vertex.stopSearch = true;
-                    // TODO obey this stop search in the CONTINUE branch
+                    break;
+                case UPDATE_FORK_COUNT:
+                    vertex.pendingCandidateBranches += msg.getNumberOfForks();
+                    LOG.info("new candidate registered. total pending searches:" + vertex.pendingCandidateBranches);
                     break;
             }
         }
@@ -186,6 +198,28 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         }
         if (aggregateScoreMsgs.size() > 0) {
             compareScoresAndPrune(aggregateScoreMsgs);
+        }
+        if (vertex.pendingCandidateBranches != null && vertex.pendingCandidateBranches == 0
+                && vertex.getCandidateMsgs().size() > 0) {
+            sendCandidateKmersToWalkNodes(vertex.getCandidateMsgs());
+            vertex.getCandidateMsgs().clear();
+        }
+    }
+
+    private void sendCandidateKmersToWalkNodes(ArrayList<RayMessage> candidateMsgs) {
+        LOG.info("sending " + candidateMsgs.size() + " candidates to " + candidateMsgs.get(0).getWalkIds().size() + " walk nodes");
+        for (int candIndex = 0; candIndex < candidateMsgs.size(); candIndex++) {
+            RayMessage msg = candidateMsgs.get(candIndex);
+            for (int walkIndex = 0; walkIndex < msg.getWalkIds().size(); walkIndex++) {
+                outgoingMsg.setAsCopy(msg);
+                outgoingMsg.setMessageType(RayMessageType.REQUEST_SCORE);
+                outgoingMsg.getWalkOffsets().clear();
+                outgoingMsg.getWalkOffsets().add(msg.getWalkOffsets().get(walkIndex)); // the offset of the destination node
+                outgoingMsg.getWalkIds().clear();
+                outgoingMsg.getWalkIds().append(msg.getWalkIds().getPosition(walkIndex));
+                outgoingMsg.setPathIndex(candIndex);
+                sendMsg(msg.getWalkIds().getPosition(walkIndex), outgoingMsg);
+            }
         }
     }
 
@@ -205,7 +239,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         }
         vertex.visited = true;
         // I am the new frontier but this message is coming from the previous frontier; I was the "candidate"
-        vertex.flippedFromInitialDirection = msg.isCandidateFlipped();
+        vertex.flippedFromInitialDirection = msg.getCandidateFlipped();
         DIR nextDir = msg.getEdgeTypeBackToFrontier().mirror().neighborDir();
 
         if (REMOVE_OTHER_INCOMING && getSuperstep() > 1) {
@@ -228,16 +262,21 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
             LOG.info("bouncing over path node: " + id);
         } else {
             // 2+ neighbors -> start evaluating candidates via a REQUEST_KMER msg
-            msg.setMessageType(RayMessageType.REQUEST_KMER);
+            msg.setMessageType(RayMessageType.REQUEST_CANDIDATE_KMER);
             msg.setFrontierFlipped(vertex.flippedFromInitialDirection);
             msg.setSourceVertexId(id);
             for (EDGETYPE et : nextDir.edgeTypes()) {
                 for (VKmer next : vertex.getEdges(et)) {
                     msg.setEdgeTypeBackToFrontier(et.mirror());
+                    msg.setEdgeTypeBackToPrev(et.mirror());
+                    msg.setCandidateFlipped(vertex.flippedFromInitialDirection ^ et.mirror().causesFlip());
                     sendMsg(next, msg);
-                    LOG.info("evaluating branch: " + next);
+                    LOG.info("evaluating branch: " + et + ":" + next);
                 }
             }
+
+            // remember how many total candidate branches to expect
+            vertex.pendingCandidateBranches = vertex.degree(nextDir);
         }
     }
 
@@ -272,16 +311,21 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         }
     }
 
+    // local variables for sendCandidatesToFrontier
+    private transient RayMessage tmpCandidate = new RayMessage();
+
     /**
      * I'm a candidate and need to send my kmer to all the nodes of the walk
+     * First, the candidate kmer needs to be aggregated
      * if I've been visited already, I need to send a STOP msg back to the frontier node and
      * mark this node as an "intersection" between multiple seeds
      * 
      * @param msg
      */
-    private void sendKmerToWalkNodes(RayMessage msg) {
+    private void sendCandidatesToFrontier(RayMessage msg) {
         VKmer id = getVertexId();
         RayValue vertex = getVertexValue();
+        DIR nextDir = msg.getEdgeTypeBackToPrev().mirror().neighborDir();
 
         // already visited -> the frontier must stop!
         if (vertex.visited) {
@@ -291,41 +335,107 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
             sendMsg(msg.getSourceVertexId(), outgoingMsg);
             return;
         }
-        
+
+        ArrayList<RayScores> singleEndScores = null;
+        ArrayList<RayScores> pairedEndScores = null;
         if (CANDIDATES_SCORE_WALK) {
             // this candidate node needs to score the accumulated walk
-            vertex.flippedFromInitialDirection = msg.isCandidateFlipped();
+            vertex.flippedFromInitialDirection = msg.getCandidateFlipped();
 
+            tmpCandidate.reset();
             // pretend that the candidate is the frontier and the frontier is the candidate
-            outgoingMsg.reset();
-            outgoingMsg.setFrontierFlipped(vertex.flippedFromInitialDirection);
-            outgoingMsg.setEdgeTypeBackToFrontier(msg.getEdgeTypeBackToFrontier().mirror());
-            outgoingMsg.setToScoreKmer(msg.getAccumulatedWalkKmer());
-            outgoingMsg.setToScoreId(id);
-            // TODO need to truncate to only a subset of readids
-            RayScores singleEndScores = voteFromReads(true, vertex, !vertex.flippedFromInitialDirection, Collections.singletonList(outgoingMsg), 0,
-                    vertex.getKmerLength(), msg.getAccumulatedWalkKmer().getKmerLetterLength());
-            RayScores pairedEndScores = HAS_PAIRED_END_READS ? voteFromReads(false, vertex, !vertex.flippedFromInitialDirection,
-                    Collections.singletonList(outgoingMsg), 0, vertex.getKmerLength(), msg.getAccumulatedWalkKmer().getKmerLetterLength()) : null;
+            tmpCandidate.setFrontierFlipped(vertex.flippedFromInitialDirection);
+            tmpCandidate.setEdgeTypeBackToFrontier(msg.getEdgeTypeBackToFrontier().mirror());
+            tmpCandidate.setToScoreKmer(msg.getAccumulatedWalkKmer());
+            tmpCandidate.setToScoreId(id);
+            tmpCandidate.setCandidateFlipped(false); // TODO check this... the accumulated kmer is always in the same dir as the search, right?
+            // TODO need to truncate to only a subset of readids if the MAX_DISTANCE isn't being used for max candidate search length
+            singleEndScores = voteFromReads(true, vertex, !vertex.flippedFromInitialDirection,
+                    Collections.singletonList(tmpCandidate), 0, vertex.getKmerLength(), msg.getAccumulatedWalkKmer()
+                            .getKmerLetterLength());
+            pairedEndScores = HAS_PAIRED_END_READS ? voteFromReads(false, vertex, !vertex.flippedFromInitialDirection,
+                    Collections.singletonList(tmpCandidate), 0, vertex.getKmerLength(), msg.getAccumulatedWalkKmer()
+                            .getKmerLetterLength()) : null;
+
+            // TODO keep these scores?
 
             vertex.flippedFromInitialDirection = null;
         }
 
         outgoingMsg.reset();
-        outgoingMsg.setMessageType(RayMessageType.REQUEST_SCORE);
-        outgoingMsg.setSourceVertexId(msg.getSourceVertexId()); // frontier node
+        if (singleEndScores != null) {
+            outgoingMsg.getSingleEndScores().addAll(singleEndScores);
+        }
+        if (pairedEndScores != null) {
+            outgoingMsg.getPairedEndScores().addAll(pairedEndScores);
+        }
+        // keep previous msg details
         outgoingMsg.setFrontierFlipped(msg.getFrontierFlipped());
         outgoingMsg.setEdgeTypeBackToFrontier(msg.getEdgeTypeBackToFrontier());
-        outgoingMsg.setToScoreId(id); // candidate node (me)
-        outgoingMsg.setToScoreKmer(vertex.getInternalKmer());
+        outgoingMsg.setSourceVertexId(msg.getSourceVertexId()); // frontier node
         outgoingMsg.setWalkLength(msg.getWalkLength());
         outgoingMsg.setAccumulatedWalkKmer(msg.getAccumulatedWalkKmer());
-        for (int i = 0; i < msg.getWalkIds().size(); i++) {
-            outgoingMsg.getWalkOffsets().clear();
-            outgoingMsg.getWalkOffsets().add(msg.getWalkOffsets().get(i)); // the offset of the destination node
-            outgoingMsg.getWalkIds().clear();
-            outgoingMsg.getWalkIds().append(msg.getWalkIds().getPosition(i));
-            sendMsg(msg.getWalkIds().getPosition(i), outgoingMsg);
+        outgoingMsg.setWalkIds(msg.getWalkIds());
+        outgoingMsg.setWalkOffsets(msg.getWalkOffsets());
+
+        // get kmer and id to score in walk nodes
+        boolean readyToScore = false;
+        if (EXPAND_CANDIDATE_BRANCHES) {
+            // need to add this vertex to the candidate walk then check if we've looked far enough.
+            // also notify the frontier of additional branches
+            if (msg.getToScoreId().getKmerLetterLength() == 0) {
+                outgoingMsg.setToScoreId(id);
+                outgoingMsg.setToScoreKmer(!msg.getCandidateFlipped() ? vertex.getInternalKmer() : vertex
+                        .getInternalKmer().reverse());
+            } else {
+                outgoingMsg.setToScoreId(msg.getToScoreId());
+                outgoingMsg.setToScoreKmer(msg.getToScoreKmer());
+                EDGETYPE accumulatedCandidateToVertexET = !msg.getCandidateFlipped() ? EDGETYPE.FF : EDGETYPE.FR;
+                outgoingMsg.getToScoreKmer().mergeWithKmerInDir(accumulatedCandidateToVertexET, Kmer.getKmerLength(),
+                        vertex.getInternalKmer());
+            }
+
+            // pass this kmer along to my adjacent branches
+            if (outgoingMsg.getToScoreKmer().getKmerLetterLength() >= MAX_DISTANCE || vertex.degree(nextDir) == 0) {
+                // this branch doesn't need to search any longer-- pass back to frontier
+                readyToScore = true;
+            }
+        } else {
+            outgoingMsg.setToScoreId(id); // candidate node (me)
+            outgoingMsg.setToScoreKmer(!msg.getCandidateFlipped() ? vertex.getInternalKmer() : vertex.getInternalKmer()
+                    .reverse());
+            readyToScore = true;
+        }
+
+        if (readyToScore) {
+            // send this complete candidate to the frontier node
+            outgoingMsg.setMessageType(RayMessageType.ASSEMBLE_CANDIDATES);
+            sendMsg(msg.getSourceVertexId(), outgoingMsg);
+            LOG.info("ready to score kmer " + outgoingMsg.getToScoreKmer() + " of candidate-length: "
+                    + outgoingMsg.getToScoreKmer().getKmerLetterLength() + " for candidate "
+                    + outgoingMsg.getEdgeTypeBackToFrontier().mirror() + ":" + outgoingMsg.getToScoreId());
+        } else {
+            // candidate is incomplete; need info from neighbors
+            outgoingMsg.setMessageType(RayMessageType.REQUEST_CANDIDATE_KMER);
+            for (EDGETYPE et : nextDir.edgeTypes()) {
+                for (VKmer neighbor : vertex.getEdges(et)) {
+                    outgoingMsg.setEdgeTypeBackToPrev(et.mirror());
+                    outgoingMsg.setCandidateFlipped(msg.getCandidateFlipped()
+                            ^ msg.getEdgeTypeBackToPrev().causesFlip());
+                    sendMsg(neighbor, outgoingMsg);
+                }
+            }
+
+            // notify the frontier about the number of forks we generated (so they know when to stop waiting)
+            if (vertex.degree(nextDir) > 1) {
+                outgoingMsg.reset();
+                outgoingMsg.setMessageType(RayMessageType.UPDATE_FORK_COUNT);
+                outgoingMsg.setNumberOfForks(vertex.degree(nextDir) - 1);
+                sendMsg(msg.getSourceVertexId(), outgoingMsg);
+                LOG.info("forking " + (vertex.degree(nextDir) - 1) + " more branches");
+            } else {
+                LOG.info("getting candidate kmer part from single neighbor");
+            }
         }
     }
 
@@ -339,7 +449,16 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
      * 
      * @param msg
      */
-    private void sendScoresToFrontier(ArrayList<RayMessage> msgs) {
+    private void sendScoresToFrontier(ArrayList<RayMessage> unsortedMsgs) {
+        // sort the msgs by their index
+        ArrayList<RayMessage> msgs = new ArrayList<>(Arrays.asList(new RayMessage[unsortedMsgs.size()]));
+        for (RayMessage msg : unsortedMsgs) {
+            if (msgs.get(msg.getPathIndex()) != null) {
+                throw new IllegalArgumentException("should only have one msg for each path!");
+            }
+            msgs.set(msg.getPathIndex(), msg);
+        }
+
         VKmer id = getVertexId();
         RayValue vertex = getVertexValue();
 
@@ -361,6 +480,15 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
                 outgoingMsg.getWalkOffsets().add(myOffset);
                 outgoingMsg.getWalkIds().append(id);
                 outgoingMsg.setAccumulatedWalkKmer(accumulatedWalk);
+                // include scores from each candidate path
+                for (RayMessage msg : msgs) {
+                    if (msg.getSingleEndScores().size() > 0) {
+                        outgoingMsg.getSingleEndScores().addAll(msg.getSingleEndScores());
+                    }
+                    if (msg.getPairedEndScores().size() > 0) {
+                        outgoingMsg.getPairedEndScores().addAll(msg.getPairedEndScores());
+                    }
+                } // TODO possible that NO scores come back from the candidates?
                 sendMsg(frontierNode, outgoingMsg);
             }
             return;
@@ -369,24 +497,46 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         // get the smallest kmer in all the messages I've received
         // since the candidates may be of different lengths, we have to use the shortest candidate
         // that way, long candidates don't receive higher scores simply for being long
-        int minLength = msgs.get(0).getToScoreKmer().getKmerLetterLength();
+        int maxMsgLength = msgs.get(0).getToScoreKmer().getKmerLetterLength();
         for (int i = 1; i < msgs.size(); i++) {
-            minLength = Math.min(minLength, msgs.get(i).getToScoreKmer().getKmerLetterLength());
+            maxMsgLength = Math.max(maxMsgLength, msgs.get(i).getToScoreKmer().getKmerLetterLength());
         }
+        int minLength = Math.min(MAX_DISTANCE, maxMsgLength);
         minLength = minLength - Kmer.getKmerLength() + 1;
 
         // I'm now allowed to score the first minLength kmers according to my readids
-        RayScores singleEndScores = voteFromReads(true, vertex, vertex.flippedFromInitialDirection, msgs, myOffset, walkLength, minLength);
-        RayScores pairedEndScores = HAS_PAIRED_END_READS ? voteFromReads(false, vertex, vertex.flippedFromInitialDirection, msgs, myOffset, walkLength,
-                minLength) : null;
+        ArrayList<RayScores> singleEndScores = voteFromReads(true, vertex, vertex.flippedFromInitialDirection, msgs,
+                myOffset, walkLength, minLength);
+        ArrayList<RayScores> pairedEndScores = HAS_PAIRED_END_READS ? voteFromReads(false, vertex,
+                vertex.flippedFromInitialDirection, msgs, myOffset, walkLength, minLength) : null;
 
         outgoingMsg.reset();
         outgoingMsg.setMessageType(RayMessageType.AGGREGATE_SCORE);
         outgoingMsg.setWalkLength(walkLength);
         outgoingMsg.getWalkOffsets().add(myOffset);
         outgoingMsg.getWalkIds().append(id);
-        outgoingMsg.setSingleEndScores(singleEndScores);
-        outgoingMsg.setPairedEndScores(pairedEndScores);
+        if (singleEndScores != null) {
+            outgoingMsg.getSingleEndScores().addAll(singleEndScores);
+        }
+        // each message has a single-element list containing the candidates' total score of the accumulatedKmer
+        // we need to add that single element to the path score it corresponds to
+        if (id.equals(frontierNode)) { // only include the candidate's mutual scores once (here, in the frontier's scores)
+            for (int i = 0; i < msgs.size(); i++) {
+                if (msgs.get(i).getSingleEndScores().size() > 0) {
+                    outgoingMsg.getSingleEndScores().get(i).addAll(msgs.get(i).getSingleEndScores().get(0));
+                }
+            }
+        }
+        if (pairedEndScores != null) {
+            outgoingMsg.getPairedEndScores().addAll(pairedEndScores);
+        }
+        if (id.equals(frontierNode)) { // only include the candidate's mutual scores once (here, in the frontier's scores)
+            for (int i = 0; i < msgs.size(); i++) {
+                if (msgs.get(i).getPairedEndScores().size() > 0) {
+                    outgoingMsg.getPairedEndScores().get(i).addAll(msgs.get(i).getPairedEndScores().get(0));
+                }
+            }
+        }
         outgoingMsg.setAccumulatedWalkKmer(accumulatedWalk);
         sendMsg(frontierNode, outgoingMsg);
         LOG.info("sending to frontier node: minLength: " + minLength + ", s-e: " + singleEndScores + ", p-e: "
@@ -452,22 +602,19 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
      * // TODO for single-end reads, we could alternatively count how many letters in the VKmers match
      * // or we could base the score on something like edit distance
      */
-    private static RayScores voteFromReads(boolean singleEnd, RayValue vertex, boolean vertexFlipped, List<RayMessage> candidateMsgs,
-            int nodeOffset, int walkLength, int msgKmerLength) {
-        SortedSet<ReadHeadInfo> readSubsetOrientedWithSearch = getReadSubsetOrientedWithSearch(singleEnd, vertex, vertexFlipped,
-                nodeOffset, walkLength);
+    private static ArrayList<RayScores> voteFromReads(boolean singleEnd, RayValue vertex, boolean vertexFlipped,
+            List<RayMessage> candidateMsgs, int nodeOffset, int walkLength, int msgKmerLength) {
+        SortedSet<ReadHeadInfo> readSubsetOrientedWithSearch = getReadSubsetOrientedWithSearch(singleEnd, vertex,
+                vertexFlipped, nodeOffset, walkLength);
 
-        // nothing like nested for loops 4 levels deep (!)
-        RayScores scores = new RayScores();
+        // my contribution to each path's final score
+        ArrayList<RayScores> pathScores = new ArrayList<>();
         for (RayMessage msg : candidateMsgs) {
-            VKmer candidateKmer;
-            if (singleEnd) {
-                // for single-end reads, we need the candidate in the same orientation as the search
-                candidateKmer = msg.isCandidateFlipped() ? msg.getToScoreKmer().reverse() : msg.getToScoreKmer();
-            } else {
-                // for paired-end reads, the mate sequence is revcomp'ed; need the candidate the opposite orientation as the search
-                candidateKmer = msg.isCandidateFlipped() ? msg.getToScoreKmer() : msg.getToScoreKmer().reverse();
-            }
+            RayScores scores = new RayScores();
+            // nothing like nested for loops 4 levels deep (!)
+            // for single-end reads, we need the candidate in the same orientation as the search
+            // for paired-end reads, the mate sequence is revcomp'ed; need the candidate the opposite orientation as the search
+            VKmer candidateKmer = singleEnd ? msg.getToScoreKmer() : msg.getToScoreKmer().reverse();
             int ruleATotal = 0, ruleBTotal = 0, ruleCTotal = 0;
             for (ReadHeadInfo read : readSubsetOrientedWithSearch) {
                 for (int kmerIndex = 0; kmerIndex < msgKmerLength; kmerIndex++) {
@@ -478,8 +625,17 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
                     // rule some more and what it means in a merged graph
 
                     if (singleEnd) {
+                        int localOffset = walkLength - nodeOffset + kmerIndex;
+                        if (!vertexFlipped) {
+                            localOffset -= read.getOffset();
+                        } else {
+                            // need to flip the read so it points with the search
+                            localOffset -= (vertex.getKmerLength() - 1 - read.getOffset());
+                            read = new ReadHeadInfo(read);
+                            read.set(read.getMateId(), read.getLibraryId(), read.getReadId(), read.getOffset(), read.getThisReadSequence().reverse(), null);
+                        } 
                         if (read.getThisReadSequence().matchesExactly(
-                                walkLength - nodeOffset - read.getOffset() + kmerIndex, candidateKmer, kmerIndex,
+                                localOffset, candidateKmer, kmerIndex,
                                 Kmer.getKmerLength())) {
                             match = true;
                         }
@@ -505,22 +661,24 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
                     }
                 }
             }
+            // TODO use the max over messages for each item
             scores.addRuleCounts(msg.getEdgeTypeBackToFrontier().mirror(), msg.getToScoreId(), ruleATotal, ruleBTotal,
                     ruleCTotal);
+            if (scores.size() > 0) {
+                pathScores.add(scores);
+            } else {
+                pathScores.add(null);
+            }
         }
-        if (scores.size() > 0) {
-            return scores;
-        } else {
-            return null;
-        }
+        return pathScores;
     }
 
     // local variables for getReadSubsetOrientedWithSearch
     @SuppressWarnings("unchecked")
     private static final SortedSet<ReadHeadInfo> EMPTY_SORTED_SET = SetUtils.EMPTY_SORTED_SET;
 
-    private static SortedSet<ReadHeadInfo> getReadSubsetOrientedWithSearch(boolean singleEnd, RayValue vertex, boolean vertexFlipped,
-            int nodeOffset, int walkLength) {
+    private static SortedSet<ReadHeadInfo> getReadSubsetOrientedWithSearch(boolean singleEnd, RayValue vertex,
+            boolean vertexFlipped, int nodeOffset, int walkLength) {
         // select out the readheads that might apply to this query
         // here's some ascii art trying to explain what the heck is going on
         //
@@ -570,8 +728,8 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
     }
 
     // local variables for compareScoresAndPrune
-    private RayScores singleEndScores = new RayScores();
-    private RayScores pairedEndScores = new RayScores();
+    private ArrayList<RayScores> singleEndScores = new ArrayList<>();
+    private ArrayList<RayScores> pairedEndScores = new ArrayList<>();
     private VKmerList walkIds = new VKmerList();
     private ArrayList<Integer> walkOffsets = new ArrayList<>();
 
@@ -600,6 +758,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         }
 
         // aggregate scores and walk info from all msgs
+        // the msgs incoming are one for each walk node and contain a list of scores, one for each path
         singleEndScores.clear();
         pairedEndScores.clear();
         walkIds.clear();
@@ -610,12 +769,52 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
                 throw new IllegalStateException("One of the messages didn't agree about the walk length! Expected "
                         + walkLength + " but saw " + msg.getWalkLength());
             }
-            singleEndScores.addAll(msg.getSingleEndScores());
-            pairedEndScores.addAll(msg.getPairedEndScores());
+            // add each walk node's contribution to the single path represented by each list element
+            if (msg.getSingleEndScores().size() > 0) {
+                if (singleEndScores.size() == 0) {
+                    //                    singleEndScores.addAll(Arrays.asList(new RayScores[msgs.size()])); // allocate placeholder null array
+                    //                    for (int i = 0; i < singleEndScores.size(); i++) {
+                    //                        singleEndScores.set(i, msg.getSingleEndScores().get(msg.getPathIndex()));
+                    //                    }
+                    singleEndScores.addAll(msg.getSingleEndScores());
+                } else {
+                    for (int i = 0; i < singleEndScores.size(); i++) {
+                        //                        singleEndScores.get(i).addAll(msg.getSingleEndScores().get(msg.getPathIndex()));
+                        singleEndScores.get(i).addAll(msg.getSingleEndScores().get(i));
+                    }
+                }
+            }
+            if (msg.getPairedEndScores().size() > 0) {
+                if (pairedEndScores.size() == 0) {
+                    //                    pairedEndScores.addAll(Arrays.asList(new RayScores[msgs.size()])); // allocate placeholder null array
+                    //                    for (int i = 0; i < pairedEndScores.size(); i++) {
+                    //                        pairedEndScores.set(i, msg.getSingleEndScores().get(msg.getPathIndex()));
+                    //                    }
+                    pairedEndScores.addAll(msg.getPairedEndScores());
+                } else {
+                    for (int i = 0; i < pairedEndScores.size(); i++) {
+                        //                        pairedEndScores.get(i).addAll(msg.getPairedEndScores().get(msg.getPathIndex()));
+                        pairedEndScores.get(i).addAll(msg.getPairedEndScores().get(i));
+                    }
+                }
+            }
             walkIds.append(msg.getWalkIds().getPosition(0));
             walkOffsets.add(msg.getWalkOffsets().get(0));
         }
         LOG.info("in prune for " + id + " scores are singleend: " + singleEndScores + " pairedend: " + pairedEndScores);
+
+        // we need to agree about the total number of paths we're considering...
+        int numSingleEndPaths = singleEndScores.size() > 0 ? singleEndScores.size() : -1;
+        int numPairedEndPaths = pairedEndScores.size() > 0 ? pairedEndScores.get(0).size() : -1;
+        if (numSingleEndPaths == -1 && numPairedEndPaths == -1) {
+            throw new IllegalStateException("no paths found in compareScoresAndPrune!");
+        } else if (numSingleEndPaths != -1 && numPairedEndPaths != -1 && numSingleEndPaths != numPairedEndPaths) {
+            throw new IllegalStateException(
+                    "single and paired end scores disagree about the total number of paths! (single: "
+                            + numSingleEndPaths + ", " + singleEndScores + "; paired: " + numPairedEndPaths + ", "
+                            + pairedEndScores);
+        }
+        int numPaths = numSingleEndPaths != -1 ? numSingleEndPaths : numPairedEndPaths;
 
         VKmer dominantKmer = null;
         EDGETYPE dominantEdgeType = null;
@@ -631,65 +830,97 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         //
         // fortunately, we can quit comparing as soon as one edge doesn't dominate another edge. 
         //
-        int queryIndex = 0, targetIndex = 0;
         boolean equalPairedEdgeFound = false;
         boolean equalSingleEdgeFound = false;
         boolean dominantEdgeFound = false;
-        EDGETYPE[] searchETs = vertex.flippedFromInitialDirection ? DIR.REVERSE.edgeTypes() : DIR.FORWARD.edgeTypes();
-        for (EDGETYPE queryET : searchETs) {
-            for (VKmer queryKmer : vertex.getEdges(queryET)) {
-                queryIndex++;
-                targetIndex = 0;
+        float coverage = vertex.getAverageCoverage();
+        RayScores tmpScores = new RayScores();
+
+        // look for a path that dominates all others.
+        // actually, some paths may share the same starting nodes; we don't have to dominate those ones
+
+        // look for a paired-end dominator
+        if (pairedEndScores.size() > 0) {
+            for (int queryI = 0; queryI < numPaths; queryI++) {
                 equalPairedEdgeFound = false;
-                equalSingleEdgeFound = false;
-                for (EDGETYPE targetET : searchETs) {
-                    for (VKmer targetKmer : vertex.getEdges(targetET)) {
-                        targetIndex++;
-                        if (queryIndex == targetIndex) {
-                            // don't compare vs self
-                            continue;
-                        }
-                        float coverage = vertex.getAverageCoverage();
-                        if (!pairedEndScores.dominates(queryET, queryKmer, targetET, targetKmer, coverage)) {
-                            equalPairedEdgeFound = true;
-                        }
-                        if (!singleEndScores.dominates(queryET, queryKmer, targetET, targetKmer, coverage)) {
-                            equalSingleEdgeFound = true;
-                        }
+                for (int targetJ = 0; targetJ < numPaths; targetJ++) {
+                    if (queryI == targetJ) {
+                        continue;
                     }
-                    if (equalPairedEdgeFound && equalSingleEdgeFound) {
-                        break;
+                    SimpleEntry<EDGETYPE, VKmer> queryBranch = pairedEndScores.get(queryI).getSingleKey();
+                    SimpleEntry<EDGETYPE, VKmer> targetBranch = pairedEndScores.get(targetJ).getSingleKey();
+                    if (!queryBranch.equals(targetBranch)) {
+                        // not same initial candidate node... need to check these paths
+                        tmpScores.clear();
+                        tmpScores.addAll(pairedEndScores.get(queryI));
+                        tmpScores.addAll(pairedEndScores.get(targetJ));
+                        if (!tmpScores.dominates(queryBranch.getKey(), queryBranch.getValue(), targetBranch.getKey(),
+                                targetBranch.getValue(), coverage)) {
+                            equalPairedEdgeFound = true;
+                            break;
+                        }
                     }
                 }
                 if (!equalPairedEdgeFound) {
                     // this edge dominated all other edges.  Keep it as the winner
-                    dominantKmer = queryKmer;
-                    dominantEdgeType = queryET;
-                    dominantEdgeFound = true;
-                    break;
-                } else if (!equalSingleEdgeFound) {
-                    dominantKmer = queryKmer;
-                    dominantEdgeType = queryET;
+                    SimpleEntry<EDGETYPE, VKmer> queryBranch = pairedEndScores.get(queryI).getSingleKey();
+                    dominantKmer = queryBranch.getValue();
+                    dominantEdgeType = queryBranch.getKey();
                     dominantEdgeFound = true;
                     break;
                 }
+                if (dominantEdgeFound) {
+                    break;
+                }
             }
-            if (dominantEdgeFound) {
-                break;
+        }
+
+        // look for a single-end dominator if we didn't find a paired-end one
+        if (!dominantEdgeFound && singleEndScores.size() > 0) {
+            for (int queryI = 0; queryI < numPaths; queryI++) {
+                equalSingleEdgeFound = false;
+                for (int targetJ = 0; targetJ < numPaths; targetJ++) {
+                    if (queryI == targetJ) {
+                        continue;
+                    }
+                    SimpleEntry<EDGETYPE, VKmer> queryBranch = singleEndScores.get(queryI).getSingleKey();
+                    SimpleEntry<EDGETYPE, VKmer> targetBranch = singleEndScores.get(targetJ).getSingleKey();
+                    if (!queryBranch.equals(targetBranch)) {
+                        // not same initial candidate node... need to check these paths
+                        tmpScores.clear();
+                        tmpScores.addAll(singleEndScores.get(queryI));
+                        tmpScores.addAll(singleEndScores.get(targetJ));
+                        if (!tmpScores.dominates(queryBranch.getKey(), queryBranch.getValue(), targetBranch.getKey(),
+                                targetBranch.getValue(), coverage)) {
+                            equalSingleEdgeFound = true;
+                            break;
+                        }
+                    }
+                }
+                if (!equalSingleEdgeFound) {
+                    // this edge dominated all other edges.  Keep it as the winner
+                    SimpleEntry<EDGETYPE, VKmer> queryBranch = singleEndScores.get(queryI).getSingleKey();
+                    dominantKmer = queryBranch.getValue();
+                    dominantEdgeType = queryBranch.getKey();
+                    dominantEdgeFound = true;
+                    break;
+                }
             }
         }
 
         if (dominantEdgeFound) {
             // if a dominant edge is found, all the others must be removed.
-            for (EDGETYPE et : searchETs) {
-                for (VKmer kmer : vertex.getEdges(et)) {
-                    if (et != dominantEdgeType || !kmer.equals(dominantKmer)) {
-                        outgoingMsg.reset();
-                        outgoingMsg.setMessageType(RayMessageType.PRUNE_EDGE);
-                        outgoingMsg.setEdgeTypeBackToFrontier(et.mirror());
-                        outgoingMsg.setSourceVertexId(id);
-                        sendMsg(kmer, outgoingMsg);
-                        vertex.getEdges(et).remove(kmer);
+            if (REMOVE_OTHER_OUTGOING) {
+                for (EDGETYPE et : dominantEdgeType.dir().edgeTypes()) {
+                    for (VKmer kmer : vertex.getEdges(et)) {
+                        if (et != dominantEdgeType || !kmer.equals(dominantKmer)) {
+                            outgoingMsg.reset();
+                            outgoingMsg.setMessageType(RayMessageType.PRUNE_EDGE);
+                            outgoingMsg.setEdgeTypeBackToFrontier(et.mirror());
+                            outgoingMsg.setSourceVertexId(id);
+                            sendMsg(kmer, outgoingMsg);
+                            vertex.getEdges(et).remove(kmer);
+                        }
                     }
                 }
             }
@@ -702,6 +933,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
             outgoingMsg.setWalkLength(walkLength);
             outgoingMsg.setAccumulatedWalkKmer(msgs.get(0).getAccumulatedWalkKmer());
             outgoingMsg.setFrontierFlipped(vertex.flippedFromInitialDirection); // TODO make sure this is correct
+            outgoingMsg.setCandidateFlipped(vertex.flippedFromInitialDirection ^ dominantEdgeType.causesFlip());
             sendMsg(dominantKmer, outgoingMsg);
             LOG.info("dominant edge found: " + dominantEdgeType + ":" + dominantKmer);
         } else {

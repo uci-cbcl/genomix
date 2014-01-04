@@ -17,12 +17,14 @@ public class RayMessage extends MessageWritable {
     private RayMessageType messageType;
 
     public enum RayMessageType {
-        REQUEST_KMER,
+        REQUEST_CANDIDATE_KMER,
+        ASSEMBLE_CANDIDATES,
         REQUEST_SCORE,
         AGGREGATE_SCORE,
         PRUNE_EDGE,
         CONTINUE_WALK,
-        STOP;
+        STOP,
+        UPDATE_FORK_COUNT;
         public static final RayMessageType[] values = values();
     }
 
@@ -30,7 +32,7 @@ public class RayMessage extends MessageWritable {
     private VKmerList walkIds = null; // the kmer id's of the previous frontiers (now part of this walk)
     private ArrayList<Integer> walkOffsets = null; // for each walk node, its start offset in the complete walk
     private Integer walkLength = null; // total number of bases in this walk including the frontier; the offset for current candidates
-    private VKmer accumulatedWalkKmer = null; // the kmer for this complete walk 
+    private VKmer accumulatedWalkKmer = null; // the kmer for this complete walk
 
     /** for REQUEST_KMER, PRUNE_EDGE, CONTINUE_WALK */
     private EDGETYPE candidateToFrontierEdgeType = null; // the edge type from the candidate's perspective back to the frontier node
@@ -43,8 +45,18 @@ public class RayMessage extends MessageWritable {
     private VKmer toScoreKmer = null; // internalKmer of candidate
 
     /** for AGGREGATE_SCORE */
-    private RayScores singleEndScores;
-    private RayScores pairedEndScores;
+    private ArrayList<RayScores> singleEndScores = null;
+    private ArrayList<RayScores> pairedEndScores = null;
+
+    /** for REQUEST_KMER */
+    private Boolean candidateFlipped = false;
+    private EDGETYPE edgeTypeBackToPrev = null;
+
+    /** for UPDATE_FORK_COUNT */
+    private Integer numberOfForks = null;
+
+    /** for REQUEST_SCORE, AGGREGATE_SCORE */
+    private Integer pathIndex = null; // the index of the path represented by this msg
 
     public RayMessage() {
 
@@ -77,14 +89,6 @@ public class RayMessage extends MessageWritable {
         }
     }
 
-    /**
-     * @return whether the candidate node represented by this message is a flipped or unflipped node
-     */
-    public boolean isCandidateFlipped() {
-        // if the frontier was flipped and I came across a FR/RF, I'm back to unflipped
-        return getFrontierFlipped() ^ getEdgeTypeBackToFrontier().causesFlip();
-    }
-
     public void setAsCopy(RayMessage other) {
         super.setAsCopy(other);
         messageType = other.messageType;
@@ -108,11 +112,21 @@ public class RayMessage extends MessageWritable {
             getToScoreKmer().setAsCopy(other.toScoreKmer);
         }
         if (other.singleEndScores != null && other.singleEndScores.size() > 0) {
-            getSingleEndScores().setAsCopy(other.singleEndScores);
+            getSingleEndScores().clear();
+            for (RayScores s : other.singleEndScores) {
+                getSingleEndScores().add(new RayScores(s));
+            }
         }
         if (other.pairedEndScores != null && other.pairedEndScores.size() > 0) {
-            getPairedEndScores().setAsCopy(other.pairedEndScores);
+            getPairedEndScores().clear();
+            for (RayScores s : other.pairedEndScores) {
+                getPairedEndScores().add(new RayScores(s));
+            }
         }
+        candidateFlipped = other.candidateFlipped;
+        edgeTypeBackToPrev = other.edgeTypeBackToPrev;
+        numberOfForks = other.numberOfForks;
+        pathIndex = other.pathIndex;
     }
 
     @Override
@@ -136,10 +150,36 @@ public class RayMessage extends MessageWritable {
             getToScoreId().readFields(in);
         }
         if ((messageFields & FIELDS.SCORE_SINGLE_END) != 0) {
-            getSingleEndScores().readFields(in);
+            getSingleEndScores().clear();
+            int count = in.readInt();
+            for (int i = 0; i < count; i++) {
+                RayScores r = new RayScores();
+                r.readFields(in);
+                getSingleEndScores().add(r);
+            }
         }
         if ((messageFields & FIELDS.SCORE_PAIRED_END) != 0) {
-            getPairedEndScores().readFields(in);
+            getPairedEndScores().clear();
+            int count = in.readInt();
+            for (int i = 0; i < count; i++) {
+                RayScores r = new RayScores();
+                r.readFields(in);
+                getPairedEndScores().add(r);
+            }
+        }
+
+        byte remainingFields = in.readByte();
+        if ((remainingFields & FIELDS.CANDIDATE_FLIPPED) != 0) {
+            candidateFlipped = in.readBoolean();
+        }
+        if ((remainingFields & FIELDS.EDGETYPE_BACK_TO_PREV) != 0) {
+            edgeTypeBackToPrev = EDGETYPE.fromByte(in.readByte());
+        }
+        if ((remainingFields & FIELDS.NUMBER_OF_FORKS) != 0) {
+            numberOfForks = in.readInt();
+        }
+        if ((remainingFields & FIELDS.PATH_INDEX) != 0) {
+            pathIndex = in.readInt();
         }
     }
 
@@ -164,11 +204,35 @@ public class RayMessage extends MessageWritable {
             toScoreId.write(out);
         }
         if (singleEndScores != null && singleEndScores.size() > 0) {
-            singleEndScores.write(out);
+            out.writeInt(singleEndScores.size());
+            for (RayScores s : singleEndScores) {
+                s.write(out);
+            }
         }
         if (pairedEndScores != null && pairedEndScores.size() > 0) {
-            pairedEndScores.write(out);
+            out.writeInt(pairedEndScores.size());
+            for (RayScores s : pairedEndScores) {
+                s.write(out);
+            }
         }
+
+        byte remainingFields = (byte) ((candidateFlipped != null ? FIELDS.CANDIDATE_FLIPPED : 0)
+                | (edgeTypeBackToPrev != null ? FIELDS.EDGETYPE_BACK_TO_PREV : 0)
+                | (numberOfForks != null ? FIELDS.NUMBER_OF_FORKS : 0) | (pathIndex != null ? FIELDS.PATH_INDEX : 0));
+        out.writeByte(remainingFields);
+        if (candidateFlipped != null) {
+            out.writeBoolean(candidateFlipped);
+        }
+        if (edgeTypeBackToPrev != null) {
+            out.writeByte(edgeTypeBackToPrev.get());
+        }
+        if (numberOfForks != null) {
+            out.writeInt(numberOfForks);
+        }
+        if (pathIndex != null) {
+            out.writeInt(pathIndex);
+        }
+
     }
 
     @Override
@@ -216,6 +280,12 @@ public class RayMessage extends MessageWritable {
         public static final byte KMER_TO_SCORE = 1 << 4;
         public static final byte SCORE_SINGLE_END = 1 << 5;
         public static final byte SCORE_PAIRED_END = 1 << 6;
+
+        // stored as an additional byte
+        public static final byte CANDIDATE_FLIPPED = 1 << 0;
+        public static final byte EDGETYPE_BACK_TO_PREV = 1 << 1;
+        public static final byte NUMBER_OF_FORKS = 1 << 2;
+        public static final byte PATH_INDEX = 1 << 3;
     }
 
     public RayMessageType getMessageType() {
@@ -293,25 +363,25 @@ public class RayMessage extends MessageWritable {
         this.toScoreId = toScoreId;
     }
 
-    public RayScores getSingleEndScores() {
+    public ArrayList<RayScores> getSingleEndScores() {
         if (singleEndScores == null) {
-            singleEndScores = new RayScores();
+            singleEndScores = new ArrayList<>();
         }
         return singleEndScores;
     }
 
-    public void setSingleEndScores(RayScores scores) {
+    public void setSingleEndScores(ArrayList<RayScores> scores) {
         this.singleEndScores = scores;
     }
 
-    public RayScores getPairedEndScores() {
+    public ArrayList<RayScores> getPairedEndScores() {
         if (pairedEndScores == null) {
-            pairedEndScores = new RayScores();
+            pairedEndScores = new ArrayList<>();
         }
         return pairedEndScores;
     }
 
-    public void setPairedEndScores(RayScores scores) {
+    public void setPairedEndScores(ArrayList<RayScores> scores) {
         this.pairedEndScores = scores;
     }
 
@@ -324,6 +394,41 @@ public class RayMessage extends MessageWritable {
 
     public void setAccumulatedWalkKmer(VKmer accumulatedKmer) {
         this.accumulatedWalkKmer = accumulatedKmer;
+    }
+
+    /**
+     * @return whether the candidate node represented by this message is a flipped or unflipped node
+     */
+    public boolean getCandidateFlipped() {
+        return candidateFlipped;
+    }
+
+    public void setCandidateFlipped(boolean flipped) {
+        this.candidateFlipped = flipped;
+    }
+
+    public EDGETYPE getEdgeTypeBackToPrev() {
+        return this.edgeTypeBackToPrev;
+    }
+
+    public void setEdgeTypeBackToPrev(EDGETYPE edgeTypeBackToPrev) {
+        this.edgeTypeBackToPrev = edgeTypeBackToPrev;
+    }
+
+    public int getNumberOfForks() {
+        return numberOfForks;
+    }
+
+    public void setNumberOfForks(int numberOfForks) {
+        this.numberOfForks = numberOfForks;
+    }
+
+    public void setPathIndex(int pathIndex) {
+        this.pathIndex = pathIndex;
+    }
+
+    public int getPathIndex() {
+        return pathIndex;
     }
 
     @Override
@@ -339,5 +444,9 @@ public class RayMessage extends MessageWritable {
         toScoreKmer = null;
         singleEndScores = null;
         pairedEndScores = null;
+        candidateFlipped = null;
+        edgeTypeBackToPrev = null;
+        numberOfForks = null;
+        pathIndex = null;
     }
 }

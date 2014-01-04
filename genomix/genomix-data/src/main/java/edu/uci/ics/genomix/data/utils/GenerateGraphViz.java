@@ -11,6 +11,7 @@ import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.util.ReflectionUtils;
 
+import edu.uci.ics.genomix.data.config.GenomixJobConf;
 import edu.uci.ics.genomix.data.types.EDGETYPE;
 import edu.uci.ics.genomix.data.types.Node;
 import edu.uci.ics.genomix.data.types.VKmer;
@@ -124,6 +125,8 @@ public class GenerateGraphViz {
                 String fillColor = "";
                 if (value.hasUnflippedOrFlippedReadIds())
                     fillColor = "fillcolor=\"grey\", style=\"filled\",";
+                if (GenomixJobConf.debugKmers.contains(key)) // TODO also include graph start seeds
+                    fillColor = "fillcolor=\"red\", style=\"filled\",";
                 if (graphType == GRAPH_TYPE.DIRECTED_GRAPH_WITH_ALLDETAILS) {
                     outputNode += " [shape=record, " + fillColor + " label = \"<f0> " + key.toString() + "|<f1> "
                             + "5':" + value.getUnflippedReadIds().toString() + "|<f2> " + "~5':"

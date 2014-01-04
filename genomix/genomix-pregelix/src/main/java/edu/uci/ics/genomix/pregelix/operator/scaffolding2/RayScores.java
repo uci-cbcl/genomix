@@ -15,6 +15,14 @@ import edu.uci.ics.genomix.data.types.VKmer;
 public class RayScores implements Writable {
 
     private HashMap<SimpleEntry<EDGETYPE, VKmer>, Rules> scores = new HashMap<>();
+    
+    public RayScores() {
+    }
+    
+    public RayScores(RayScores other) {
+        scores.clear();
+        addAll(other);
+    }
 
     private class Rules {
         public int ruleA = 0; // the overlap-weighted score (reads that overlap the walk better receive higher ruleA values)
@@ -65,6 +73,16 @@ public class RayScores implements Writable {
             addRuleCounts(elem.getKey().getKey(), elem.getKey().getValue(), elem.getValue().ruleA,
                     elem.getValue().ruleB, elem.getValue().ruleC);
         }
+    }
+    
+    public SimpleEntry<EDGETYPE, VKmer> getSingleKey() {
+        if (scores.size() != 1) {
+            throw new IllegalStateException("requested single key but this score has " + scores.size() + " entries! " + scores);
+        }
+        for (SimpleEntry<EDGETYPE,VKmer> e : scores.keySet()) {
+            return e;
+        }
+        throw new IllegalStateException("requested single key but this score has " + scores.size() + " entries! " + scores);
     }
 
     /**
