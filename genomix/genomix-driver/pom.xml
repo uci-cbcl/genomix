@@ -119,6 +119,28 @@
 							<goal>assemble</goal>
 						</goals>
 					</execution>
+					<execution>
+						<id>copytolocal</id>
+						<phase>package</phase>
+						<goals>
+							<goal>assemble</goal>
+						</goals>
+						<configuration>
+							<platforms>
+								<platform>unix</platform>
+							</platforms>
+							<programs>
+								<program>
+									<mainClass>edu.uci.ics.genomix.driver.util.CopyToLocal</mainClass>
+									<name>copyToLocal</name>
+								</program>
+							</programs>
+							<repositoryLayout>flat</repositoryLayout>
+							<repositoryName>lib</repositoryName>
+							<includeConfigurationDirectoryInClasspath>true</includeConfigurationDirectoryInClasspath>
+							<useWildcardClassPath>true</useWildcardClassPath>
+						</configuration>
+					</execution>
 				</executions>
 			</plugin>
 			<plugin>

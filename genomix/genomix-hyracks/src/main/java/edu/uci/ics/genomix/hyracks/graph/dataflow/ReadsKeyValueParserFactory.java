@@ -101,8 +101,8 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                     libraryId = Byte.valueOf(libraryPattern.matcher(filename).group(0));
                 } catch (IllegalStateException e) {
                     // TODO FIXME the library id isn't being read correctly
-//                    System.err.println("Could not determine which library " + filename
-//                            + " is supposed to belong to.  Just using library 0!");
+                    //                    System.err.println("Could not determine which library " + filename
+                    //                            + " is supposed to belong to.  Just using library 0!");
                     libraryId = 0;
                 }
                 long readID = 0;
@@ -166,6 +166,7 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                 if (curNodeDir == DIR.FORWARD) {
                     curNode.getUnflippedReadIds().add(readHeadInfo);
                 } else {
+                    readHeadInfo.resetOffset(Kmer.getKmerLength() - 1);
                     curNode.getFlippedReadIds().add(readHeadInfo);
                 }
 

@@ -31,7 +31,7 @@ import edu.uci.ics.genomix.data.types.VKmer;
 import edu.uci.ics.genomix.data.types.VKmerList;
 import edu.uci.ics.genomix.data.utils.GeneCode;
 
-public class VKmerTest {
+public class VKmerFixedTest {
     static byte[] array = { 'A', 'A', 'T', 'A', 'G', 'A', 'A', 'G' };
     static int k = 7;
 
@@ -643,35 +643,5 @@ public class VKmerTest {
         VKmer kmer7 = new VKmer("ACTATCCTGCGTACGC");
         VKmer kmer8 = new VKmer("ACTAC");
         Assert.assertEquals(-1, kmer7.indexOf(kmer8));
-    }
-
-    @Test
-    public void TestIndexOfForLongRead() {
-        String testStr1 = generateString(100);
-        VKmer testKmer1 = new VKmer(testStr1);
-        String subStr1 = testStr1.substring(25, 80);
-        VKmer subKmer1 = new VKmer(subStr1);
-        Assert.assertEquals(25, testKmer1.indexOf(subKmer1));
-
-        String testStr2 = generateString(200);
-        VKmer testKmer2 = new VKmer(testStr2);
-        String subStr2 = testStr2.substring(100, 200);
-        VKmer subKmer2 = new VKmer(subStr2);
-        Assert.assertEquals(100, testKmer2.indexOf(subKmer2));
-
-        String testStr3 = generateString(300);
-        VKmer testKmer3 = new VKmer(testStr3);
-        VKmer subKmer3 = new VKmer();
-        for (int i = 0; i < 10; i++) {
-            String subStr3 = testStr3.substring(40 + i * 3, 40 + i * 3 + 55);
-            subKmer3.setAsCopy(subStr3);
-            Assert.assertEquals(40 + i * 3, testKmer3.indexOf(subKmer3));
-        }
-
-        String testStr4 = generateString(55);
-        if (!testStr3.contains(testStr4)) {
-            VKmer testKmer4 = new VKmer(testStr4);
-            Assert.assertEquals(-1, testKmer3.indexOf(testKmer4));
-        }
     }
 }
