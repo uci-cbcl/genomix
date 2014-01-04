@@ -6,9 +6,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import edu.uci.ics.genomix.data.types.Kmer;
-import edu.uci.ics.genomix.data.types.Node;
 import edu.uci.ics.genomix.data.types.ReadHeadInfo;
-import edu.uci.ics.genomix.data.types.VKmer;
 import edu.uci.ics.genomix.pregelix.base.VertexValueWritable;
 
 public class RayValue extends VertexValueWritable {
@@ -18,7 +16,7 @@ public class RayValue extends VertexValueWritable {
     boolean visited = false;
     boolean intersection = false;
     boolean stopSearch = false;
-    
+
     Integer pendingCandidateBranches = null;
     ArrayList<RayMessage> candidateMsgs = null;
 
@@ -29,7 +27,7 @@ public class RayValue extends VertexValueWritable {
         public static final byte INTERSECTION = 0b1 << 3;
         public static final byte STOP_SEARCH = 0b1 << 4;
         public static final byte PENDING_CANDIDATE_BRANCHES = 1 << 5;
-        public static final byte CANDIDATE_MSGS= 1 << 6;
+        public static final byte CANDIDATE_MSGS = 1 << 6;
     }
 
     @Override
@@ -45,14 +43,14 @@ public class RayValue extends VertexValueWritable {
         visited = ((state & FIELDS.VISITED) != 0);
         intersection = ((state & FIELDS.INTERSECTION) != 0);
         stopSearch = ((state & FIELDS.STOP_SEARCH) != 0);
-        
+
         if ((state & FIELDS.PENDING_CANDIDATE_BRANCHES) != 0) {
             pendingCandidateBranches = in.readInt();
         }
         if ((state & FIELDS.CANDIDATE_MSGS) != 0) {
             getCandidateMsgs().clear();
             int count = in.readInt();
-            for (int i=0; i < count; i++) {
+            for (int i = 0; i < count; i++) {
                 RayMessage m = new RayMessage();
                 m.readFields(in);
                 candidateMsgs.add(m);
@@ -82,7 +80,7 @@ public class RayValue extends VertexValueWritable {
             state |= FIELDS.CANDIDATE_MSGS;
         }
         super.write(out);
-        
+
         if (pendingCandidateBranches != null) {
             out.writeInt(pendingCandidateBranches);
         }
@@ -93,7 +91,7 @@ public class RayValue extends VertexValueWritable {
             }
         }
     }
-    
+
     @Override
     public void reset() {
         super.reset();

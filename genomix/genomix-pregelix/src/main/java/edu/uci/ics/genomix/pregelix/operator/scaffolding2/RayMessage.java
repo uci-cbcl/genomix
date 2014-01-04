@@ -57,10 +57,10 @@ public class RayMessage extends MessageWritable {
 
     /** for REQUEST_SCORE, AGGREGATE_SCORE */
     private Integer pathIndex = null; // the index of the path represented by this msg
-    
+
     // TODO remove these whenever we want to (they're only used for debugging)
     public VKmerList candidatePathIds = new VKmerList();
-    
+
     public RayMessage() {
 
     }

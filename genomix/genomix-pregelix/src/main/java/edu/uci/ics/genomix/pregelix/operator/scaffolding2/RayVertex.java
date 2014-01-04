@@ -47,7 +47,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
     public static final boolean REMOVE_OTHER_OUTGOING = true; // whether to remove other outgoing branches when a dominant edge is chosen
     public static final boolean REMOVE_OTHER_INCOMING = true; // whether to remove other incoming branches when a dominant edge is chosen
     public static final boolean CANDIDATES_SCORE_WALK = false; // whether to have the candidates score the walk
-    private static final boolean EXPAND_CANDIDATE_BRANCHES = true; // whether to get kmer from all possible candidate branches  
+    private static final boolean EXPAND_CANDIDATE_BRANCHES = true; // whether to get kmer from all possible candidate branches
 
     public RayVertex() {
         outgoingMsg = new RayMessage();
@@ -207,7 +207,8 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
     }
 
     private void sendCandidateKmersToWalkNodes(ArrayList<RayMessage> candidateMsgs) {
-        LOG.info("sending " + candidateMsgs.size() + " candidates to " + candidateMsgs.get(0).getWalkIds().size() + " walk nodes");
+        LOG.info("sending " + candidateMsgs.size() + " candidates to " + candidateMsgs.get(0).getWalkIds().size()
+                + " walk nodes");
         for (int candIndex = 0; candIndex < candidateMsgs.size(); candIndex++) {
             RayMessage msg = candidateMsgs.get(candIndex);
             for (int walkIndex = 0; walkIndex < msg.getWalkIds().size(); walkIndex++) {
@@ -416,7 +417,8 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
             sendMsg(msg.getSourceVertexId(), outgoingMsg);
             LOG.info("ready to score kmer " + outgoingMsg.getToScoreKmer() + " of candidate-length: "
                     + outgoingMsg.getToScoreKmer().getKmerLetterLength() + " for candidate "
-                    + outgoingMsg.getEdgeTypeBackToFrontier().mirror() + ":" + outgoingMsg.getToScoreId() + " which passed through " + outgoingMsg.candidatePathIds);
+                    + outgoingMsg.getEdgeTypeBackToFrontier().mirror() + ":" + outgoingMsg.getToScoreId()
+                    + " which passed through " + outgoingMsg.candidatePathIds);
         } else {
             // candidate is incomplete; need info from neighbors
             outgoingMsg.setMessageType(RayMessageType.REQUEST_CANDIDATE_KMER);
@@ -608,14 +610,16 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
             List<RayMessage> candidateMsgs, int nodeOffset, int walkLength, int msgKmerLength) {
         SortedSet<ReadHeadInfo> readSubsetOrientedWithSearch = getReadSubsetOrientedWithSearch(singleEnd, vertex,
                 vertexFlipped, nodeOffset, walkLength);
-        
+
         if (GenomixJobConf.debug && singleEnd) {
             LOG.info("candidates:");
             for (RayMessage msg : candidateMsgs) {
-                LOG.info(msg.getEdgeTypeBackToFrontier() + ":" + msg.getToScoreId() + " = " + msg.getToScoreKmer() + " passing through " + msg.candidatePathIds);
+                LOG.info(msg.getEdgeTypeBackToFrontier() + ":" + msg.getToScoreId() + " = " + msg.getToScoreKmer()
+                        + " passing through " + msg.candidatePathIds);
             }
             LOG.info("\noriented reads:\n" + readSubsetOrientedWithSearch);
-            LOG.info("\nvertexFlipped: " + vertexFlipped + "\nunflipped: " + vertex.getUnflippedReadIds() + "\nflipped: " + vertex.getFlippedReadIds());
+            LOG.info("\nvertexFlipped: " + vertexFlipped + "\nunflipped: " + vertex.getUnflippedReadIds()
+                    + "\nflipped: " + vertex.getFlippedReadIds());
         }
 
         // my contribution to each path's final score
@@ -643,10 +647,10 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
                             // need to flip the read so it points with the search
                             localOffset -= (vertex.getKmerLength() - 1 - read.getOffset());
                             read = new ReadHeadInfo(read);
-                            read.set(read.getMateId(), read.getLibraryId(), read.getReadId(), read.getOffset(), read.getThisReadSequence().reverse(), null);
-                        } 
-                        if (read.getThisReadSequence().matchesExactly(
-                                localOffset, candidateKmer, kmerIndex,
+                            read.set(read.getMateId(), read.getLibraryId(), read.getReadId(), read.getOffset(), read
+                                    .getThisReadSequence().reverse(), null);
+                        }
+                        if (read.getThisReadSequence().matchesExactly(localOffset, candidateKmer, kmerIndex,
                                 Kmer.getKmerLength())) {
                             match = true;
                         }
