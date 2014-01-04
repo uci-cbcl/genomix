@@ -728,8 +728,15 @@ public class Node implements Writable, Serializable {
     protected void mergeUnflippedAndFlippedReadIDs(EDGETYPE edgeType, Node other) {
         int otherLength = other.internalKmer.lettersInKmer;
         mergeUnflippedAndFlippedReadIDs(edgeType, other, otherLength);
+        //TODO, move this code to test code
+        //        if (this.flippedReadIds != null && !this.flippedReadIds.verifySequence(this.internalKmer)) {
+        //            System.err.println("verityFilpSequence failed:\n " + this.toString() + "\n" + other.toString());
+        //        }
+        //        if (this.unflippedReadIds != null && !this.unflippedReadIds.verifySequence(this.internalKmer, false)) {
+        //            System.err.println("verityUnFilpSequence failed:\n " + this.toString() + "\n" + other.toString());
+        //        }
     }
-    
+
     protected void mergeUnflippedAndFlippedReadIDs(EDGETYPE edgeType, Node other, int otherLength) {
         int K = Kmer.getKmerLength();
         int thisLength = internalKmer.lettersInKmer;
@@ -850,7 +857,7 @@ public class Node implements Writable, Serializable {
     }
 
     public int calculateSeedScore() {
-        int length = getKmerLength() == 0 ? Kmer.getKmerLength() : getKmerLength(); 
+        int length = getKmerLength() == 0 ? Kmer.getKmerLength() : getKmerLength();
         return length * (getUnflippedReadIds().size() + getFlippedReadIds().size());
     }
 }
