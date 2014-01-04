@@ -258,6 +258,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
             NeighborInfo next = vertex.getSingleNeighbor(nextDir);
             msg.setEdgeTypeBackToFrontier(next.et.mirror());
             msg.setFrontierFlipped(vertex.flippedFromInitialDirection);
+            msg.setCandidateFlipped(vertex.flippedFromInitialDirection ^ next.et.mirror().causesFlip());
             sendMsg(next.kmer, msg);
             LOG.info("bouncing over path node: " + id);
         } else {
@@ -422,8 +423,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
             for (EDGETYPE et : nextDir.edgeTypes()) {
                 for (VKmer neighbor : vertex.getEdges(et)) {
                     outgoingMsg.setEdgeTypeBackToPrev(et.mirror());
-                    outgoingMsg.setCandidateFlipped(msg.getCandidateFlipped()
-                            ^ msg.getEdgeTypeBackToPrev().causesFlip());
+                    outgoingMsg.setCandidateFlipped(msg.getCandidateFlipped() ^ et.causesFlip());
                     sendMsg(neighbor, outgoingMsg);
                 }
             }
