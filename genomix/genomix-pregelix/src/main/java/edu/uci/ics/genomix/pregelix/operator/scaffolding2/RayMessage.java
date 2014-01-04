@@ -57,7 +57,10 @@ public class RayMessage extends MessageWritable {
 
     /** for REQUEST_SCORE, AGGREGATE_SCORE */
     private Integer pathIndex = null; // the index of the path represented by this msg
-
+    
+    // TODO remove these whenever we want to (they're only used for debugging)
+    public VKmerList candidatePathIds = new VKmerList();
+    
     public RayMessage() {
 
     }
@@ -127,6 +130,7 @@ public class RayMessage extends MessageWritable {
         edgeTypeBackToPrev = other.edgeTypeBackToPrev;
         numberOfForks = other.numberOfForks;
         pathIndex = other.pathIndex;
+        candidatePathIds.setAsCopy(other.candidatePathIds);
     }
 
     @Override
@@ -181,6 +185,7 @@ public class RayMessage extends MessageWritable {
         if ((remainingFields & FIELDS.PATH_INDEX) != 0) {
             pathIndex = in.readInt();
         }
+        candidatePathIds.readFields(in);
     }
 
     @Override
@@ -232,7 +237,7 @@ public class RayMessage extends MessageWritable {
         if (pathIndex != null) {
             out.writeInt(pathIndex);
         }
-
+        candidatePathIds.write(out);
     }
 
     @Override
@@ -448,5 +453,6 @@ public class RayMessage extends MessageWritable {
         edgeTypeBackToPrev = null;
         numberOfForks = null;
         pathIndex = null;
+        candidatePathIds.clear();
     }
 }

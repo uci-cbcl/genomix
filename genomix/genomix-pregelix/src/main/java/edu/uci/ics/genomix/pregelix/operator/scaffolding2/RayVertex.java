@@ -394,6 +394,8 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
                 outgoingMsg.getToScoreKmer().mergeWithKmerInDir(accumulatedCandidateToVertexET, Kmer.getKmerLength(),
                         vertex.getInternalKmer());
             }
+            outgoingMsg.candidatePathIds.setAsCopy(msg.candidatePathIds);
+            outgoingMsg.candidatePathIds.append(id);
 
             // pass this kmer along to my adjacent branches
             if (outgoingMsg.getToScoreKmer().getKmerLetterLength() >= MAX_DISTANCE || vertex.degree(nextDir) == 0) {
@@ -413,7 +415,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
             sendMsg(msg.getSourceVertexId(), outgoingMsg);
             LOG.info("ready to score kmer " + outgoingMsg.getToScoreKmer() + " of candidate-length: "
                     + outgoingMsg.getToScoreKmer().getKmerLetterLength() + " for candidate "
-                    + outgoingMsg.getEdgeTypeBackToFrontier().mirror() + ":" + outgoingMsg.getToScoreId());
+                    + outgoingMsg.getEdgeTypeBackToFrontier().mirror() + ":" + outgoingMsg.getToScoreId() + " which passed through " + outgoingMsg.candidatePathIds);
         } else {
             // candidate is incomplete; need info from neighbors
             outgoingMsg.setMessageType(RayMessageType.REQUEST_CANDIDATE_KMER);
@@ -606,6 +608,15 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
             List<RayMessage> candidateMsgs, int nodeOffset, int walkLength, int msgKmerLength) {
         SortedSet<ReadHeadInfo> readSubsetOrientedWithSearch = getReadSubsetOrientedWithSearch(singleEnd, vertex,
                 vertexFlipped, nodeOffset, walkLength);
+        
+        if (GenomixJobConf.debug && singleEnd) {
+            LOG.info("candidates:");
+            for (RayMessage msg : candidateMsgs) {
+                LOG.info(msg.getEdgeTypeBackToFrontier() + ":" + msg.getToScoreId() + " = " + msg.getToScoreKmer() + " passing through " + msg.candidatePathIds);
+            }
+            LOG.info("\noriented reads:\n" + readSubsetOrientedWithSearch);
+            LOG.info("\nvertexFlipped: " + vertexFlipped + "\nunflipped: " + vertex.getUnflippedReadIds() + "\nflipped: " + vertex.getFlippedReadIds());
+        }
 
         // my contribution to each path's final score
         ArrayList<RayScores> pathScores = new ArrayList<>();
@@ -952,7 +963,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         return job;
     }
 
-    public Logger LOG = Logger.getLogger(RayVertex.class.getName());
+    public static Logger LOG = Logger.getLogger(RayVertex.class.getName());
 
     @SuppressWarnings("deprecation")
     public static int calculateScoreThreshold(Counters statsCounters, Float topFraction, Integer topNumber,
