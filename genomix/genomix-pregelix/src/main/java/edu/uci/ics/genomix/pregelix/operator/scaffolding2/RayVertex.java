@@ -34,6 +34,7 @@ import edu.uci.ics.pregelix.api.job.PregelixJob;
 
 public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
     private static DIR INITIAL_DIRECTION;
+    private static String SEED_ID;
     private Integer SEED_SCORE_THRESHOLD;
     private Integer SEED_LENGTH_THRESHOLD;
     private int COVERAGE_DIST_NORMAL_MEAN;
@@ -61,10 +62,15 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         INITIAL_DIRECTION = DIR.valueOf(conf.get(GenomixJobConf.SCAFFOLDING_INITIAL_DIRECTION));
         COVERAGE_DIST_NORMAL_MEAN = 0; // TODO set properly once merged
         COVERAGE_DIST_NORMAL_STD = 1000;
-        try {
-            SEED_SCORE_THRESHOLD = Integer.parseInt(conf.get(GenomixJobConf.SCAFFOLDING_SEED_SCORE_THRESHOLD));
-        } catch (NumberFormatException e) {
-            SEED_LENGTH_THRESHOLD = Integer.parseInt(conf.get(GenomixJobConf.SCAFFOLDING_SEED_LENGTH_THRESHOLD));
+
+        if (conf.get(GenomixJobConf.SCAFFOLD_SEED_ID) != null) {
+            SEED_ID = conf.get(GenomixJobConf.SCAFFOLD_SEED_ID);
+        } else {
+            try {
+                SEED_SCORE_THRESHOLD = Integer.parseInt(conf.get(GenomixJobConf.SCAFFOLDING_SEED_SCORE_THRESHOLD));
+            } catch (NumberFormatException e) {
+                SEED_LENGTH_THRESHOLD = Integer.parseInt(conf.get(GenomixJobConf.SCAFFOLDING_SEED_LENGTH_THRESHOLD));
+            }
         }
 
         HAS_PAIRED_END_READS = GenomixJobConf.outerDistanceMeans != null;
@@ -109,13 +115,17 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
      * @return whether or not this node meets the "seed" criteria
      */
     private boolean isStartSeed() {
-        if (SEED_SCORE_THRESHOLD != null) {
-            float coverage = getVertexValue().getAverageCoverage();
-            return ((coverage >= COVERAGE_DIST_NORMAL_MEAN - COVERAGE_DIST_NORMAL_STD)
-                    && (coverage <= COVERAGE_DIST_NORMAL_MEAN + COVERAGE_DIST_NORMAL_STD) && (getVertexValue()
-                    .calculateSeedScore() >= SEED_SCORE_THRESHOLD));
+        if (SEED_ID != null) {
+            return SEED_ID.equals(getVertexId().toString());
         } else {
-            return getVertexValue().getKmerLength() >= SEED_LENGTH_THRESHOLD;
+            if (SEED_SCORE_THRESHOLD != null) {
+                float coverage = getVertexValue().getAverageCoverage();
+                return ((coverage >= COVERAGE_DIST_NORMAL_MEAN - COVERAGE_DIST_NORMAL_STD)
+                        && (coverage <= COVERAGE_DIST_NORMAL_MEAN + COVERAGE_DIST_NORMAL_STD) && (getVertexValue()
+                        .calculateSeedScore() >= SEED_SCORE_THRESHOLD));
+            } else {
+                return getVertexValue().getKmerLength() >= SEED_LENGTH_THRESHOLD;
+            }
         }
     }
 
@@ -178,7 +188,13 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
                 case PRUNE_EDGE:
                     // remove the given edge back towards the frontier node.  Also, clear the "visited" state of this node
                     // so that other walks are free to include me
-                    vertex.getEdges(msg.getEdgeTypeBackToFrontier()).remove(msg.getSourceVertexId());
+                    try {
+                        vertex.getEdges(msg.getEdgeTypeBackToFrontier()).remove(msg.getSourceVertexId());
+                    } catch (ArrayIndexOutOfBoundsException e) {
+                        LOG.severe("Was asked to prune an edge that doesn't exist here! I am " + id + " = " + vertex
+                                + " and recieved msg " + msg.getMessageType() + " " + msg.getEdgeTypeBackToFrontier()
+                                + " " + msg.getSourceVertexId());
+                    }
                     vertex.visited = false;
                     break;
                 case STOP:
@@ -822,7 +838,10 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         int numSingleEndPaths = singleEndScores.size() > 0 ? singleEndScores.size() : -1;
         int numPairedEndPaths = pairedEndScores.size() > 0 ? pairedEndScores.get(0).size() : -1;
         if (numSingleEndPaths == -1 && numPairedEndPaths == -1) {
-            throw new IllegalStateException("no paths found in compareScoresAndPrune!");
+            LOG.info("failed to find a dominant edge (no scores available!). Started at "
+                    + msgs.get(0).getSourceVertexId() + " and will stop at " + id + " with total length: "
+                    + msgs.get(0).getWalkLength() + "\n>id " + id + "\n" + msgs.get(0).getAccumulatedWalkKmer());
+            return;
         } else if (numSingleEndPaths != -1 && numPairedEndPaths != -1 && numSingleEndPaths != numPairedEndPaths) {
             throw new IllegalStateException(
                     "single and paired end scores disagree about the total number of paths! (single: "
@@ -952,8 +971,9 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
             sendMsg(dominantKmer, outgoingMsg);
             LOG.info("dominant edge found: " + dominantEdgeType + ":" + dominantKmer);
         } else {
-            LOG.info("failed to find a dominant edge and will stop at " + id + " with total length: "
-                    + msgs.get(0).getWalkLength() + "\n>id " + id + "\n" + msgs.get(0).getAccumulatedWalkKmer());
+            LOG.info("failed to find a dominant edge. Started at " + msgs.get(0).getSourceVertexId()
+                    + " and will stop at " + id + " with total length: " + msgs.get(0).getWalkLength() + "\n>id " + id
+                    + "\n" + msgs.get(0).getAccumulatedWalkKmer());
         }
     }
 
