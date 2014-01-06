@@ -14,7 +14,7 @@ import edu.uci.ics.genomix.data.types.Kmer;
 import edu.uci.ics.genomix.driver.GenomixDriver;
 import edu.uci.ics.genomix.hyracks.graph.driver.GenomixHyracksDriver;
 
-public class SingleLongReadCreateTool {
+public class GenRandSingleLongRead {
     /**
      * it is better to set the kmerSize a big value in case of duplicates, 
      * the target path which contain this string will be generated automatically
@@ -43,7 +43,7 @@ public class SingleLongReadCreateTool {
     private KmerDir curKmerDir = KmerDir.FORWARD;
     private String targetPath;
     
-    public SingleLongReadCreateTool(int kmerSize, int length) {
+    public GenRandSingleLongRead(int kmerSize, int length) {
         if (length < 1)
             throw new IllegalArgumentException("length < 1: " + length);
         buf = new char[length];
