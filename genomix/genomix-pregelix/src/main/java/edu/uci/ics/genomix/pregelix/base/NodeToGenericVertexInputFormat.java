@@ -6,6 +6,7 @@ import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.RecordReader;
 
 import edu.uci.ics.genomix.data.types.Node;
+import edu.uci.ics.genomix.data.types.ReadHeadSet;
 import edu.uci.ics.genomix.data.types.VKmer;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.util.BspUtils;
@@ -21,6 +22,8 @@ public abstract class NodeToGenericVertexInputFormat<V extends VertexValueWritab
 
         public BinaryDataCleanLoadGraphReader(RecordReader<VKmer, Node> recordReader) {
             super(recordReader);
+            // from HDFS, read complete records; within pregelix jobs, writes are chunked
+            ReadHeadSet.forceWriteEntireBody(false);
         }
 
         @Override

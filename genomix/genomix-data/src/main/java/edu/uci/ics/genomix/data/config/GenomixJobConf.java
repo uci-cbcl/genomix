@@ -39,7 +39,8 @@ public class GenomixJobConf extends JobConf {
 
     public static boolean debug;
     public static ArrayList<VKmer> debugKmers;
-    
+
+    public static ArrayList<Integer> readLengths;
     public static HashMap<Byte, Integer> outerDistanceMeans;
     public static HashMap<Byte, Integer> outerDistanceStdDevs;
 
@@ -64,18 +65,21 @@ public class GenomixJobConf extends JobConf {
         @Option(name = "-pipelineOrder", usage = "Specify the order of the graph cleaning process", required = false)
         private String pipelineOrder;
 
-        @Option(name = "-singleEndFastqs", usage = "One or more local fastq files as inputs to graphbuild. Treated as single-ends reads.", required = false)
-        private String[] singleEndFastqs;
-        
         @Option(name = "-pairedEndFastqs", usage = "Two or more local fastq files as inputs to graphbuild. Treated as paired-end reads. See also, -outerDistMean and -outerDistStdDev", required = false)
         private String[] pairedEndFastqs;
-        
+
+        @Option(name = "-singleEndFastqs", usage = "One or more local fastq files as inputs to graphbuild. Treated as single-ends reads.", required = false)
+        private String[] singleEndFastqs;
+
+        @Option(name = "-readLengths", usage = "read lengths for each library, with paired-end libraries first", required = true)
+        private String[] readLengths;
+
         @Option(name = "-outerDistMeans", usage = "Average outer distances (from A to B:  A==>    <==B)  for paired-end libraries", required = false)
         private String[] outerDistMeans;
-        
+
         @Option(name = "-outerDistStdDevs", usage = "Standard deviations of outer distances (from A to B:  A==>    <==B)  for paired-end libraries", required = false)
         private String[] outerDistStdDevs;
-        
+
         @Option(name = "-localInput", usage = "Local directory containing input for the first pipeline step", required = false)
         private String localInput;
 
@@ -103,7 +107,7 @@ public class GenomixJobConf extends JobConf {
 
         @Option(name = "-bubbleMerge_maxDissimilarity", usage = "Maximum dissimilarity (1 - % identity) allowed between two kmers while still considering them a \"bubble\", (leading to their collapse into a single node)", required = false)
         private float bubbleMerge_maxDissimilarity = -1;
-        
+
         @Option(name = "-bubbleMerge_maxLength", usage = "The maximum length an internal node may be and still be considered a bubble", required = false)
         private int bubbleMerge_maxLength;
 
@@ -127,22 +131,12 @@ public class GenomixJobConf extends JobConf {
 
         @Option(name = "-tipRemove_maxLength", usage = "Tips (dead ends in the graph) whose length is less than this threshold are removed from the graph", required = false)
         private int tipRemove_maxLength = -1;
+        
+        @Option(name = "-scaffolding_serialRunMinLength", usage = "Rather than processing all the nodes in parallel, run separate scaffolding jobs serially, running with a seed of all nodes longer than this threshold", required = false)
+        private int scaffolding_serialRunMinLength = -1;
 
         @Option(name = "-maxReadIDsPerEdge", usage = "The maximum number of readids that are recored as spanning a single edge", required = false)
         private int maxReadIDsPerEdge = -1;
-
-        // scaffolding
-        @Option(name = "-minScaffoldingTraveralLength", usage = "The minimum length that can be travelled by scaffolding", required = false)
-        private int minScaffoldingTraveralLength = -1;
-
-        @Option(name = "-maxScaffoldingTraveralLength", usage = "The maximum length that can be travelled by scaffolding", required = false)
-        private int maxScaffoldingTraveralLength = -1;
-
-        @Option(name = "-minScaffoldingVertexMinCoverage", usage = "The minimum vertex coverage that can be the head of scaffolding", required = false)
-        private int minScaffoldingVertexMinCoverage = -1;
-
-        @Option(name = "-minScaffoldingVertexMinLength", usage = "The minimum vertex length that can be the head of scaffolding", required = false)
-        private int minScaffoldingVertexMinLength = -1;
 
         @Option(name = "-plotSubgraph_startSeed", usage = "The minimum vertex length that can be the head of scaffolding", required = false)
         private String plotSubgraph_startSeed;
@@ -154,6 +148,13 @@ public class GenomixJobConf extends JobConf {
                 + " 2. DIRECTED_GRAPH_WITH_SIMPLELABEL_AND_EDGETYPE, 3. DIRECTED_GRAPH_WITH_KMERS_AND_EDGETYPE, 4. DIRECTED_GRAPH_WITH_ALLDETAILS"
                 + "Default is 1.", required = false)
         private int plotSubgraph_verbosity = -1;
+
+        // scaffolding
+        @Option(name = "-scaffold_seedScorePercentile", usage = "Choose scaffolding seeds as the highest 'seed score', currently (length * numReads).  If this is 0 < percentile < 1, this value will be interpreted as a fraction of the graph (so .01 will mean 1% of the graph will be a seed).  For fraction >= 1, it will be interpreted as the (approximate) *number* of seeds to include. Mutually exclusive with -scaffold_seedLengthPercentile.", required = false)
+        private float scaffold_seedScorePercentile = -1;
+
+        @Option(name = "-scaffold_seedLengthPercentile", usage = "Choose scaffolding seeds as the nodes with longest kmer length.  If this is 0 < percentile < 1, this value will be interpreted as a fraction of the graph (so .01 will mean 1% of the graph will be a seed).  For fraction >= 1, it will be interpreted as the (approximate) *number* of seeds to include. Mutually exclusive with -scaffold_seedScorePercentile.", required = false)
+        private float scaffold_seedLengthPercentile = -1;
 
         // Hyracks/Pregelix Setup
         @Option(name = "-profile", usage = "Whether or not to do runtime profifling", required = false)
@@ -186,9 +187,9 @@ public class GenomixJobConf extends JobConf {
 
         @Option(name = "-runAllStats", usage = "Whether or not to run a STATS job after each normal job")
         private boolean runAllStats = false;
-        
-        @Option(name = "-logBubbleInfo", usage = "Whether or not to log bubble info on simple bubble merge")
-        private boolean logBubbleInfo = false;
+
+        @Option(name = "-setCutoffCoverageByFittingMixture", usage = "Whether or not to automatically set cutoff coverage based on fitting mixture")
+        private boolean setCutoffCoverageByFittingMixture = false;
     }
 
     /**
@@ -211,6 +212,8 @@ public class GenomixJobConf extends JobConf {
         TIP,
         SCAFFOLD,
         RAY_SCAFFOLD,
+        RAY_SCAFFOLD_FORWARD,
+        RAY_SCAFFOLD_REVERSE,
         SPLIT_REPEAT,
         DUMP_FASTA,
         CHECK_SYMMETRY,
@@ -220,7 +223,6 @@ public class GenomixJobConf extends JobConf {
         BRIDGE_ADD,
         BUBBLE_ADD,
         BFS;
-
         /** the jobs that actually mutate the graph */
         public static final EnumSet<Patterns> mutatingJobs = EnumSet.complementOf(EnumSet.of(Patterns.DUMP_FASTA,
                 Patterns.CHECK_SYMMETRY, Patterns.PLOT_SUBGRAPH, Patterns.STATS, Patterns.TIP_ADD, Patterns.BRIDGE_ADD,
@@ -271,11 +273,11 @@ public class GenomixJobConf extends JobConf {
 
     // Global config
     public static final String KMER_LENGTH = "genomix.conf.kmerLength";
-    public static final String READ_LENGTH = "genomix.conf.readLength";
     public static final String LINES_PERMAP = "genomix.conf.linesPerMap";
     public static final String PIPELINE_ORDER = "genomix.conf.pipelineOrder";
     public static final String SINGLE_END_FASTQ_INPUTS = "genomix.conf.singleEndFastqInputs";
     public static final String PAIRED_END_FASTQ_INPUTS = "genomix.conf.pairedEndFastqInputs";
+    public static final String READ_LENGTHS = "genomix.conf.readLengths";
     private static final String OUTER_DISTANCE_MEANS = "genomix.conf.outerDistanceMeans";
     private static final String OUTER_DISTANCE_STD_DEVS = "genomix.conf.outerDistanceStdDevs";
     public static final String INITIAL_HDFS_INPUT_DIR = "genomix.conf.initialHDFSInputDir";
@@ -287,6 +289,7 @@ public class GenomixJobConf extends JobConf {
     public static final String HDFS_WORK_PATH = "genomix.hdfs.work.path";
     public static final String EXTRA_CONF_FILES = "genomix.conf.extraConfFiles";
     public static final String RUN_ALL_STATS = "genomix.conf.runAllStats";
+    public static final String SET_CUTOFF_COVERAGE = "genomix.conf.setCutoffCoverageByFittingMixture";
 
     // Graph cleaning   
     public static final String BRIDGE_REMOVE_MAX_LENGTH = "genomix.bridgeRemove.maxLength";
@@ -299,13 +302,18 @@ public class GenomixJobConf extends JobConf {
     public static final String REMOVE_LOW_COVERAGE_MAX_COVERAGE = "genomix.removeLowCoverage.maxCoverage";
     public static final String TIP_REMOVE_MAX_LENGTH = "genomix.tipRemove.maxLength";
     public static final String MAX_READIDS_PER_EDGE = "genomix.maxReadidsPerEdge";
-    public static final String SCAFFOLDING_MIN_TRAVERSAL_LENGTH = "genomix.scaffolding.minTraversalLength";
-    public static final String SCAFFOLDING_MAX_TRAVERSAL_LENGTH = "genomix.scaffolding.maxTraversalLength";
-    public static final String SCAFFOLDING_VERTEX_MIN_COVERAGE = "genomix.scaffolding.vertexMinCoverage";
-    public static final String SCAFFOLDING_VERTEX_MIN_LENGTH = "genomix.scaffolding.vertexMinLength";
+    public static final String SCAFFOLDING_INITIAL_DIRECTION = "genomix.scaffolding.initialDirection";
+    public static final String SCAFFOLDING_SERIAL_RUN_MIN_LENGTH_THRESHOLD = "genomix.scaffolding.serialRunMinLengthThreshold";
+    public static final String SCAFFOLD_SEED_ID = "genomix.scaffolding.seedId";
+    public static final String SCAFFOLD_SEED_SCORE_PERCENTILE = "genomix.scaffolding.seedScorePercentile";
+    public static final String SCAFFOLD_SEED_LENGTH_PERCENTILE = "genomix.scaffolding.seedLengthPercentile";
+    public static final String SCAFFOLDING_SEED_SCORE_THRESHOLD = "genomix.scaffolding.seedScoreThreshold";
+    public static final String SCAFFOLDING_SEED_LENGTH_THRESHOLD = "genomix.scaffolding.seedLengthThreshold";
     public static final String PLOT_SUBGRAPH_START_SEEDS = "genomix.plotSubgraph.startSeeds";
     public static final String PLOT_SUBGRAPH_NUM_HOPS = "genomix.plotSubgraph.numHops";
     public static final String PLOT_SUBGRAPH_GRAPH_VERBOSITY = "genomix.plotSubgraph.graphVerbosity";
+    public static final String COVERAGE_NORMAL_MEAN = "genomix.coverage.normalMean";
+    public static final String COVERAGE_NORMAL_STD = "genomix.coverage.normalStd";
 
     // Hyracks/Pregelix Setup
     public static final String PROFILE = "genomix.conf.profile";
@@ -398,9 +406,20 @@ public class GenomixJobConf extends JobConf {
 
         if (Integer.parseInt(conf.get(TIP_REMOVE_MAX_LENGTH)) < kmerLength)
             throw new IllegalArgumentException("tipRemove_maxLength must be at least as long as kmerLength!");
+        
+        if (conf.get(SCAFFOLDING_SERIAL_RUN_MIN_LENGTH_THRESHOLD) != null && Integer.parseInt(conf.get(SCAFFOLDING_SERIAL_RUN_MIN_LENGTH_THRESHOLD)) < kmerLength)
+            throw new IllegalArgumentException("scaffold_serialRunMinLength must be at least kmerLength!");
 
         if (Integer.parseInt(conf.get(MAX_READIDS_PER_EDGE)) < 0)
             throw new IllegalArgumentException("maxReadIDsPerEdge must be non-negative!");
+
+        if (conf.get(SCAFFOLD_SEED_SCORE_PERCENTILE) != null && conf.get(SCAFFOLD_SEED_LENGTH_PERCENTILE) != null)
+            throw new IllegalArgumentException(
+                    "Can't set both -scaffold_scoreSeedPercentile and -scaffold_scoreLengthPercentile!");
+        if (conf.getFloat(SCAFFOLD_SEED_SCORE_PERCENTILE, 1) <= 0)
+            throw new IllegalArgumentException("-scaffold_seedScorePercentile must be greater than 0!");
+        if (conf.getFloat(SCAFFOLD_SEED_LENGTH_PERCENTILE, 1) <= 0)
+            throw new IllegalArgumentException("-scaffold_seedLengthPercentile must be greater than 0!");
 
         Patterns.verifyPatterns(Patterns.arrayFromString(conf.get(GenomixJobConf.PIPELINE_ORDER)));
     }
@@ -409,15 +428,13 @@ public class GenomixJobConf extends JobConf {
         // Global config
         int kmerLength = getInt(KMER_LENGTH, -1);
 
-        setInt(READ_LENGTH, getInt(READ_LENGTH, -1));
-
         // Graph cleaning
         if (getInt(BRIDGE_REMOVE_MAX_LENGTH, -1) == -1 && kmerLength != -1)
             setInt(BRIDGE_REMOVE_MAX_LENGTH, kmerLength + 1);
 
         if (getFloat(BUBBLE_MERGE_MAX_DISSIMILARITY, -1) == -1)
             setFloat(BUBBLE_MERGE_MAX_DISSIMILARITY, .05f);
-        
+
         if (getInt(BUBBLE_MERGE_MAX_LENGTH, -1) == -1)
             setInt(BUBBLE_MERGE_MAX_LENGTH, kmerLength * 5);
 
@@ -444,19 +461,6 @@ public class GenomixJobConf extends JobConf {
 
         if (getInt(MAX_READIDS_PER_EDGE, -1) == -1)
             setInt(MAX_READIDS_PER_EDGE, 250);
-
-        // scaffolding
-        if (getInt(SCAFFOLDING_MIN_TRAVERSAL_LENGTH, -1) == -1)
-            setInt(SCAFFOLDING_MIN_TRAVERSAL_LENGTH, 2);
-
-        if (getInt(SCAFFOLDING_MAX_TRAVERSAL_LENGTH, -1) == -1)
-            setInt(SCAFFOLDING_MAX_TRAVERSAL_LENGTH, 15);
-
-        if (getInt(SCAFFOLDING_VERTEX_MIN_COVERAGE, -1) == -1)
-            setInt(SCAFFOLDING_VERTEX_MIN_COVERAGE, 1);
-
-        if (getInt(SCAFFOLDING_VERTEX_MIN_LENGTH, -1) == -1)
-            setInt(SCAFFOLDING_VERTEX_MIN_LENGTH, 1);
 
         if (get(PIPELINE_ORDER) == null) {
             set(PIPELINE_ORDER,
@@ -499,16 +503,16 @@ public class GenomixJobConf extends JobConf {
 
         if (opts.plotSubgraph_verbosity != -1)
             set(PLOT_SUBGRAPH_GRAPH_VERBOSITY, GRAPH_TYPE.getFromInt(opts.plotSubgraph_verbosity).toString());
-        
+
         boolean inputFastq = opts.singleEndFastqs != null || opts.pairedEndFastqs != null;
         boolean inputLocalDir = opts.localInput != null;
         boolean inputHdfsDir = opts.hdfsInput != null;
         if (!inputFastq && !inputHdfsDir && !inputLocalDir) {
-            throw new IllegalArgumentException("At least one input (-localInput, -hdfsInput, or -*EndFastq) must be specified");
+            throw new IllegalArgumentException(
+                    "At least one input (-localInput, -hdfsInput, or -*EndFastq) must be specified");
         }
-        if (! ((inputFastq && !inputHdfsDir && !inputLocalDir) 
-                || (!inputFastq && inputHdfsDir && !inputLocalDir)
-                || (!inputFastq && !inputHdfsDir && inputLocalDir))) {
+        if (!((inputFastq && !inputHdfsDir && !inputLocalDir) || (!inputFastq && inputHdfsDir && !inputLocalDir) || (!inputFastq
+                && !inputHdfsDir && inputLocalDir))) {
             throw new IllegalArgumentException("Only one of -localInput, -hdfsInput, or -*EndFastq may be specified");
         }
         if (opts.singleEndFastqs != null)
@@ -517,16 +521,27 @@ public class GenomixJobConf extends JobConf {
             if ((opts.pairedEndFastqs.length % 2) != 0)
                 throw new IllegalArgumentException("The number of fastq files for -pairedEndFastqs must be even!");
             if (opts.outerDistMeans == null)
-                throw new IllegalArgumentException("For paired-end reads, you must specify the outer distances of the libraries! (Missing -outerDistMeans)");
+                throw new IllegalArgumentException(
+                        "For paired-end reads, you must specify the outer distances of the libraries! (Missing -outerDistMeans)");
             if (opts.outerDistMeans.length != opts.pairedEndFastqs.length / 2)
-                throw new IllegalArgumentException("For paired-end reads, you must specify the outer distance of each library! (saw " + opts.pairedEndFastqs.length / 2 + " libraries but had " + opts.outerDistMeans.length + " outerDistMeans specified");
-            
+                throw new IllegalArgumentException(
+                        "For paired-end reads, you must specify the outer distance of each library! (saw "
+                                + opts.pairedEndFastqs.length / 2 + " libraries but had " + opts.outerDistMeans.length
+                                + " outerDistMeans specified");
+
             if (opts.outerDistStdDevs == null)
-                throw new IllegalArgumentException("For paired-end reads, you must specify the outer distances of the libraries! (Missing -outerDistStdDevs)");
+                throw new IllegalArgumentException(
+                        "For paired-end reads, you must specify the outer distances of the libraries! (Missing -outerDistStdDevs)");
             if (opts.outerDistStdDevs.length != opts.pairedEndFastqs.length / 2)
-                throw new IllegalArgumentException("For paired-end reads, you must specify the outer distance of each library! (saw " + opts.pairedEndFastqs.length / 2 + " libraries but had " + opts.outerDistStdDevs.length + " outerDistStdDevs specified");
+                throw new IllegalArgumentException(
+                        "For paired-end reads, you must specify the outer distance of each library! (saw "
+                                + opts.pairedEndFastqs.length / 2 + " libraries but had "
+                                + opts.outerDistStdDevs.length + " outerDistStdDevs specified");
             set(PAIRED_END_FASTQ_INPUTS, StringUtils.join(opts.pairedEndFastqs, ","));
         }
+        if (opts.readLengths != null)
+            set(READ_LENGTHS, StringUtils.join(opts.readLengths, ","));
+
         // the distances can still be specified when we're using an intermediate output
         if (opts.outerDistMeans != null)
             set(OUTER_DISTANCE_MEANS, StringUtils.join(opts.outerDistMeans, ","));
@@ -566,10 +581,16 @@ public class GenomixJobConf extends JobConf {
         setFloat(PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD, opts.pathMergeRandom_probBeingRandomHead);
         setFloat(REMOVE_LOW_COVERAGE_MAX_COVERAGE, opts.removeLowCoverage_maxCoverage);
         setInt(TIP_REMOVE_MAX_LENGTH, opts.tipRemove_maxLength);
-        setInt(SCAFFOLDING_MIN_TRAVERSAL_LENGTH, opts.minScaffoldingTraveralLength);
-        setInt(SCAFFOLDING_MAX_TRAVERSAL_LENGTH, opts.maxScaffoldingTraveralLength);
-        setInt(SCAFFOLDING_VERTEX_MIN_COVERAGE, opts.minScaffoldingVertexMinCoverage);
-        setInt(SCAFFOLDING_VERTEX_MIN_LENGTH, opts.minScaffoldingVertexMinLength);
+        if (opts.scaffolding_serialRunMinLength != -1)
+            setInt(SCAFFOLDING_SERIAL_RUN_MIN_LENGTH_THRESHOLD, opts.scaffolding_serialRunMinLength);
+        if (opts.scaffold_seedScorePercentile != -1) {
+            setFloat(SCAFFOLD_SEED_SCORE_PERCENTILE, opts.scaffold_seedScorePercentile);
+        } else if (opts.scaffold_seedLengthPercentile != -1) {
+            setFloat(SCAFFOLD_SEED_LENGTH_PERCENTILE, opts.scaffold_seedLengthPercentile);
+        } else {
+            // use a default score percentile of .01
+            setFloat(SCAFFOLD_SEED_SCORE_PERCENTILE, .01f);
+        }
 
         setInt(STATS_EXPECTED_GENOMESIZE, opts.stats_expectedGenomeSize);
         setInt(STATS_MIN_CONTIGLENGTH, opts.stats_minContigLength);
@@ -582,6 +603,7 @@ public class GenomixJobConf extends JobConf {
         if (opts.extraConfFiles != null)
             set(EXTRA_CONF_FILES, opts.extraConfFiles);
         setBoolean(RUN_ALL_STATS, opts.runAllStats);
+        setBoolean(SET_CUTOFF_COVERAGE, opts.setCutoffCoverageByFittingMixture);
     }
 
     /**
@@ -609,22 +631,32 @@ public class GenomixJobConf extends JobConf {
 
     public static void setGlobalStaticConstants(Configuration conf) throws IOException {
         Kmer.setGlobalKmerLength(Integer.parseInt(conf.get(KMER_LENGTH)));
-        ExternalableTreeSet.setupManager(conf, new Path(conf.get("hadoop.tmp.dir", "/tmp")));
+        //        ExternalableTreeSet.setupManager(conf, new Path(conf.get("hadoop.tmp.dir", "/tmp")));
+        ExternalableTreeSet.setupManager(conf, new Path("tmp"));
         ExternalableTreeSet.setCountLimit(1000);
-        
+
+        if (conf.get(READ_LENGTHS) != null) {
+            readLengths = new ArrayList<>();
+            for (String length : conf.get(READ_LENGTHS).split(",")) {
+                readLengths.add(Integer.valueOf(length));
+            }
+        }
+
         Byte libraryId = 0;
         if (conf.get(OUTER_DISTANCE_MEANS) != null) {
+            outerDistanceMeans = new HashMap<>();
             for (String mean : conf.get(OUTER_DISTANCE_MEANS).split(",")) {
                 outerDistanceMeans.put(libraryId++, Integer.valueOf(mean));
             }
         }
         libraryId = 0;
         if (conf.get(OUTER_DISTANCE_STD_DEVS) != null) {
+            outerDistanceStdDevs = new HashMap<>();
             for (String stddev : conf.get(OUTER_DISTANCE_STD_DEVS).split(",")) {
                 outerDistanceStdDevs.put(libraryId++, Integer.valueOf(stddev));
             }
         }
-        
+
         //        EdgeWritable.MAX_READ_IDS_PER_EDGE = Integer.parseInt(conf.get(GenomixJobConf.MAX_READIDS_PER_EDGE));
         debug = conf.get(GenomixJobConf.DEBUG_KMERS) != null;
         if (debugKmers == null) {

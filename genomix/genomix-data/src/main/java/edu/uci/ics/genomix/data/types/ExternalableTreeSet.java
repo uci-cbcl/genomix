@@ -8,18 +8,20 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.UUID;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
+
+import edu.uci.ics.pregelix.api.util.BspUtils;
 
 public abstract class ExternalableTreeSet<T extends WritableComparable<T> & Serializable> implements Writable,
         Serializable {
@@ -29,7 +31,8 @@ public abstract class ExternalableTreeSet<T extends WritableComparable<T> & Seri
      */
     private static final long serialVersionUID = 1L;
     static FileManager manager;
-    static private int countLimit = Integer.MAX_VALUE;
+    //    static private int countLimit = Integer.MAX_VALUE;
+    static private int countLimit = 1000;
 
     public static synchronized void setupManager(Configuration conf, Path workPath) throws IOException {
         if (manager == null) {
@@ -51,16 +54,25 @@ public abstract class ExternalableTreeSet<T extends WritableComparable<T> & Seri
     protected Path path;
     protected boolean isChanged;
     protected boolean isLoaded;
+    protected boolean writeToLocal;
+    protected boolean readFromLocal;
+    private static boolean writeEntireBody;
 
     public ExternalableTreeSet() {
-        this(null);
+        this(false);
     }
 
-    protected ExternalableTreeSet(Path path) {
+    public ExternalableTreeSet(boolean writeToLocal) {
+        this(null, writeToLocal);
+    }
+
+    protected ExternalableTreeSet(Path path, boolean writeTolocal) {
         inMemorySet = new TreeSet<T>();
         this.path = path;
         isChanged = false;
         isLoaded = false;
+        this.writeToLocal = writeTolocal;
+        this.readFromLocal = this.writeToLocal;
     }
 
     /**
@@ -71,7 +83,7 @@ public abstract class ExternalableTreeSet<T extends WritableComparable<T> & Seri
     private void loadInMemorySetFromPath() {
         if (!isLoaded && path != null) {
             try {
-                inMemorySet = (TreeSet<T>) load(path);
+                inMemorySet = (TreeSet<T>) load(path, readFromLocal);
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
                 throw new RuntimeException(e);
@@ -196,16 +208,16 @@ public abstract class ExternalableTreeSet<T extends WritableComparable<T> & Seri
         return new ReadIterator(inMemorySet.iterator());
     }
 
-    protected static TreeSet<?> load(Path path) throws IOException, ClassNotFoundException {
-        InputStream fis = manager.getInputStream(path);
+    protected static TreeSet<?> load(Path path, boolean readFromLocal) throws IOException, ClassNotFoundException {
+        InputStream fis = manager.getInputStream(path, readFromLocal);
         ObjectInputStream ois = new ObjectInputStream(fis);
         TreeSet<?> set = (TreeSet<?>) ois.readObject();
         ois.close();
         return set;
     }
 
-    protected static void save(Path path, final TreeSet<?> set) throws IOException {
-        OutputStream fos = manager.getOutputStream(path);
+    protected static void save(Path path, final TreeSet<?> set, boolean writeToLocal) throws IOException {
+        OutputStream fos = manager.getOutputStream(path, writeToLocal);
         ObjectOutputStream oos = new ObjectOutputStream(fos);
         oos.writeObject(set);
         oos.close();
@@ -217,14 +229,16 @@ public abstract class ExternalableTreeSet<T extends WritableComparable<T> & Seri
 
     @Override
     public void readFields(DataInput in) throws IOException {
-        int size = in.readInt();
         inMemorySet.clear();
         path = null;
-        if (size < countLimit) {
+        boolean wholeBodyInStream = in.readBoolean();
+        if (wholeBodyInStream) {
+            int size = in.readInt();
             for (int i = 0; i < size; ++i) {
                 inMemorySet.add(readNonGenericElement(in));
             }
         } else {
+            readFromLocal = in.readBoolean();
             path = new Path(in.readUTF());
         }
 
@@ -233,90 +247,137 @@ public abstract class ExternalableTreeSet<T extends WritableComparable<T> & Seri
 
     @Override
     public void write(DataOutput out) throws IOException {
-        out.writeInt(inMemorySet.size());
-        if (!isLoaded && path != null) {
+        boolean pathsUnmodified = !writeEntireBody && !isChanged && path != null && readFromLocal == writeToLocal;
+        boolean wholeBodyInStream = writeEntireBody || inMemorySet.size() < countLimit;
+        out.writeBoolean(wholeBodyInStream);
+
+        if (pathsUnmodified) {
+            out.writeBoolean(writeToLocal);
             out.writeUTF(path.toString());
             return;
         }
-        if (inMemorySet.size() < countLimit) {
+        if (wholeBodyInStream) {
+            loadInMemorySetFromPath();
+            out.writeInt(inMemorySet.size());
             for (T t : inMemorySet) {
                 writeNonGenericElement(out, t);
             }
             if (path != null) {
-                manager.deleteFile(path);
+                manager.deleteFile(path, writeToLocal);
                 path = null;
             }
         } else {
             if (path == null) {
-                path = manager.createFile();
-                save(path, inMemorySet);
+                path = manager.createFile(writeToLocal);
+                save(path, inMemorySet, writeToLocal);
             } else if (isChanged) {
-                save(path, inMemorySet);
+                save(path, inMemorySet, writeToLocal);
             }
+            out.writeBoolean(writeToLocal);
             out.writeUTF(path.toString());
         }
         isChanged = false;
     }
 
     public void destroy() throws IOException {
-        manager.deleteFile(path);
+        manager.deleteFile(path, writeToLocal);
     }
 
     protected static class FileManager {
-        private FileSystem fs;
-        private Path workPath;
+        private FileSystem hfs;
+        private FileSystem lfs;
+        private Path hdfsWorkPath;
+        private Path localWorkPath;
         private Configuration conf;
-        private HashMap<Path, OutputStream> allocatedPath;
+        private HashSet<Path> allocatedHdfsPath;
+        private HashSet<Path> allocatedLocalPath;
 
-        public FileManager(Configuration conf, Path workingPath) throws IOException {
-            fs = FileSystem.get(conf);
-            workPath = workingPath;
-            allocatedPath = new HashMap<Path, OutputStream>();
+        public FileManager(Configuration conf, Path hdfsWorkingPath) throws IOException {
+            hfs = FileSystem.get(conf);
+            lfs = FileSystem.getLocal(conf);
+            hdfsWorkPath = hdfsWorkingPath;
+            localWorkPath = new Path(BspUtils.TMP_DIR);
+            allocatedHdfsPath = new HashSet<Path>();
+            allocatedLocalPath = new HashSet<Path>();
             this.conf = conf;
         }
 
         public void deleteAll() throws IOException {
-            for (Path path : allocatedPath.keySet()) {
-                deleteFile(path);
+            for (Path path : allocatedHdfsPath) {
+                deleteFile(path, false);
             }
-
+            allocatedHdfsPath.clear();
+            for (Path path : allocatedLocalPath) {
+                deleteFile(path, true);
+            }
+            allocatedLocalPath.clear();
         }
 
         public Configuration getConfiguration() {
             return conf;
         }
 
-        protected final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyy-hhmmssSS");
+        public Path createFile(boolean local) throws IOException {
+            if (local) {
+                return createOneFile(allocatedLocalPath, lfs, localWorkPath);
+            } else {
+                return createOneFile(allocatedHdfsPath, hfs, hdfsWorkPath);
+            }
+        }
 
-        public synchronized Path createFile() throws IOException {
+        private static synchronized Path createOneFile(HashSet<Path> validation, FileSystem fs, Path workPath)
+                throws IOException {
             Path path;
             do {
-                path = new Path(workPath, this.getClass().getName() + simpleDateFormat.format(new Date()));
+                path = new Path(workPath, "ExternalableTreeSet" + UUID.randomUUID());
             } while (fs.exists(path));
-            allocatedPath.put(path, fs.create(path, (short) 1));
+            FSDataOutputStream os = fs.create(path, (short) 1);
+            os.close();
+            validation.add(path);
             return path;
         }
 
-        public synchronized void deleteFile(Path path) throws IOException {
-            if (path != null && allocatedPath.containsKey(path)) {
+        private static synchronized void deleteOneFile(Path path, final HashSet<Path> validation, FileSystem fs)
+                throws IOException {
+            if (path != null && validation.contains(path)) {
                 fs.delete(path, true);
-                allocatedPath.remove(path);
             }
         }
 
-        public OutputStream getOutputStream(Path path) throws IOException {
-            if (!allocatedPath.containsKey(path)) {
-                throw new IOException("File not exist:" + path);
+        public void deleteFile(Path path, boolean local) throws IOException {
+            if (local) {
+                deleteOneFile(path, allocatedLocalPath, lfs);
+            } else {
+                deleteOneFile(path, allocatedHdfsPath, hfs);
             }
-            return allocatedPath.get(path);
         }
 
-        public InputStream getInputStream(Path path) throws IOException {
-            //            if (!allocatedPath.containsKey(path)) {
-            //                throw new IOException("File not exist:" + path);
-            //            }
-            return fs.open(path);
+        private static OutputStream getOutputStream(Path path, HashSet<Path> validation, FileSystem fs)
+                throws IOException {
+            if (!validation.contains(path)) {
+                throw new IOException("File not registered:" + path);
+            }
+            return fs.create(path, (short) 1);
+        }
+
+        public OutputStream getOutputStream(Path path, boolean local) throws IOException {
+            if (local) {
+                return getOutputStream(path, allocatedLocalPath, lfs);
+            } else {
+                return getOutputStream(path, allocatedHdfsPath, hfs);
+            }
+        }
+
+        public InputStream getInputStream(Path path, boolean local) throws IOException {
+            if (local) {
+                return lfs.open(path);
+            } else {
+                return hfs.open(path);
+            }
         }
     }
 
+    public static void forceWriteEntireBody(boolean entire) {
+        writeEntireBody = entire;
+    }
 }

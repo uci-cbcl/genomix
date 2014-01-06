@@ -3,6 +3,7 @@ package edu.uci.ics.genomix.pregelix.base;
 import java.io.IOException;
 import java.util.List;
 
+import edu.uci.ics.genomix.data.config.GenomixJobConf;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.mapreduce.InputSplit;
@@ -55,6 +56,7 @@ public class BinaryVertexInputFormat<I extends WritableComparable<?>, V extends 
         @Override
         public void initialize(InputSplit inputSplit, TaskAttemptContext context) throws IOException,
                 InterruptedException {
+            GenomixJobConf.setGlobalStaticConstants(context.getConfiguration());
             lineRecordReader.initialize(inputSplit, context);
             this.context = context;
         }
