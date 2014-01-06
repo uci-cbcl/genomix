@@ -790,6 +790,10 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
         return indexOf(this, pattern);
     }
 
+    public int indexOfRangeQuery(VKmer pattern, int pStart, int pEnd, int mStart, int mEnd) throws IOException{
+        return indexOfRangeQuery(pattern, pStart, pEnd, this, mStart, mEnd);
+    }
+    
     /**
      * use KMP to fast detect whether master Vkmer contain pattern (only detect the first position which pattern match);
      * if true return index, otherwise return -1;
@@ -821,6 +825,42 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
         }
     }
 
+    public static int indexOfRangeQuery(VKmer pattern, int pStart, int pEnd, VKmer master, int mStart, int mEnd)
+            throws IOException {
+
+        if ((pStart > pEnd) || (mStart > mEnd)) {
+            throw new IOException("index Start can't exceed index End!");
+        }
+        if ((pStart < 0) || (mStart < 0) || (pEnd >= pattern.getKmerLetterLength())
+                || (mEnd >= master.getKmerLetterLength())) {
+            throw new IOException("index Start can't be less than 0, or index End can't exceed the kmer length!");
+        }
+        if((pEnd - pStart) > (mEnd - mStart)){
+            throw new IOException("sdfsdf");
+        }
+        
+        int subPsize = pEnd - pStart + 1;
+        int subMSize = mEnd - mStart + 1;
+        int[] failureSet = computeFailureSetWithRange(pattern, subPsize, pStart, pEnd);
+        int p = 0;
+        int m = 0;
+        while (p < subPsize && m < subMSize) {
+            if (pattern.getGeneCodeAtPosition(p + pStart) == master.getGeneCodeAtPosition(m + mStart)) {
+                p++;
+                m++;
+            } else if (p == 0) {
+                m++;
+            } else {
+                p = failureSet[p - 1] + 1;
+            }
+        }
+        if (p < subPsize) {
+            return -1;
+        } else {
+            return m + mStart - subPsize;
+        }
+    }
+
     /**
      * compute the failure function of KMP algorithm
      * 
@@ -838,6 +878,23 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
                 i = failureSet[i];
             }
             if (pattern.getGeneCodeAtPosition(j) == pattern.getGeneCodeAtPosition(i + 1)) {
+                failureSet[j] = i + 1;
+            } else
+                failureSet[j] = -1;
+        }
+        return failureSet;
+    }
+
+    protected static int[] computeFailureSetWithRange(VKmer pattern, int subPsize, int start, int end) {
+        int[] failureSet = new int[subPsize];
+        int i = 0;
+        failureSet[0] = -1;
+        for (int j = 1; j < subPsize; j++) {
+            i = failureSet[j - 1];
+            while (i > 0 && pattern.getGeneCodeAtPosition(j + start) != pattern.getGeneCodeAtPosition(i + start + 1)) {
+                i = failureSet[i];
+            }
+            if (pattern.getGeneCodeAtPosition(j + start) == pattern.getGeneCodeAtPosition(i + start + 1)) {
                 failureSet[j] = i + 1;
             } else
                 failureSet[j] = -1;
