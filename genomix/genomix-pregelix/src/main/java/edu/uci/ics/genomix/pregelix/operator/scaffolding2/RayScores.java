@@ -15,6 +15,14 @@ import edu.uci.ics.genomix.data.types.VKmer;
 public class RayScores implements Writable {
 
     private HashMap<SimpleEntry<EDGETYPE, VKmer>, Rules> scores = new HashMap<>();
+    
+    public RayScores() {
+    }
+    
+    public RayScores(RayScores other) {
+        scores.clear();
+        addAll(other);
+    }
 
     private class Rules {
         public int ruleA = 0; // the overlap-weighted score (reads that overlap the walk better receive higher ruleA values)
@@ -66,6 +74,16 @@ public class RayScores implements Writable {
                     elem.getValue().ruleB, elem.getValue().ruleC);
         }
     }
+    
+    public SimpleEntry<EDGETYPE, VKmer> getSingleKey() {
+        if (scores.size() != 1) {
+            throw new IllegalStateException("requested single key but this score has " + scores.size() + " entries! " + scores);
+        }
+        for (SimpleEntry<EDGETYPE,VKmer> e : scores.keySet()) {
+            return e;
+        }
+        throw new IllegalStateException("requested single key but this score has " + scores.size() + " entries! " + scores);
+    }
 
     /**
      * Return true iff queryKmer is "better than" targetKmer according to my scores.
@@ -85,7 +103,8 @@ public class RayScores implements Writable {
         Rules targetRule = scores.get(targetKey);
         return (((queryRule.ruleA) > targetRule.ruleA * factor) // overlap-weighted score  
                 && ((queryRule.ruleB) > targetRule.ruleB * factor) // raw score 
-        && ((queryRule.ruleC) > targetRule.ruleC * factor)); // smallest non-zero element of the walk
+//        && ((queryRule.ruleC) > targetRule.ruleC * factor)
+        ); // smallest non-zero element of the walk
         // TODO ruleC again doesn't make much sense in our case-- the min is over nodes currently which may represent long kmers  
     }
 

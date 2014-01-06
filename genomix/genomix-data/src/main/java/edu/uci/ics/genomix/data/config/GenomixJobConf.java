@@ -131,6 +131,9 @@ public class GenomixJobConf extends JobConf {
 
         @Option(name = "-tipRemove_maxLength", usage = "Tips (dead ends in the graph) whose length is less than this threshold are removed from the graph", required = false)
         private int tipRemove_maxLength = -1;
+        
+        @Option(name = "-scaffolding_serialRunMinLength", usage = "Rather than processing all the nodes in parallel, run separate scaffolding jobs serially, running with a seed of all nodes longer than this threshold", required = false)
+        private int scaffolding_serialRunMinLength = -1;
 
         @Option(name = "-maxReadIDsPerEdge", usage = "The maximum number of readids that are recored as spanning a single edge", required = false)
         private int maxReadIDsPerEdge = -1;
@@ -300,6 +303,8 @@ public class GenomixJobConf extends JobConf {
     public static final String TIP_REMOVE_MAX_LENGTH = "genomix.tipRemove.maxLength";
     public static final String MAX_READIDS_PER_EDGE = "genomix.maxReadidsPerEdge";
     public static final String SCAFFOLDING_INITIAL_DIRECTION = "genomix.scaffolding.initialDirection";
+    public static final String SCAFFOLDING_SERIAL_RUN_MIN_LENGTH_THRESHOLD = "genomix.scaffolding.serialRunMinLengthThreshold";
+    public static final String SCAFFOLD_SEED_ID = "genomix.scaffolding.seedId";
     public static final String SCAFFOLD_SEED_SCORE_PERCENTILE = "genomix.scaffolding.seedScorePercentile";
     public static final String SCAFFOLD_SEED_LENGTH_PERCENTILE = "genomix.scaffolding.seedLengthPercentile";
     public static final String SCAFFOLDING_SEED_SCORE_THRESHOLD = "genomix.scaffolding.seedScoreThreshold";
@@ -401,6 +406,9 @@ public class GenomixJobConf extends JobConf {
 
         if (Integer.parseInt(conf.get(TIP_REMOVE_MAX_LENGTH)) < kmerLength)
             throw new IllegalArgumentException("tipRemove_maxLength must be at least as long as kmerLength!");
+        
+        if (conf.get(SCAFFOLDING_SERIAL_RUN_MIN_LENGTH_THRESHOLD) != null && Integer.parseInt(conf.get(SCAFFOLDING_SERIAL_RUN_MIN_LENGTH_THRESHOLD)) < kmerLength)
+            throw new IllegalArgumentException("scaffold_serialRunMinLength must be at least kmerLength!");
 
         if (Integer.parseInt(conf.get(MAX_READIDS_PER_EDGE)) < 0)
             throw new IllegalArgumentException("maxReadIDsPerEdge must be non-negative!");
@@ -573,6 +581,8 @@ public class GenomixJobConf extends JobConf {
         setFloat(PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD, opts.pathMergeRandom_probBeingRandomHead);
         setFloat(REMOVE_LOW_COVERAGE_MAX_COVERAGE, opts.removeLowCoverage_maxCoverage);
         setInt(TIP_REMOVE_MAX_LENGTH, opts.tipRemove_maxLength);
+        if (opts.scaffolding_serialRunMinLength != -1)
+            setInt(SCAFFOLDING_SERIAL_RUN_MIN_LENGTH_THRESHOLD, opts.scaffolding_serialRunMinLength);
         if (opts.scaffold_seedScorePercentile != -1) {
             setFloat(SCAFFOLD_SEED_SCORE_PERCENTILE, opts.scaffold_seedScorePercentile);
         } else if (opts.scaffold_seedLengthPercentile != -1) {
@@ -622,7 +632,7 @@ public class GenomixJobConf extends JobConf {
     public static void setGlobalStaticConstants(Configuration conf) throws IOException {
         Kmer.setGlobalKmerLength(Integer.parseInt(conf.get(KMER_LENGTH)));
         //        ExternalableTreeSet.setupManager(conf, new Path(conf.get("hadoop.tmp.dir", "/tmp")));
-        ExternalableTreeSet.setupManager(conf, new Path("/user/tmp"));
+        ExternalableTreeSet.setupManager(conf, new Path("tmp"));
         ExternalableTreeSet.setCountLimit(1000);
 
         if (conf.get(READ_LENGTHS) != null) {

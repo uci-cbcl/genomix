@@ -26,20 +26,27 @@ import java.io.Reader;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.TreeMap;
 import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
 
 import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.mapred.Counters;
 import org.apache.hadoop.mapred.Counters.Counter;
 import org.apache.hadoop.mapred.Counters.Group;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.util.ReflectionUtils;
 import org.codehaus.plexus.util.FileUtils;
 import org.kohsuke.args4j.CmdLineException;
 
@@ -48,6 +55,8 @@ import edu.uci.ics.genomix.data.cluster.GenomixClusterManager;
 import edu.uci.ics.genomix.data.config.GenomixJobConf;
 import edu.uci.ics.genomix.data.config.GenomixJobConf.Patterns;
 import edu.uci.ics.genomix.data.types.DIR;
+import edu.uci.ics.genomix.data.types.Node;
+import edu.uci.ics.genomix.data.types.VKmer;
 import edu.uci.ics.genomix.data.utils.GenerateGraphViz;
 import edu.uci.ics.genomix.data.utils.GenerateGraphViz.GRAPH_TYPE;
 import edu.uci.ics.genomix.hadoop.buildgraph.GenomixHadoopDriver;
@@ -198,8 +207,8 @@ public class GenomixDriver {
             case MERGE:
             case MERGE_P4:
                 pregelixJobs.add(P4ForPathMergeVertex.getConfiguredJob(conf, P4ForPathMergeVertex.class));
-               // flushPendingJobs(conf);
-               // setMinScaffoldingSeedLength(conf);
+                // flushPendingJobs(conf);
+                // setMinScaffoldingSeedLength(conf);
                 break;
             case UNROLL_TANDEM:
                 pregelixJobs.add(UnrollTandemRepeat.getConfiguredJob(conf, UnrollTandemRepeat.class));
@@ -229,22 +238,53 @@ public class GenomixDriver {
                 } else {
                     conf.set(GenomixJobConf.SCAFFOLDING_INITIAL_DIRECTION, DIR.REVERSE.toString());
                 }
-                Float scorePercentile = conf.getFloat(GenomixJobConf.SCAFFOLD_SEED_SCORE_PERCENTILE, -1);
-                Float lengthPercentile = conf.getFloat(GenomixJobConf.SCAFFOLD_SEED_LENGTH_PERCENTILE, -1);
-                if (scorePercentile > 0) {
-                    Float topFraction = (scorePercentile > 0 && scorePercentile < 1) ? scorePercentile : null;
-                    Integer topCount = (scorePercentile >= 1) ? ((int) scorePercentile.floatValue()) : null;
-                    conf.setInt(GenomixJobConf.SCAFFOLDING_SEED_SCORE_THRESHOLD,
-                            RayVertex.calculateScoreThreshold(prevStatsCounters, topFraction, topCount));
+
+                if (conf.get(GenomixJobConf.SCAFFOLDING_SERIAL_RUN_MIN_LENGTH_THRESHOLD) != null) {
+                    // create individual jobs for each Node above threshold, starting at the longest
+                    int minLength = Integer.parseInt(conf.get(GenomixJobConf.SCAFFOLDING_SERIAL_RUN_MIN_LENGTH_THRESHOLD));
+
+                    // get all the node lengths
+                    flushPendingJobs(conf);
+                    TreeMap<Integer, ArrayList<String>> nodeLengths = getNodeLengths(conf, prevOutput);
+
+                    int jobNumber = 0;
+                    for (Entry<Integer, ArrayList<String>> lengthEntry : nodeLengths.descendingMap().entrySet()) {
+                        if (lengthEntry.getKey() > minLength) {
+                            for (String seedId : lengthEntry.getValue()) {
+                                //                                for (DIR d : EnumSet.of(DIR.FORWARD, DIR.REVERSE)) {
+                                for (DIR d : EnumSet.of(DIR.FORWARD)) {
+                                    jobNumber++;
+                                    LOG.info("adding job " + jobNumber + " for " + seedId);
+                                    curOutput = conf.get(GenomixJobConf.HDFS_WORK_PATH) + File.separator
+                                            + String.format("%02d-", stepNum) + step + "-job-" + jobNumber;
+                                    FileInputFormat.setInputPaths(conf, new Path(prevOutput));
+                                    FileOutputFormat.setOutputPath(conf, new Path(curOutput));
+                                    conf.set(GenomixJobConf.SCAFFOLD_SEED_ID, seedId);
+                                    pregelixJobs.add(RayVertex.getConfiguredJob(conf, RayVertex.class));
+                                    prevOutput = curOutput;
+                                }
+                            }
+                        }
+                    }
                 } else {
-                    Float topFraction = (lengthPercentile > 0 && lengthPercentile < 1) ? lengthPercentile : null;
-                    Integer topCount = (lengthPercentile >= 1) ? ((int) lengthPercentile.floatValue()) : null;
-                    conf.setInt(GenomixJobConf.SCAFFOLDING_SEED_LENGTH_THRESHOLD,
-                            RayVertex.calculateScoreThreshold(prevStatsCounters, topFraction, topCount));
+
+                    Float scorePercentile = conf.getFloat(GenomixJobConf.SCAFFOLD_SEED_SCORE_PERCENTILE, -1);
+                    Float lengthPercentile = conf.getFloat(GenomixJobConf.SCAFFOLD_SEED_LENGTH_PERCENTILE, -1);
+                    if (scorePercentile > 0) {
+                        Float topFraction = (scorePercentile > 0 && scorePercentile < 1) ? scorePercentile : null;
+                        Integer topCount = (scorePercentile >= 1) ? ((int) scorePercentile.floatValue()) : null;
+                        conf.setInt(GenomixJobConf.SCAFFOLDING_SEED_SCORE_THRESHOLD, RayVertex.calculateScoreThreshold(
+                                prevStatsCounters, topFraction, topCount, "scaffoldSeedScore"));
+                    } else {
+                        Float topFraction = (lengthPercentile > 0 && lengthPercentile < 1) ? lengthPercentile : null;
+                        Integer topCount = (lengthPercentile >= 1) ? ((int) lengthPercentile.floatValue()) : null;
+                        conf.setInt(GenomixJobConf.SCAFFOLDING_SEED_LENGTH_THRESHOLD, RayVertex
+                                .calculateScoreThreshold(prevStatsCounters, topFraction, topCount, "kmerLength"));
+                    }
+                    conf.setFloat(GenomixJobConf.COVERAGE_NORMAL_MEAN, (float) cur_normalMean);
+                    conf.setFloat(GenomixJobConf.COVERAGE_NORMAL_STD, (float) cur_normalStd);
+                    pregelixJobs.add(RayVertex.getConfiguredJob(conf, RayVertex.class));
                 }
-                conf.setFloat(GenomixJobConf.COVERAGE_NORMAL_MEAN, (float) cur_normalMean);
-                conf.setFloat(GenomixJobConf.COVERAGE_NORMAL_STD, (float) cur_normalStd);
-                pregelixJobs.add(RayVertex.getConfiguredJob(conf, RayVertex.class));
                 break;
             case DUMP_FASTA:
                 flushPendingJobs(conf);
@@ -280,6 +320,53 @@ public class GenomixDriver {
                 pregelixJobs.add(BubbleAddVertex.getConfiguredJob(conf, BubbleAddVertex.class));
                 break;
         }
+    }
+
+    /**
+     * given an existing HDFS output file, generate a TreeMap of Node lengths
+     * 
+     * @throws IOException
+     */
+    private TreeMap<Integer, ArrayList<String>> getNodeLengths(GenomixJobConf conf, String inputGraph)
+            throws IOException {
+        LOG.info("Getting Map of Node lengths...");
+        GenomixJobConf.tick("getNodeLengths");
+        TreeMap<Integer, ArrayList<String>> nodeLengths = new TreeMap<>();
+
+        FileSystem dfs = FileSystem.get(conf);
+        // stream in the graph, counting elements as you go... this would be better as a hadoop job which aggregated... maybe into counters?
+        SequenceFile.Reader reader = null;
+        VKmer key = null;
+        Node value = null;
+        FileStatus[] files = dfs.globStatus(new Path(inputGraph + File.separator + "*"));
+        for (FileStatus f : files) {
+            if (f.getLen() != 0) {
+                try {
+                    reader = new SequenceFile.Reader(dfs, f.getPath(), conf);
+                    key = (VKmer) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
+                    value = (Node) ReflectionUtils.newInstance(reader.getValueClass(), conf);
+                    while (reader.next(key, value)) {
+                        if (key == null || value == null)
+                            break;
+
+                        int length = value.getInternalKmer().getKmerLetterLength() == 0 ? key.getKmerLetterLength()
+                                : value.getInternalKmer().getKmerLetterLength();
+                        if (nodeLengths.containsKey(length)) {
+                            nodeLengths.get(length).add(key.toString());
+                        } else {
+                            nodeLengths.put(length, new ArrayList<>(Collections.singletonList(key.toString())));
+                        }
+                    }
+                } catch (Exception e) {
+                    System.out.println("Encountered an error getting lengths for " + f + ":\n" + e);
+                } finally {
+                    if (reader != null)
+                        reader.close();
+                }
+            }
+        }
+        LOG.info("Getting length map took " + GenomixJobConf.tock("getNodeLengths") + "ms");
+        return nodeLengths;
     }
 
     private void plotSubgraph(GenomixJobConf conf) throws IOException, Exception {
