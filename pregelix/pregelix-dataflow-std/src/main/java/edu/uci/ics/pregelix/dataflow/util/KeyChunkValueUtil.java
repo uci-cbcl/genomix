@@ -92,7 +92,7 @@ public class KeyChunkValueUtil {
             id.increaseId();
         }
     }
-
+    
     public static int recover(RecoverChunkedTupleBuilder chunkTupleBuilder, ArrayTupleBuilder cachedTupleBuilder,
             ArrayTupleReference lastTuple, IIndexCursor cursor) throws HyracksDataException, IndexException {
         chunkTupleBuilder.reset(lastTuple);

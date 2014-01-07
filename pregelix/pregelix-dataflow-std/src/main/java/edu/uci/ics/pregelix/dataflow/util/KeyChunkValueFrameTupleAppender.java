@@ -61,7 +61,7 @@ public class KeyChunkValueFrameTupleAppender {
                 keyBuilder.getFieldData().getLength());
         size += keyBuilder.getFieldData().getLength();
 
-        buffer.putShort(tupleDataEndOffset + size, id.getId());
+        buffer.putShort(tupleDataEndOffset + size, id.getID());
         size += id.getLength();
 
         System.arraycopy(bs, offset, buffer.array(), tupleDataEndOffset + size, bsLength);

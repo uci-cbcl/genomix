@@ -79,6 +79,7 @@ import edu.uci.ics.pregelix.dataflow.group.ClusteredGroupOperatorDescriptor;
 import edu.uci.ics.pregelix.dataflow.group.IClusteredAggregatorDescriptorFactory;
 import edu.uci.ics.pregelix.dataflow.std.IndexNestedLoopJoinFunctionUpdateOperatorDescriptor;
 import edu.uci.ics.pregelix.dataflow.std.IndexNestedLoopJoinOperatorDescriptor;
+import edu.uci.ics.pregelix.dataflow.std.KeyChunkValueIndexInsertUpdateDeleteOperatorDescriptor;
 import edu.uci.ics.pregelix.dataflow.std.KeyChunkValueTreeSearchFunctionUpdateOperatorDescriptor;
 import edu.uci.ics.pregelix.dataflow.std.RuntimeHookOperatorDescriptor;
 import edu.uci.ics.pregelix.dataflow.std.TreeIndexBulkReLoadOperatorDescriptor;
@@ -132,8 +133,8 @@ public class JobGenInnerJoin extends JobGen {
          */
         RecordDescriptor recordDescriptor = DataflowUtils.getRecordDescriptorFromKeyValueClasses(conf,
                 vertexIdClass.getName(), vertexClass.getName());
-        IBinaryComparatorFactory[] comparatorFactories = new IBinaryComparatorFactory[1];
-        comparatorFactories[0] = JobGenUtil.getIBinaryComparatorFactory(iteration, vertexIdClass);
+        IBinaryComparatorFactory[] treeComparatorFactories = TreeIndexTypeUtils
+                .getBinaryComparatorFactories(vertexIdClass);
 
         ITypeTraits[] treeTypeTraits = TreeIndexTypeUtils.TypeTraits;
 
@@ -155,7 +156,7 @@ public class JobGenInnerJoin extends JobGen {
 
         KeyChunkValueTreeSearchFunctionUpdateOperatorDescriptor scanner = new KeyChunkValueTreeSearchFunctionUpdateOperatorDescriptor(
                 spec, recordDescriptor, storageManagerInterface, lcManagerProvider, fileSplitProvider, treeTypeTraits,
-                comparatorFactories, JobGenUtil.getForwardScan(iteration), TreeIndexTypeUtils.CHUNK_SIZE,
+                treeComparatorFactories, JobGenUtil.getForwardScan(iteration), TreeIndexTypeUtils.CHUNK_SIZE,
                 TreeIndexTypeUtils.PregelixKeyValueFieldsCount, TreeIndexTypeUtils.PregelixKeyFields, null, null, true,
                 true, getIndexDataflowHelperFactory(), inputRdFactory, 6, new StartComputeUpdateFunctionFactory(
                         confFactory), preHookFactory, null, rdUnnestedMessage, rdDummy, rdPartialAggregate, rdInsert,
@@ -246,21 +247,22 @@ public class JobGenInnerJoin extends JobGen {
         /**
          * add the insert operator to insert vertexes
          */
-        //TODO : start here
-        TreeIndexInsertUpdateDeleteOperatorDescriptor insertOp = new TreeIndexInsertUpdateDeleteOperatorDescriptor(
+        KeyChunkValueIndexInsertUpdateDeleteOperatorDescriptor insertOp = new KeyChunkValueIndexInsertUpdateDeleteOperatorDescriptor(
                 spec, rdInsert, storageManagerInterface, lcManagerProvider, fileSplitProvider, treeTypeTraits,
-                comparatorFactories, null, fieldPermutation, IndexOperation.INSERT, getIndexDataflowHelperFactory(),
-                null, NoOpOperationCallbackFactory.INSTANCE);
+                treeComparatorFactories, null, fieldPermutation, IndexOperation.INSERT,
+                getIndexDataflowHelperFactory(), null, NoOpOperationCallbackFactory.INSTANCE,
+                TreeIndexTypeUtils.CHUNK_SIZE);
         ClusterConfig.setLocationConstraint(spec, insertOp);
 
         /**
          * add the delete operator to delete vertexes
          */
         int[] fieldPermutationDelete = new int[] { 0 };
-        TreeIndexInsertUpdateDeleteOperatorDescriptor deleteOp = new TreeIndexInsertUpdateDeleteOperatorDescriptor(
+        KeyChunkValueIndexInsertUpdateDeleteOperatorDescriptor deleteOp = new KeyChunkValueIndexInsertUpdateDeleteOperatorDescriptor(
                 spec, rdDelete, storageManagerInterface, lcManagerProvider, fileSplitProvider, treeTypeTraits,
-                comparatorFactories, null, fieldPermutationDelete, IndexOperation.DELETE,
-                getIndexDataflowHelperFactory(), null, NoOpOperationCallbackFactory.INSTANCE);
+                treeComparatorFactories, null, fieldPermutationDelete, IndexOperation.DELETE,
+                getIndexDataflowHelperFactory(), null, NoOpOperationCallbackFactory.INSTANCE,
+                TreeIndexTypeUtils.CHUNK_SIZE);
         ClusterConfig.setLocationConstraint(spec, deleteOp);
 
         /** construct empty sink operator */
