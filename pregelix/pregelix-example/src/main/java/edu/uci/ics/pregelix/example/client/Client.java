@@ -141,15 +141,17 @@ public class Client {
          * set customized key value pairs
          */
         String customizedProperties = options.customizedProperties;
-        String[] properties = customizedProperties.split(",");
-        for (String property : properties) {
-            String[] keyValue = property.split("=");
-            if (keyValue.length != 2) {
-                throw new IllegalStateException(property + " is not a valid key value pair!");
+        if (customizedProperties.indexOf(",") >= 0) {
+            String[] properties = customizedProperties.split(",");
+            for (String property : properties) {
+                String[] keyValue = property.split("=");
+                if (keyValue.length != 2) {
+                    throw new IllegalStateException(property + " is not a valid key value pair!");
+                }
+                String key = keyValue[0];
+                String value = keyValue[1];
+                job.getConfiguration().set(key, value);
             }
-            String key = keyValue[0];
-            String value = keyValue[1];
-            job.getConfiguration().set(key, value);
         }
     }
 
