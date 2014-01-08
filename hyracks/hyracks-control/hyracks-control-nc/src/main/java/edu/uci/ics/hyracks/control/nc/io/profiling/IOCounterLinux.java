@@ -16,13 +16,14 @@
 package edu.uci.ics.hyracks.control.nc.io.profiling;
 
 import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.StringTokenizer;
 
 public class IOCounterLinux implements IIOCounter {
     public static final String COMMAND = "iostat";
-    public static final String COMMAND2 = "cat /proc/self/io";
+    public static final String STATFILE = "/proc/self/io";
     public static final int PAGE_SIZE = 4096;
 
     private long baseReads = 0;
@@ -92,7 +93,7 @@ public class IOCounterLinux implements IIOCounter {
     }
 
     private long extractRow(int rowIndex) throws IOException {
-        BufferedReader reader = exec(COMMAND2);
+        BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(STATFILE)));
         String line = null;
         long ios = 0;
         int i = 0;
