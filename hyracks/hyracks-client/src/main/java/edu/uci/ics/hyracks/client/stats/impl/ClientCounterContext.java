@@ -177,16 +177,24 @@ public class ClientCounterContext implements IClusterCounterContext {
         } else if (counterObject instanceof JSONArray) {
             JSONArray jArray = (JSONArray) counterObject;
             Object[] values = jArray.toArray();
+            /**
+             * use the last non-zero value as the counter value
+             */
             for (Object value : values) {
                 if (value instanceof Double) {
                     Double dValue = (Double) value;
-                    counterValue += dValue.doubleValue();
+                    double currentVal = dValue.doubleValue();
+                    if (currentVal != 0) {
+                        counterValue = (long) currentVal;
+                    }
                 } else if (value instanceof Long) {
                     Long lValue = (Long) value;
-                    counterValue += lValue.longValue();
+                    long currentVal = lValue.longValue();
+                    if (currentVal != 0) {
+                        counterValue = lValue.longValue();
+                    }
                 }
             }
-            counterValue /= values.length;
         } else {
             Long val = (Long) counterObject;
             counterValue = val.longValue();
