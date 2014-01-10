@@ -77,14 +77,14 @@ public class GenomixJobConfTest {
     @Test
     public void testFromArgs() {
         try {
-            String[] args = {"-kmerLength", "5", "-localInput", "file1"};
+            String[] args = {"-kmerLength", "5", "-localInput", "file1", "-readLengths", "22"};
             GenomixJobConf.fromArguments(args);
         } catch(CmdLineException e) {
             Assert.fail("Config was valid-- shouldn't have thrown an error! Error was: " + e.getMessage());
         }
         
         try {
-            String[] args = {"-kmerLength", "2", "-localInput", "file1"};
+            String[] args = {"-kmerLength", "2", "-localInput", "file1", "-readLengths", "22"};
             GenomixJobConf.fromArguments(args);
             Assert.fail("Should have thrown an exception (SHORT kmer)");
         } catch(IllegalArgumentException e) {
