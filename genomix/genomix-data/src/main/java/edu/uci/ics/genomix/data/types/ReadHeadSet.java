@@ -17,6 +17,10 @@ public class ReadHeadSet extends ExternalableTreeSet<ReadHeadInfo> {
         super();
     }
 
+    public ReadHeadSet(boolean toLocalFile) {
+        super(toLocalFile);
+    }
+
     public void add(byte mateId, byte libraryId, long readId, int offset, VKmer thisReadSequence, VKmer thatReadSequence) {
         super.add(new ReadHeadInfo(mateId, libraryId, readId, offset, thisReadSequence, thatReadSequence));
     }
@@ -57,13 +61,30 @@ public class ReadHeadSet extends ExternalableTreeSet<ReadHeadInfo> {
         super.union(setB);
     }
 
+    public boolean verifySequence(VKmer internalKmer, boolean flip) {
+        Iterator<ReadHeadInfo> iter = super.readOnlyIterator();
+        while (iter.hasNext()) {
+            ReadHeadInfo now = iter.next();
+            if (now.getThisReadSequence() == null) {
+                continue;
+            }
+            if (!flip) {
+                if (!internalKmer.matchesExactly(now.getOffset(), now.getThisReadSequence(), 0, Kmer.getKmerLength())) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
     public void unionUpdate(ReadHeadSet setB, float lengthFactor, boolean flipOffset, int otherLength) {
         if (!flipOffset) {
             ReadIterator iter = setB.readOnlyIterator();
             while (iter.hasNext()) {
                 ReadHeadInfo p = iter.next();
-                this.add(p.getMateId(), p.getLibraryId(), p.getReadId(), (int) ((p.getOffset() + 1) * lengthFactor - lengthFactor),
-                        p.getThisReadSequence(), p.getMateReadSequence());
+                this.add(p.getMateId(), p.getLibraryId(), p.getReadId(),
+                        (int) ((p.getOffset() + 1) * lengthFactor - lengthFactor), p.getThisReadSequence(),
+                        p.getMateReadSequence());
             }
         } else {
             // int newOtherOffset = (int) ((otherLength - 1) * lengthFactor);
@@ -72,8 +93,9 @@ public class ReadHeadSet extends ExternalableTreeSet<ReadHeadInfo> {
             while (iter.hasNext()) {
                 ReadHeadInfo p = iter.next();
                 int newPOffset = otherLength - 1 - p.getOffset();
-                this.add(p.getMateId(), p.getLibraryId(), p.getReadId(), (int) ((newPOffset + 1) * lengthFactor - lengthFactor),
-                        p.getThisReadSequence(), p.getMateReadSequence());
+                this.add(p.getMateId(), p.getLibraryId(), p.getReadId(),
+                        (int) ((newPOffset + 1) * lengthFactor - lengthFactor), p.getThisReadSequence(),
+                        p.getMateReadSequence());
             }
         }
     }
@@ -94,9 +116,12 @@ public class ReadHeadSet extends ExternalableTreeSet<ReadHeadInfo> {
         }
     }
 
-    public SortedSet<ReadHeadInfo> getOffSetRange(int lowOffset, int highOffset, boolean mate) {
-        return super.rangeSearch(ReadHeadInfo.getLowerBoundInfo(lowOffset, mate),
-                ReadHeadInfo.getUpperBoundInfo(highOffset, mate));
+    public SortedSet<ReadHeadInfo> getOffSetRange(int lowOffset, int highOffset) {
+        if (lowOffset < 0 || highOffset > ReadHeadInfo.MAX_OFFSET_VALUE) {
+            throw new IllegalArgumentException("Invalid range specified: must be 0 < " + ReadHeadInfo.MAX_OFFSET_VALUE
+                    + " but saw low: " + lowOffset + ", high: " + highOffset);
+        }
+        return super.rangeSearch(ReadHeadInfo.getLowerBoundInfo(lowOffset), ReadHeadInfo.getUpperBoundInfo(highOffset));
     }
 
     public Set<Long> getReadIdSet() {

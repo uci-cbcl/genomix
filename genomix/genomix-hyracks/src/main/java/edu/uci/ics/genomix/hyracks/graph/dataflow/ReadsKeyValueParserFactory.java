@@ -31,6 +31,7 @@ import edu.uci.ics.genomix.data.types.EDGETYPE;
 import edu.uci.ics.genomix.data.types.Kmer;
 import edu.uci.ics.genomix.data.types.Node;
 import edu.uci.ics.genomix.data.types.ReadHeadInfo;
+import edu.uci.ics.genomix.data.types.ReadHeadSet;
 import edu.uci.ics.genomix.data.types.VKmer;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
@@ -55,7 +56,7 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
     public static final RecordDescriptor readKmerOutputRec = new RecordDescriptor(new ISerializerDeserializer[2]);
 
     private static final Pattern genePattern = Pattern.compile("[AGCT]+");
-    private static final Pattern libraryPattern = Pattern.compile("library-(\\d+).readids");
+    private static final Pattern libraryPattern = Pattern.compile(".*library-(\\d+).readids.*");
 
     public ReadsKeyValueParserFactory(JobConf conf) throws HyracksDataException {
         confFactory = new ConfFactory(conf);
@@ -75,6 +76,7 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
             e1.printStackTrace();
             throw new HyracksDataException(e1);
         }
+        ReadHeadSet.forceWriteEntireBody(true);
 
         return new IKeyValueParser<LongWritable, Text>() {
 
@@ -98,8 +100,9 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                 try {
                     libraryId = Byte.valueOf(libraryPattern.matcher(filename).group(0));
                 } catch (IllegalStateException e) {
-                    System.err.println("Could not determine which library " + filename
-                            + " is supposed to belong to.  Just using library 0!");
+                    // TODO FIXME the library id isn't being read correctly
+                    //                    System.err.println("Could not determine which library " + filename
+                    //                            + " is supposed to belong to.  Just using library 0!");
                     libraryId = 0;
                 }
                 long readID = 0;
@@ -163,6 +166,7 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                 if (curNodeDir == DIR.FORWARD) {
                     curNode.getUnflippedReadIds().add(readHeadInfo);
                 } else {
+                    readHeadInfo.resetOffset(Kmer.getKmerLength() - 1);
                     curNode.getFlippedReadIds().add(readHeadInfo);
                 }
 

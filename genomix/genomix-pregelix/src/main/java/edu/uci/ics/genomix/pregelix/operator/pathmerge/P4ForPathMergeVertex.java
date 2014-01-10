@@ -228,7 +228,8 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
     @Override
     public void compute(Iterator<PathMergeMessage> msgIterator) {
         initVertex();
-        if (Float.isInfinite(getVertexValue().getAverageCoverage()) || Float.isNaN(getVertexValue().getAverageCoverage())) {
+        if (Float.isInfinite(getVertexValue().getAverageCoverage())
+                || Float.isNaN(getVertexValue().getAverageCoverage())) {
             System.out.println("Before: " + getVertexValue());
         }
         if (getVertexId().toString().equals("AGCGCAAGG")) {
@@ -255,7 +256,8 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
             receiveUpdates(msgIterator);
             sendMergeMsg();
         }
-        if (Float.isInfinite(getVertexValue().getAverageCoverage()) || Float.isNaN(getVertexValue().getAverageCoverage())) {
+        if (Float.isInfinite(getVertexValue().getAverageCoverage())
+                || Float.isNaN(getVertexValue().getAverageCoverage())) {
             System.out.println("after: " + getVertexValue());
             throw new RuntimeException(this.toString());
         }

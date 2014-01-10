@@ -39,7 +39,7 @@ public class VertexValueWritable extends Node {
         public static final byte MERGE_MASK = 0b0010011;
     }
 
-    private short state;
+    protected short state;
     private boolean isFakeVertex;
 
     protected boolean verbose = false;
