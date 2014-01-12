@@ -15,10 +15,7 @@
 
 package edu.uci.ics.genomix.data.types;
 
-import java.util.ArrayList;
-import java.util.Map;
 import java.util.Random;
-import java.util.AbstractMap.SimpleEntry;
 
 import junit.framework.Assert;
 
@@ -134,11 +131,13 @@ public class RandomTestHelper {
             System.out.println("-------------------------------------");
         }
         System.out.println("StartReads");
-        for (ReadHeadInfo startIter : srcNode.getUnflippedReadIds().getOffSetRange(0, srcNode.getUnflippedReadIds().size()))
+        for (ReadHeadInfo startIter : srcNode.getUnflippedReadIds().getOffSetRange(0,
+                srcNode.getUnflippedReadIds().size()))
             System.out.println(startIter.toString() + "---");
         System.out.println("");
         System.out.println("EndsReads");
-        for (ReadHeadInfo startIter : srcNode.getFlippedReadIds().getOffSetRange(0, srcNode.getUnflippedReadIds().size()))
+        for (ReadHeadInfo startIter : srcNode.getFlippedReadIds().getOffSetRange(0,
+                srcNode.getUnflippedReadIds().size()))
             System.out.println(startIter.toString() + "---");
         System.out.println("");
         System.out.println("Coverage: " + srcNode.getAverageCoverage());
@@ -156,7 +155,8 @@ public class RandomTestHelper {
             }
         }
         for (ReadHeadInfo startIter1 : et1.getUnflippedReadIds().getOffSetRange(0, et1.getUnflippedReadIds().size())) {
-            ReadHeadInfo startIter2 = et2.getUnflippedReadIds().getOffSetRange(0, et1.getUnflippedReadIds().size()).first();
+            ReadHeadInfo startIter2 = et2.getUnflippedReadIds().getOffSetRange(0, et1.getUnflippedReadIds().size())
+                    .first();
             Assert.assertEquals(startIter1.toString(), startIter2.toString());
             et2.getUnflippedReadIds().getOffSetRange(0, et1.getUnflippedReadIds().size()).remove(startIter2);
         }

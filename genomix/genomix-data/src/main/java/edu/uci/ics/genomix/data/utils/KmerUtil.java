@@ -15,7 +15,6 @@
 
 package edu.uci.ics.genomix.data.utils;
 
-
 public class KmerUtil {
     public static final String empty = "";
 

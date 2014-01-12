@@ -131,7 +131,7 @@ public class GenomixJobConf extends JobConf {
 
         @Option(name = "-tipRemove_maxLength", usage = "Tips (dead ends in the graph) whose length is less than this threshold are removed from the graph", required = false)
         private int tipRemove_maxLength = -1;
-        
+
         @Option(name = "-scaffolding_serialRunMinLength", usage = "Rather than processing all the nodes in parallel, run separate scaffolding jobs serially, running with a seed of all nodes longer than this threshold", required = false)
         private int scaffolding_serialRunMinLength = -1;
 
@@ -406,8 +406,9 @@ public class GenomixJobConf extends JobConf {
 
         if (Integer.parseInt(conf.get(TIP_REMOVE_MAX_LENGTH)) < kmerLength)
             throw new IllegalArgumentException("tipRemove_maxLength must be at least as long as kmerLength!");
-        
-        if (conf.get(SCAFFOLDING_SERIAL_RUN_MIN_LENGTH_THRESHOLD) != null && Integer.parseInt(conf.get(SCAFFOLDING_SERIAL_RUN_MIN_LENGTH_THRESHOLD)) < kmerLength)
+
+        if (conf.get(SCAFFOLDING_SERIAL_RUN_MIN_LENGTH_THRESHOLD) != null
+                && Integer.parseInt(conf.get(SCAFFOLDING_SERIAL_RUN_MIN_LENGTH_THRESHOLD)) < kmerLength)
             throw new IllegalArgumentException("scaffold_serialRunMinLength must be at least kmerLength!");
 
         if (Integer.parseInt(conf.get(MAX_READIDS_PER_EDGE)) < 0)

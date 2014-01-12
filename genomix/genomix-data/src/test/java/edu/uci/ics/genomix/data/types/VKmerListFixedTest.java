@@ -25,13 +25,10 @@ import junit.framework.Assert;
 
 import org.junit.Test;
 
-import edu.uci.ics.genomix.data.types.VKmer;
-import edu.uci.ics.genomix.data.types.VKmerList;
-
 public class VKmerListFixedTest {
 
     static byte[] array = { 'A', 'A', 'T', 'A', 'G', 'A', 'A', 'G' };
-    
+
     public static String generaterRandomString(int n) {
         char[] chars = "ACGT".toCharArray();
         StringBuilder sb = new StringBuilder();
@@ -145,13 +142,13 @@ public class VKmerListFixedTest {
         uniqueElements.add(b);
         uniqueElements.add(c);
         VKmerList expected = new VKmerList();
-        
+
         ArrayList<String> arraylist1 = new ArrayList<String>();
         for (int i = 0; i < list1.size(); i++) {
             arraylist1.add(list1.getPosition(i).toString());
         }
         Collections.sort(arraylist1);
-        
+
         for (VKmer kmer : uniqueElements) {
             expected.append(kmer);
         }
@@ -160,9 +157,9 @@ public class VKmerListFixedTest {
             arraylist2.add(expected.getPosition(i).toString());
         }
         Collections.sort(arraylist2);
-        
+
         Assert.assertEquals(arraylist1.size(), arraylist2.size());
-        
+
         for (int i = 0; i < list1.size(); i++) {
             Assert.assertEquals(arraylist1.get(i), arraylist2.get(i));
         }

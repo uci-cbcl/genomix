@@ -14,18 +14,10 @@
  */
 package edu.uci.ics.genomix.data.types;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
-import java.util.AbstractMap.SimpleEntry;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Iterator;
-import java.util.Map;
-import java.util.Random;
 
 import junit.framework.Assert;
 
@@ -41,11 +33,11 @@ public class NodeFixedTest {
         String str1 = "ATGCATGCGCTAG";
         VKmer vkmer1 = new VKmer(str1);
         String str2 = "ATGCATCCCCTAG";
-        VKmer vkmer2 = new VKmer(str1);
+        VKmer vkmer2 = new VKmer(str2);
         String str3 = "AGGGATGCGCTAG";
-        VKmer vkmer3 = new VKmer(str1);
+        VKmer vkmer3 = new VKmer(str3);
         String str4 = "ATGCATAAATAC";
-        VKmer vkmer4 = new VKmer(str1);
+        VKmer vkmer4 = new VKmer(str4);
         VKmerList source = new VKmerList();
         source.append(vkmer1);
         source.append(vkmer2);
@@ -86,14 +78,14 @@ public class NodeFixedTest {
         EnumSet<EDGETYPE> edgeExample2 = EnumSet.noneOf(EDGETYPE.class);
         edgeExample1.add(EDGETYPE.FF);
         edgeExample1.add(EDGETYPE.FR);
-        Assert.assertEquals(edgeExample1, edgeTypes1);
+        Assert.assertEquals(edgeExample1, EnumSet.copyOf(Arrays.asList(edgeTypes1)));
 
         edgeExample2.add(EDGETYPE.RF);
         edgeExample2.add(EDGETYPE.RR);
-        Assert.assertEquals(edgeExample2, edgeTypes2);
+        Assert.assertEquals(edgeExample2, EnumSet.copyOf(Arrays.asList(edgeTypes2)));
 
-        Assert.assertEquals(edgeExample1, DIR.edgeTypesInDir(testDir1));
-        Assert.assertEquals(edgeExample2, DIR.edgeTypesInDir(testDir2));
+        Assert.assertEquals(edgeExample1, EnumSet.copyOf(Arrays.asList(DIR.edgeTypesInDir(testDir1))));
+        Assert.assertEquals(edgeExample2, EnumSet.copyOf(Arrays.asList(DIR.edgeTypesInDir(testDir2))));
 
         EnumSet<DIR> dirExample = EnumSet.noneOf(DIR.class);
         dirExample.add(DIR.FORWARD);
