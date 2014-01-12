@@ -1,6 +1,6 @@
 CCA	{FF:null	FR:null	RF:null	RR:[GCC]	5':null, ~5':null	kmer:null	cov:1.0x}
 CCG	{FF:null	FR:null	RF:null	RR:[GCC]	5':null, ~5':null	kmer:null	cov:1.0x}
-GCC	{FF:[CCG,CCA]	FR:[AGG]	RF:null	RR:[AGC]	5':[3-0_0 readSeq: GCCTT mateReadSeq: null], ~5':null	kmer:null	cov:3.0x}
-AGC	{FF:[GCC]	FR:null	RF:null	RR:null	5':[1-0_0 readSeq: AGCCA mateReadSeq: null,2-0_0 readSeq: AGCCG mateReadSeq: null], ~5':null	kmer:null	cov:2.0x}
+GCC	{FF:[CCG,CCA]	FR:[AGG]	RF:null	RR:[AGC]	5':[3-0_0-0 readSeq: GCCTT mateReadSeq: null], ~5':null	kmer:null	cov:3.0x}
+AGC	{FF:[GCC]	FR:null	RF:null	RR:null	5':[1-0_0-0 readSeq: AGCCA mateReadSeq: null,2-0_0-0 readSeq: AGCCG mateReadSeq: null], ~5':null	kmer:null	cov:2.0x}
 AAG	{FF:[AGG]	FR:null	RF:null	RR:null	5':null, ~5':null	kmer:null	cov:1.0x}
 AGG	{FF:null	FR:[GCC]	RF:null	RR:[AAG]	5':null, ~5':null	kmer:null	cov:1.0x}

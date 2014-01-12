@@ -1,31 +1,31 @@
 CAA	{FF:[AAT,AAC]	FR:null	RF:null	RR:[TCA,GCA]	5':null, ~5':null	kmer:null	cov:6.0x}
-CCA	{FF:[CAC,CAG]	FR:null	RF:null	RR:[GCC]	5':[37-0_0 readSeq: CCACACGC mateReadSeq: null], ~5':null	kmer:null	cov:4.0x}
-CGA	{FF:null	FR:[CTC]	RF:[CGC]	RR:null	5':null, ~5':[33-0_0 readSeq: TCGCTTAA mateReadSeq: null,35-0_0 readSeq: TCGCTTAA mateReadSeq: null]	kmer:null	cov:4.0x}
-CTA	{FF:null	FR:[CTA,ATA]	RF:[AGC,AGG]	RR:[ACT]	5':null, ~5':[1-0_0 readSeq: TAGTGCGA mateReadSeq: null]	kmer:null	cov:6.0x}
+CCA	{FF:[CAC,CAG]	FR:null	RF:null	RR:[GCC]	5':[37-0_0-0 readSeq: CCACACGC mateReadSeq: null], ~5':null	kmer:null	cov:4.0x}
+CGA	{FF:null	FR:[CTC]	RF:[CGC]	RR:null	5':null, ~5':[33-2_0-0 readSeq: TCGCTTAA mateReadSeq: null,35-2_0-0 readSeq: TCGCTTAA mateReadSeq: null]	kmer:null	cov:4.0x}
+CTA	{FF:null	FR:[CTA,ATA]	RF:[AGC,AGG]	RR:[ACT]	5':null, ~5':[1-2_0-0 readSeq: TAGTGCGA mateReadSeq: null]	kmer:null	cov:6.0x}
 CAC	{FF:[ACT,ACG,ACA]	FR:null	RF:null	RR:[TCA,GCA,CCA,ACA]	5':null, ~5':null	kmer:null	cov:8.0x}
 CCC	{FF:null	FR:[AGG]	RF:null	RR:[ACC]	5':null, ~5':null	kmer:null	cov:3.0x}
-CGC	{FF:[GCA]	FR:[AGC]	RF:[CGA]	RR:[ACG]	5':null, ~5':[31-0_0 readSeq: GCGTCATG mateReadSeq: null]	kmer:null	cov:8.0x}
-CTC	{FF:null	FR:[CGA,AGA]	RF:[AGG,AGA]	RR:null	5':[12-0_0 readSeq: CTCTGGCA mateReadSeq: null], ~5':[4-0_0 readSeq: GAGGGTTG mateReadSeq: null]	kmer:null	cov:5.0x}
-CAG	{FF:[AGC,AGA]	FR:null	RF:null	RR:[TCA,GCA,CCA]	5':[9-0_0 readSeq: CAGATTTC mateReadSeq: null], ~5':[8-0_0 readSeq: CTGAAATC mateReadSeq: null,11-0_0 readSeq: CTGGCAGA mateReadSeq: null]	kmer:null	cov:9.0x}
-CCG	{FF:null	FR:[ACG]	RF:null	RR:[GCC]	5':null, ~5':[15-0_0 readSeq: CGGCATCT mateReadSeq: null]	kmer:null	cov:3.0x}
-GAA	{FF:[AAA]	FR:null	RF:[TCA]	RR:null	5':[17-0_0 readSeq: GAAACGGC mateReadSeq: null], ~5':null	kmer:null	cov:9.0x}
-GCA	{FF:[CAC,CAA,CAG]	FR:[ATG]	RF:[GCC]	RR:[AGC,CGC]	5':[14-0_0 readSeq: GCATCTCT mateReadSeq: null], ~5':null	kmer:null	cov:11.0x}
-GTA	{FF:[TAA]	FR:[ATA]	RF:[ACG]	RR:null	5':[26-0_0 readSeq: GTAATAGT mateReadSeq: null], ~5':[22-0_0 readSeq: TACGTGAA mateReadSeq: null]	kmer:null	cov:6.0x}
-GAC	{FF:[ACG]	FR:null	RF:[TCA]	RR:null	5':null, ~5':[30-0_0 readSeq: GTCATGAC mateReadSeq: null]	kmer:null	cov:6.0x}
-GCC	{FF:[CCG,CCA]	FR:null	RF:[GCA]	RR:null	5':null, ~5':[10-0_0 readSeq: GGCAGATT mateReadSeq: null]	kmer:null	cov:6.0x}
-TAA	{FF:[AAG,AAT]	FR:null	RF:[TAA]	RR:[GTA]	5':null, ~5':[28-0_0 readSeq: TTACGTCA mateReadSeq: null]	kmer:null	cov:9.0x}
-TCA	{FF:[CAC,CAA,CAG]	FR:[ATG]	RF:[GAC,GAA]	RR:null	5':[20-0_0 readSeq: TCAATACG mateReadSeq: null], ~5':[24-0_0 readSeq: TGAAACTA mateReadSeq: null]	kmer:null	cov:15.0x}
-AAA	{FF:[AAT,AAC]	FR:null	RF:null	RR:[GAA]	5':[25-0_0 readSeq: AAACTATT mateReadSeq: null], ~5':[7-0_0 readSeq: TTTCAGCA mateReadSeq: null]	kmer:null	cov:9.0x}
+CGC	{FF:[GCA]	FR:[AGC]	RF:[CGA]	RR:[ACG]	5':null, ~5':[31-2_0-0 readSeq: GCGTCATG mateReadSeq: null]	kmer:null	cov:8.0x}
+CTC	{FF:null	FR:[CGA,AGA]	RF:[AGG,AGA]	RR:null	5':[12-0_0-0 readSeq: CTCTGGCA mateReadSeq: null], ~5':[4-2_0-0 readSeq: GAGGGTTG mateReadSeq: null]	kmer:null	cov:5.0x}
+CAG	{FF:[AGC,AGA]	FR:null	RF:null	RR:[TCA,GCA,CCA]	5':[9-0_0-0 readSeq: CAGATTTC mateReadSeq: null], ~5':[8-2_0-0 readSeq: CTGAAATC mateReadSeq: null,11-2_0-0 readSeq: CTGGCAGA mateReadSeq: null]	kmer:null	cov:9.0x}
+CCG	{FF:null	FR:[ACG]	RF:null	RR:[GCC]	5':null, ~5':[15-2_0-0 readSeq: CGGCATCT mateReadSeq: null]	kmer:null	cov:3.0x}
+GAA	{FF:[AAA]	FR:null	RF:[TCA]	RR:null	5':[17-0_0-0 readSeq: GAAACGGC mateReadSeq: null], ~5':null	kmer:null	cov:9.0x}
+GCA	{FF:[CAC,CAA,CAG]	FR:[ATG]	RF:[GCC]	RR:[AGC,CGC]	5':[14-0_0-0 readSeq: GCATCTCT mateReadSeq: null], ~5':null	kmer:null	cov:11.0x}
+GTA	{FF:[TAA]	FR:[ATA]	RF:[ACG]	RR:null	5':[26-0_0-0 readSeq: GTAATAGT mateReadSeq: null], ~5':[22-2_0-0 readSeq: TACGTGAA mateReadSeq: null]	kmer:null	cov:6.0x}
+GAC	{FF:[ACG]	FR:null	RF:[TCA]	RR:null	5':null, ~5':[30-2_0-0 readSeq: GTCATGAC mateReadSeq: null]	kmer:null	cov:6.0x}
+GCC	{FF:[CCG,CCA]	FR:null	RF:[GCA]	RR:null	5':null, ~5':[10-2_0-0 readSeq: GGCAGATT mateReadSeq: null]	kmer:null	cov:6.0x}
+TAA	{FF:[AAG,AAT]	FR:null	RF:[TAA]	RR:[GTA]	5':null, ~5':[28-2_0-0 readSeq: TTACGTCA mateReadSeq: null]	kmer:null	cov:9.0x}
+TCA	{FF:[CAC,CAA,CAG]	FR:[ATG]	RF:[GAC,GAA]	RR:null	5':[20-0_0-0 readSeq: TCAATACG mateReadSeq: null], ~5':[24-2_0-0 readSeq: TGAAACTA mateReadSeq: null]	kmer:null	cov:15.0x}
+AAA	{FF:[AAT,AAC]	FR:null	RF:null	RR:[GAA]	5':[25-0_0-0 readSeq: AAACTATT mateReadSeq: null], ~5':[7-2_0-0 readSeq: TTTCAGCA mateReadSeq: null]	kmer:null	cov:9.0x}
 ACA	{FF:[CAC]	FR:null	RF:null	RR:[CAC]	5':null, ~5':null	kmer:null	cov:2.0x}
 AGA	{FF:null	FR:[ATC,CTC]	RF:[CTC]	RR:[CAG]	5':null, ~5':null	kmer:null	cov:9.0x}
-ATA	{FF:null	FR:[CTA,GTA]	RF:null	RR:[AAT]	5':null, ~5':[19-0_0 readSeq: TATTGAAA mateReadSeq: null,27-0_0 readSeq: TATTACGT mateReadSeq: null]	kmer:null	cov:6.0x}
-AAC	{FF:[ACT,ACG,ACC]	FR:null	RF:null	RR:[CAA,AAA]	5':[16-0_0 readSeq: AACGGCAT mateReadSeq: null], ~5':[6-0_0 readSeq: GTTGCTGA mateReadSeq: null,23-0_0 readSeq: GTTTCACG mateReadSeq: null]	kmer:null	cov:9.0x}
+ATA	{FF:null	FR:[CTA,GTA]	RF:null	RR:[AAT]	5':null, ~5':[19-2_0-0 readSeq: TATTGAAA mateReadSeq: null,27-2_0-0 readSeq: TATTACGT mateReadSeq: null]	kmer:null	cov:6.0x}
+AAC	{FF:[ACT,ACG,ACC]	FR:null	RF:null	RR:[CAA,AAA]	5':[16-0_0-0 readSeq: AACGGCAT mateReadSeq: null], ~5':[6-2_0-0 readSeq: GTTGCTGA mateReadSeq: null,23-2_0-0 readSeq: GTTTCACG mateReadSeq: null]	kmer:null	cov:9.0x}
 ACC	{FF:[CCC]	FR:null	RF:null	RR:[AAC]	5':null, ~5':null	kmer:null	cov:3.0x}
-AGC	{FF:[GCA]	FR:[CGC]	RF:[CTA]	RR:[AAG,CAG]	5':[5-0_0 readSeq: AGCAACCC mateReadSeq: null], ~5':[3-0_0 readSeq: GCTAGGGT mateReadSeq: null,34-0_0 readSeq: GCTTAAGC mateReadSeq: null]	kmer:null	cov:10.0x}
-ATC	{FF:null	FR:[AGA]	RF:[ATG]	RR:[AAT]	5':[13-0_0 readSeq: ATCTCTGG mateReadSeq: null], ~5':null	kmer:null	cov:6.0x}
-AAG	{FF:[AGC]	FR:null	RF:null	RR:[TAA]	5':[32-0_0 readSeq: AAGCGTCA mateReadSeq: null,36-0_0 readSeq: AAGCGTGT mateReadSeq: null], ~5':null	kmer:null	cov:6.0x}
-ACG	{FF:[CGC]	FR:[CCG,ACG]	RF:[GTA]	RR:[GAC,CAC,AAC]	5':null, ~5':[18-0_0 readSeq: CGTTTCAA mateReadSeq: null]	kmer:null	cov:19.0x}
-AGG	{FF:null	FR:[CCC]	RF:[CTA,CTC]	RR:null	5':null, ~5':[2-0_0 readSeq: CCTCGCAC mateReadSeq: null]	kmer:null	cov:3.0x}
-ATG	{FF:null	FR:[TCA,GCA]	RF:[ATC,ATG]	RR:null	5':null, ~5':[29-0_0 readSeq: CATGACGT mateReadSeq: null]	kmer:null	cov:9.0x}
-AAT	{FF:[ATC,ATA]	FR:null	RF:null	RR:[TAA,CAA,AAA]	5':[21-0_0 readSeq: AATACGTG mateReadSeq: null], ~5':null	kmer:null	cov:9.0x}
+AGC	{FF:[GCA]	FR:[CGC]	RF:[CTA]	RR:[AAG,CAG]	5':[5-0_0-0 readSeq: AGCAACCC mateReadSeq: null], ~5':[3-2_0-0 readSeq: GCTAGGGT mateReadSeq: null,34-2_0-0 readSeq: GCTTAAGC mateReadSeq: null]	kmer:null	cov:10.0x}
+ATC	{FF:null	FR:[AGA]	RF:[ATG]	RR:[AAT]	5':[13-0_0-0 readSeq: ATCTCTGG mateReadSeq: null], ~5':null	kmer:null	cov:6.0x}
+AAG	{FF:[AGC]	FR:null	RF:null	RR:[TAA]	5':[32-0_0-0 readSeq: AAGCGTCA mateReadSeq: null,36-0_0-0 readSeq: AAGCGTGT mateReadSeq: null], ~5':null	kmer:null	cov:6.0x}
+ACG	{FF:[CGC]	FR:[CCG,ACG]	RF:[GTA]	RR:[GAC,CAC,AAC]	5':null, ~5':[18-2_0-0 readSeq: CGTTTCAA mateReadSeq: null]	kmer:null	cov:19.0x}
+AGG	{FF:null	FR:[CCC]	RF:[CTA,CTC]	RR:null	5':null, ~5':[2-2_0-0 readSeq: CCTCGCAC mateReadSeq: null]	kmer:null	cov:3.0x}
+ATG	{FF:null	FR:[TCA,GCA]	RF:[ATC,ATG]	RR:null	5':null, ~5':[29-2_0-0 readSeq: CATGACGT mateReadSeq: null]	kmer:null	cov:9.0x}
+AAT	{FF:[ATC,ATA]	FR:null	RF:null	RR:[TAA,CAA,AAA]	5':[21-0_0-0 readSeq: AATACGTG mateReadSeq: null], ~5':null	kmer:null	cov:9.0x}
 ACT	{FF:[CTA]	FR:null	RF:null	RR:[CAC,AAC]	5':null, ~5':null	kmer:null	cov:4.0x}

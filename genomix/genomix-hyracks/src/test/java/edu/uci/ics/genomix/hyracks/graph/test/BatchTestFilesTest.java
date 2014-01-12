@@ -17,6 +17,7 @@ package edu.uci.ics.genomix.hyracks.graph.test;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -27,6 +28,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
+import org.apache.wicket.util.file.Files;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -164,11 +166,8 @@ public class BatchTestFilesTest {
                 .getParent().toString());
         GenerateGraphViz.writeLocalBinToLocalSvg(path.getParent().toString() + "/bin", path.getParent().toString()
                 + "/graphviz.svg", GRAPH_TYPE.DIRECTED_GRAPH_WITH_ALLDETAILS);
-        HashSet<Integer> set = new HashSet<Integer>();
-        set.add(1);
-        set.add(2);
-        set.add(3);
-        set.add(4);
+
+        HashSet<Integer> set = new HashSet<Integer>(Arrays.asList(new Integer[] { 1, 2, 3, 4 }));
         TestUtils.compareFilesWithUnOrderedFields(new File(resultFileName), new File(expectFileName), true, set);
     }
 

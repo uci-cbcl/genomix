@@ -7,11 +7,8 @@ import java.util.Random;
 import java.util.logging.Logger;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import edu.uci.ics.genomix.data.types.Kmer;
-import edu.uci.ics.genomix.driver.GenomixDriver;
 import edu.uci.ics.genomix.hyracks.graph.driver.GenomixHyracksDriver;
 
 public class SingleLongReadCreateTool {
