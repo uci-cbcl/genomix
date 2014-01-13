@@ -86,7 +86,7 @@ def main(args):
         genome = make_genome(args.genome_length)
     else:
         parser.error("Please specify either --in-genome or --genome-length!")
-    args.out_genome.write('>synthetic_genome\n%s\n' % genome)
+    args.out_genome.write('>synthetic_genome\n%s\n>reverse_complement\n%s\n' % (genome, reverse_complement(genome)))
     args.out_reads.writelines(make_reads(genome, args.read_length,
                                         args.coverage, args.walk, args.no_rc,
                                         args.error_rate, args.insert_size))
