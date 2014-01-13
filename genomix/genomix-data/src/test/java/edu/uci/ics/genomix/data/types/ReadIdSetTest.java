@@ -7,9 +7,6 @@ import junit.framework.Assert;
 
 import org.junit.Test;
 
-import edu.uci.ics.genomix.data.types.ReadIdSet;
-import edu.uci.ics.genomix.data.types.VKmer;
-import edu.uci.ics.genomix.data.types.VKmerList;
 import edu.uci.ics.genomix.data.utils.Marshal;
 
 public class ReadIdSetTest {

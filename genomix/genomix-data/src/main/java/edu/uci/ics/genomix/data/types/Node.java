@@ -105,8 +105,9 @@ public class Node implements Writable, Serializable {
                 public NeighborInfo next() {
                     if (info == null) {
                         info = new NeighborInfo(et, it.next());
+                    } else {
+                        info.set(et, it.next());
                     }
-                    info.set(et, it.next());
                     return info;
                 }
 

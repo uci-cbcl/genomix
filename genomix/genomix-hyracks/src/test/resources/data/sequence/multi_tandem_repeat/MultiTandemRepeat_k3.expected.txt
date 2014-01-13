@@ -1,1 +1,1 @@
-CGC	{FF:null	FR:[CGC]	RF:[CGC]	RR:null	5':[1-0_0 readSeq: CGCGC mateReadSeq: null], ~5':null	kmer:null	cov:3.0x}
+CGC	{FF:null	FR:[CGC]	RF:[CGC]	RR:null	5':[1-0_0-0 readSeq: CGCGC mateReadSeq: null], ~5':null	kmer:null	cov:3.0x}

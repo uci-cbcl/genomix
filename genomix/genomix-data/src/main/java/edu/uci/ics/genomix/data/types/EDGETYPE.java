@@ -1,6 +1,5 @@
 package edu.uci.ics.genomix.data.types;
 
-
 public enum EDGETYPE {
     //public enum EDGETYPE implements Writable {
 
@@ -21,8 +20,8 @@ public enum EDGETYPE {
         return val;
     }
 
-    public static final EDGETYPE[] REVERSE = {RF, RR};
-    public static final EDGETYPE[] FORWARD = {FF, FR};
+    public static final EDGETYPE[] REVERSE = { RF, RR };
+    public static final EDGETYPE[] FORWARD = { FF, FR };
     public static final EDGETYPE[] values = { FF, FR, RF, RR };
 
     public static EDGETYPE fromByte(short b) {

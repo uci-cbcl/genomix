@@ -59,7 +59,7 @@ public class GeneCode {
     public static byte getPairedCodeFromSymbol(byte ch) {
         return getPairedGeneCode(getCodeFromSymbol(ch));
     }
-    
+
     public static byte getComplimentSymbolFromSymbol(byte ch) {
         return getSymbolFromCode(getPairedGeneCode(getCodeFromSymbol(ch)));
     }

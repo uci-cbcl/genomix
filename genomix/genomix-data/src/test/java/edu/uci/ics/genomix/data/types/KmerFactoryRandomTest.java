@@ -17,6 +17,7 @@ package edu.uci.ics.genomix.data.types;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+
 import edu.uci.ics.genomix.data.utils.GeneCode;
 
 public class KmerFactoryRandomTest {

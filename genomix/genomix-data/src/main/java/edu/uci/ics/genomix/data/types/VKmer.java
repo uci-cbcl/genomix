@@ -790,10 +790,10 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
         return indexOf(this, pattern);
     }
 
-    public int indexOfRangeQuery(VKmer pattern, int pStart, int pEnd, int mStart, int mEnd) throws IOException{
+    public int indexOfRangeQuery(VKmer pattern, int pStart, int pEnd, int mStart, int mEnd) throws IOException {
         return indexOfRangeQuery(pattern, pStart, pEnd, this, mStart, mEnd);
     }
-    
+
     /**
      * use KMP to fast detect whether master Vkmer contain pattern (only detect the first position which pattern match);
      * if true return index, otherwise return -1;
@@ -835,10 +835,10 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
                 || (mEnd >= master.getKmerLetterLength())) {
             throw new IOException("index Start can't be less than 0, or index End can't exceed the kmer length!");
         }
-        if((pEnd - pStart) > (mEnd - mStart)){
+        if ((pEnd - pStart) > (mEnd - mStart)) {
             throw new IOException("sdfsdf");
         }
-        
+
         int subPsize = pEnd - pStart + 1;
         int subMSize = mEnd - mStart + 1;
         int[] failureSet = computeFailureSetWithRange(pattern, subPsize, pStart, pEnd);

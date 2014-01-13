@@ -37,13 +37,13 @@ public class VKmerList implements Writable, Iterable<VKmer>, Serializable {
         setAsReference(data, offset);
     }
 
-    public VKmerList(VKmerList kmerList){
+    public VKmerList(VKmerList kmerList) {
         this();
         for (VKmer kmer : kmerList) {
             append(kmer);
         }
     }
-    
+
     public VKmerList(List<VKmer> kmers) {
         this();
         for (VKmer kmer : kmers) {
@@ -61,8 +61,8 @@ public class VKmerList implements Writable, Iterable<VKmer>, Serializable {
 
     public void append(VKmer kmer) {
         setSize(getLengthInBytes() + kmer.getLength());
-        System.arraycopy(kmer.getBlockBytes(), kmer.kmerStartOffset - VKmer.HEADER_SIZE, storage, offset + getLengthInBytes(),
-                kmer.getLength());
+        System.arraycopy(kmer.getBlockBytes(), kmer.kmerStartOffset - VKmer.HEADER_SIZE, storage, offset
+                + getLengthInBytes(), kmer.getLength());
         valueCount += 1;
         Marshal.putInt(valueCount, storage, offset);
     }
@@ -175,7 +175,8 @@ public class VKmerList implements Writable, Iterable<VKmer>, Serializable {
 
     /**
      * read a KmerListWritable from newData, which should include the header
-     * @return 
+     * 
+     * @return
      */
     public int setAsCopy(byte[] newData, int newOffset) {
         int newValueCount = Marshal.getInt(newData, newOffset);
@@ -234,7 +235,7 @@ public class VKmerList implements Writable, Iterable<VKmer>, Serializable {
         };
         return it;
     }
-    
+
     public boolean contains(VKmer kmer) {
         Iterator<VKmer> posIterator = this.iterator();
         while (posIterator.hasNext()) {
@@ -243,7 +244,7 @@ public class VKmerList implements Writable, Iterable<VKmer>, Serializable {
         }
         return false;
     }
-    
+
     public int indexOf(VKmer kmer) {
         Iterator<VKmer> posIterator = this.iterator();
         int i = 0;
@@ -254,6 +255,7 @@ public class VKmerList implements Writable, Iterable<VKmer>, Serializable {
         }
         return -1;
     }
+
     /*
      * remove the first instance of `toRemove`. Uses a linear scan. Throws an
      * exception if not in this list.

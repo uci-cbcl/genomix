@@ -16,9 +16,11 @@
 package edu.uci.ics.genomix.data.types;
 
 import java.io.IOException;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+
 import edu.uci.ics.genomix.data.utils.GeneCode;
 
 public class KmerRandomTest {
@@ -64,7 +66,7 @@ public class KmerRandomTest {
         int strLength = RandomTestHelper.genRandomInt(strMinLength, strMaxLength);
         String input = RandomTestHelper.generateGeneString(strLength);
         Kmer kmer = getRandomKmer(input, strLength);
-        int kmerLength = kmer.getKmerLength();
+        int kmerLength = Kmer.getKmerLength();
         for (int i = kmerLength; i < strLength - 1; i++) {
             kmer.shiftKmerWithNextChar((byte) (input.charAt(i)));
             Assert.assertEquals(input.substring(1 + i - kmerLength, 1 + i - kmerLength + kmerLength), kmer.toString());
@@ -88,9 +90,9 @@ public class KmerRandomTest {
         int strLength = RandomTestHelper.genRandomInt(strMinLength, strMaxLength);
         String input = RandomTestHelper.generateGeneString(strLength);
         Kmer kmer = getRandomKmer(input, strLength);
-        String actualKmerStr = input.substring(0, kmer.getKmerLength());
+        String actualKmerStr = input.substring(0, Kmer.getKmerLength());
         kmer.setFromStringBytes(actualKmerStr.getBytes(), 0);
-        for (int i = 0; i < kmer.getKmerLength(); i++) {
+        for (int i = 0; i < Kmer.getKmerLength(); i++) {
             Assert.assertEquals(actualKmerStr.charAt(i),
                     (char) (GeneCode.getSymbolFromCode(kmer.getGeneCodeAtPosition(i))));
         }
@@ -101,12 +103,12 @@ public class KmerRandomTest {
         int strLength = RandomTestHelper.genRandomInt(strMinLength, strMaxLength);
         String input = RandomTestHelper.generateGeneString(strLength);
         Kmer kmer = getRandomKmer(input, strLength);
-        String actualKmerStr = input.substring(0, kmer.getKmerLength());
+        String actualKmerStr = input.substring(0, Kmer.getKmerLength());
         Kmer kmerAppend = new Kmer();
-        for (int i = 0; i < kmer.getKmerLength(); i++) {
+        for (int i = 0; i < Kmer.getKmerLength(); i++) {
             byte byteActual = Kmer.getOneByteFromKmerAtPosition(i, kmer.getBytes(), kmer.getOffset(), kmer.getLength());
             byte byteExpect = GeneCode.getCodeFromSymbol((byte) (actualKmerStr.charAt(i)));
-            for (int j = 1; j < 4 && i + j < kmer.getKmerLength(); j++) {
+            for (int j = 1; j < 4 && i + j < Kmer.getKmerLength(); j++) {
                 byteExpect += GeneCode.getCodeFromSymbol((byte) (actualKmerStr.charAt(i + j))) << (j * 2);
             }
             Assert.assertEquals(byteActual, byteExpect);

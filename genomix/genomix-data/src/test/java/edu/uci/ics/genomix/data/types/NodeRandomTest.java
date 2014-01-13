@@ -19,13 +19,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.util.Iterator;
-import java.util.AbstractMap.SimpleEntry;
+
 import junit.framework.Assert;
 
 import org.junit.Before;
 import org.junit.Test;
-import edu.uci.ics.genomix.data.types.Node.NeighborInfo;
 
 public class NodeRandomTest {
 
@@ -170,8 +168,7 @@ public class NodeRandomTest {
         int strLength = RandomTestHelper.genRandomInt(strMinLength, strMaxLength);
         Node testNode1 = new Node();
         RandomTestHelper.assembleNodeRandomly(testNode1, strLength, vkmerListNumMin, vkmerListNumMax);
-        Kmer fixedKmer = new Kmer();
-        fixedKmer.setGlobalKmerLength(13);
+        Kmer.setGlobalKmerLength(13);
         Node testNode2 = new Node();
         RandomTestHelper.assembleNodeRandomly(testNode2, strLength, vkmerListNumMin, vkmerListNumMax);
         //get mergeCoverage manually first
@@ -188,8 +185,7 @@ public class NodeRandomTest {
         int strLength = RandomTestHelper.genRandomInt(strMinLength, strMaxLength);
         Node testNode1 = new Node();
         RandomTestHelper.assembleNodeRandomly(testNode1, strLength, vkmerListNumMin, vkmerListNumMax);
-        Kmer fixedKmer = new Kmer();
-        fixedKmer.setGlobalKmerLength(13);
+        Kmer.setGlobalKmerLength(13);
         Node testNode2 = new Node();
         RandomTestHelper.assembleNodeRandomly(testNode2, strLength, vkmerListNumMin, vkmerListNumMax);
         //get mergeCoverage manually first
@@ -394,8 +390,7 @@ public class NodeRandomTest {
         RandomTestHelper.assembleNodeRandomly(majorNode, strLength, strMinLength, strMaxLength);
         Node minorNode = new Node();
         RandomTestHelper.assembleNodeRandomly(minorNode, strLength, strMinLength, strMaxLength);
-        Kmer fixedKmer = new Kmer();
-        fixedKmer.setGlobalKmerLength(13);
+        Kmer.setGlobalKmerLength(13);
         int ffEdgeCount = majorNode.getEdges(EDGETYPE.FF).size() / 2;
         VKmerList iterFFList = new VKmerList();
         iterFFList.setAsCopy(majorNode.getEdges(EDGETYPE.FF));
@@ -512,7 +507,6 @@ public class NodeRandomTest {
         }
         Assert.assertEquals(true, node.isSimpleOrTerminalPath());
 
-        Node node2 = new Node();
         RandomTestHelper.assembleNodeRandomly(node, strLength, strMinLength, strMaxLength);
         Assert.assertEquals(false, node.isPathNode());
         node.getEdges(EDGETYPE.FR).clear();

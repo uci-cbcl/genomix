@@ -22,9 +22,8 @@ import org.junit.Test;
 
 import edu.uci.ics.genomix.data.utils.GeneCode;
 
-
 public class VKmerRandomTest {
-    
+
     public static int strMaxLength;
     public static int strMinLength;
 
@@ -39,7 +38,7 @@ public class VKmerRandomTest {
             throw new IllegalArgumentException("strMinLength can not be larger than strMaxLength!");
         }
     }
-    
+
     public static VKmer getRandomKmer(String input, int strLength) {
         int kmerSize = RandomTestHelper.genRandomInt(1, strLength);
         String actualKmerStr = input.substring(0, kmerSize);
@@ -47,7 +46,7 @@ public class VKmerRandomTest {
         vkmer.setFromStringBytes(kmerSize, actualKmerStr.getBytes(), 0);
         return vkmer;
     }
-    
+
     @Test
     public void TestCompressKmer() {
         int strLength = RandomTestHelper.genRandomInt(strMinLength, strMaxLength);
@@ -55,7 +54,7 @@ public class VKmerRandomTest {
         VKmer vkmer = getRandomKmer(input, strLength);
         Assert.assertEquals(input.substring(0, vkmer.getKmerLetterLength()), vkmer.toString());
     }
-    
+
     @Test
     public void TestConstructorFromRead() {
         int strLength = RandomTestHelper.genRandomInt(strMinLength, strMaxLength);
@@ -63,7 +62,7 @@ public class VKmerRandomTest {
         VKmer vkmer = new VKmer(input);
         Assert.assertEquals(input.toString(), vkmer.toString());
     }
-    
+
     @Test
     public void TestMoveKmer() {
         int strLength = RandomTestHelper.genRandomInt(strMinLength, strMaxLength);
@@ -76,7 +75,7 @@ public class VKmerRandomTest {
             Assert.assertEquals(input.substring(1 + i - kmerLength, 1 + i - kmerLength + kmerLength), vkmer.toString());
         }
     }
-    
+
     @Test
     public void TestCompressKmerReverse() {
         int strLength = RandomTestHelper.genRandomInt(strMinLength, strMaxLength);
@@ -87,7 +86,7 @@ public class VKmerRandomTest {
         vkmer.setReversedFromStringBytes(kmerSize, input.getBytes(), 0);
         Assert.assertEquals(RandomTestHelper.getFlippedGeneStr(actualKmerStr), vkmer.toString());
     }
-    
+
     @Test
     public void TestMoveKmerReverse() {
         int strLength = RandomTestHelper.genRandomInt(strMinLength, strMaxLength);
@@ -103,7 +102,7 @@ public class VKmerRandomTest {
             Assert.assertEquals(expectedStr, vkmer.toString());
         }
     }
-    
+
     @Test
     public void TestGetGene() {
         int strLength = RandomTestHelper.genRandomInt(strMinLength, strMaxLength);
@@ -114,8 +113,7 @@ public class VKmerRandomTest {
             Assert.assertEquals(input.charAt(i), (char) (GeneCode.getSymbolFromCode(vkmer.getGeneCodeAtPosition(i))));
         }
     }
-    
-    
+
     @Test
     public void TestGetOneByteFromKmer() {
         int strLength = RandomTestHelper.genRandomInt(strMinLength, strMaxLength);
@@ -124,7 +122,8 @@ public class VKmerRandomTest {
         String actualKmerStr = input.substring(0, vkmer.getKmerLetterLength());
         VKmer kmerAppend = new VKmer(vkmer.getKmerLetterLength());
         for (int i = 0; i < vkmer.getKmerLetterLength(); i++) {
-            byte byteActual = Kmer.getOneByteFromKmerAtPosition(i, vkmer.getBlockBytes(), vkmer.getKmerOffset(), vkmer.getKmerByteLength());
+            byte byteActual = Kmer.getOneByteFromKmerAtPosition(i, vkmer.getBlockBytes(), vkmer.getKmerOffset(),
+                    vkmer.getKmerByteLength());
             byte byteExpect = GeneCode.getCodeFromSymbol((byte) (actualKmerStr.charAt(i)));
             for (int j = 1; j < 4 && i + j < vkmer.getKmerLetterLength(); j++) {
                 byteExpect += GeneCode.getCodeFromSymbol((byte) (actualKmerStr.charAt(i + j))) << (j * 2);
@@ -135,7 +134,7 @@ public class VKmerRandomTest {
         }
         Assert.assertEquals(vkmer.toString(), kmerAppend.toString());
     }
-    
+
     @Test
     public void TestMergeFFKmer() {
         int strLength = RandomTestHelper.genRandomInt(strMinLength, strMaxLength);
@@ -155,7 +154,7 @@ public class VKmerRandomTest {
             Assert.assertEquals(kmer1.toString() + kmer2.toString().substring(i - 1), merge.toString());
         }
     }
-    
+
     @Test
     public void TestMergeFRKmer() {
         int strLength = RandomTestHelper.genRandomInt(strMinLength, strMaxLength);
@@ -164,7 +163,8 @@ public class VKmerRandomTest {
         kmer1.setFromStringBytes(strLength - 1, input.getBytes(), 0);
         Assert.assertEquals(input.substring(0, strLength - 1), kmer1.toString());
         VKmer kmer2 = new VKmer();
-        kmer2.setFromStringBytes(strLength - 1 , RandomTestHelper.getFlippedGeneStr(input.substring(1, strLength)).getBytes(), 0);
+        kmer2.setFromStringBytes(strLength - 1, RandomTestHelper.getFlippedGeneStr(input.substring(1, strLength))
+                .getBytes(), 0);
         Assert.assertEquals(RandomTestHelper.getFlippedGeneStr(input.substring(1, strLength)), kmer2.toString());
         VKmer merge = new VKmer();
         merge.setAsCopy(kmer1);
@@ -173,10 +173,11 @@ public class VKmerRandomTest {
         for (int i = 1; i < strLength - 1; i++) {
             merge.setAsCopy(kmer1);
             merge.mergeWithFRKmer(i, kmer2);
-            Assert.assertEquals(kmer1.toString() + input.substring(1, strLength).toString().substring(i - 1), merge.toString());
-        } 
+            Assert.assertEquals(kmer1.toString() + input.substring(1, strLength).toString().substring(i - 1),
+                    merge.toString());
+        }
     }
-    
+
     @Test
     public void TestMergeRFKmer() {
         int strLength = RandomTestHelper.genRandomInt(strMinLength, strMaxLength);
@@ -185,8 +186,9 @@ public class VKmerRandomTest {
         kmer1.setFromStringBytes(strLength - 1, input.getBytes(), 1);
         Assert.assertEquals(input.substring(1, strLength), kmer1.toString());
         VKmer kmer2 = new VKmer();
-        kmer2.setFromStringBytes(strLength - 1 , RandomTestHelper.getFlippedGeneStr(input.substring(0, strLength - 1)).getBytes(), 0);
-        Assert.assertEquals(RandomTestHelper.getFlippedGeneStr(input.substring(0, strLength-1)), kmer2.toString());
+        kmer2.setFromStringBytes(strLength - 1, RandomTestHelper.getFlippedGeneStr(input.substring(0, strLength - 1))
+                .getBytes(), 0);
+        Assert.assertEquals(RandomTestHelper.getFlippedGeneStr(input.substring(0, strLength - 1)), kmer2.toString());
         VKmer merge = new VKmer();
         merge.setAsCopy(kmer1);
         merge.mergeWithRFKmer(strLength - 1, kmer2);
@@ -194,10 +196,13 @@ public class VKmerRandomTest {
         for (int i = 1; i < strLength - 1; i++) {
             merge.setAsCopy(kmer1);
             merge.mergeWithRFKmer(i, kmer2);
-            Assert.assertEquals(RandomTestHelper.getFlippedGeneStr(kmer2.toString()).substring(0, kmer1.getKmerLetterLength() - (i - 1)) + kmer1.toString(), merge.toString());
+            Assert.assertEquals(
+                    RandomTestHelper.getFlippedGeneStr(kmer2.toString()).substring(0,
+                            kmer1.getKmerLetterLength() - (i - 1))
+                            + kmer1.toString(), merge.toString());
         }
     }
-    
+
     @Test
     public void TestMergeRRKmer() {
         int strLength = RandomTestHelper.genRandomInt(strMinLength, strMaxLength);
@@ -215,7 +220,9 @@ public class VKmerRandomTest {
         for (int i = 1; i < strLength - 1; i++) {
             merge.setAsCopy(kmer1);
             merge.mergeWithRRKmer(i, kmer2);
-            Assert.assertEquals(kmer2.toString().substring(0, kmer1.getKmerLetterLength() - (i - 1)) + kmer1.toString(), merge.toString());
+            Assert.assertEquals(
+                    kmer2.toString().substring(0, kmer1.getKmerLetterLength() - (i - 1)) + kmer1.toString(),
+                    merge.toString());
         }
     }
 
@@ -249,4 +256,3 @@ public class VKmerRandomTest {
         }
     }
 }
-

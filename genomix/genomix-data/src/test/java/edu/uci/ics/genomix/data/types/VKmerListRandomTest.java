@@ -18,7 +18,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
+
 import junit.framework.Assert;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -88,25 +90,23 @@ public class VKmerListRandomTest {
         }
         Assert.assertEquals(loop, kmerList.size());
         Iterator<VKmer> iterator;
-        for (int i = 0; i < loop; i++) {
-            iterator = kmerList.iterator();
-            boolean removed = false;
-            while (iterator.hasNext()) {
-                VKmer tmpKmer = iterator.next();
-                if (tmpKmer.toString().equals(expectedList.get(i))) {
-                    iterator.remove();
-                    expectedList.remove(i);
-                    removed = true;
-                    break;
-                }
-            }
-            Assert.assertTrue(removed);
-            for(int j = 0; j < expectedList.size(); i++) {
-                Assert.assertEquals(expectedList.get(j), kmerList.getPosition(j).toString());
+        iterator = kmerList.iterator();
+        boolean removed = false;
+        while (iterator.hasNext()) {
+            VKmer tmpKmer = iterator.next();
+            if (tmpKmer.toString().equals(expectedList.get(0))) {
+                iterator.remove();
+                expectedList.remove(0);
+                removed = true;
+                break;
             }
         }
+        Assert.assertTrue(removed);
+        for (int j = 0; j < expectedList.size(); j++) {
+            Assert.assertEquals(expectedList.get(j), kmerList.getPosition(j).toString());
+        }
     }
-    
+
     @Test
     public void complicatedTestUnionUpdate() {
         VKmerList kmerList1 = new VKmerList();

@@ -115,7 +115,8 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
                     "byte specified for offset will lose some of its bits when saved! (was: " + offset
                             + " but only allowed " + bitsForOffset + " bits!");
 
-        return ((((long)(offset)) << offsetShift) + (((long)(libraryId)) << libraryIdShift) + (((long)(mateId)) << mateIdShift) + (((long)(readId)) << readIdShift));
+        return ((((long) (offset)) << offsetShift) + (((long) (libraryId)) << libraryIdShift)
+                + (((long) (mateId)) << mateIdShift) + (((long) (readId)) << readIdShift));
     }
 
     public void set(byte mateId, byte libraryId, long readId, int offset) {
@@ -146,21 +147,21 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
     }
 
     public byte getMateId() {
-        return (byte) ((value & ~(((long)-1) << (mateIdShift + bitsForMate))) >>> mateIdShift); // clear leading bits, then shift back to place
+        return (byte) ((value & ~(((long) -1) << (mateIdShift + bitsForMate))) >>> mateIdShift); // clear leading bits, then shift back to place
     }
 
     public byte getLibraryId() {
-        return (byte) ((value & ~(((long)-1) << (libraryIdShift + bitsForLibrary))) >>> libraryIdShift);
+        return (byte) ((value & ~(((long) -1) << (libraryIdShift + bitsForLibrary))) >>> libraryIdShift);
     }
 
     public long getReadId() {
-        return ((value & ~(((long)-1l) << (readIdShift + bitsForReadId))) >>> readIdShift);
+        return ((value & ~(((long) -1l) << (readIdShift + bitsForReadId))) >>> readIdShift);
     }
 
     public int getOffset() {
-    	// holy smokes java... -1 << 64 == -1 ???
-//        return (int) ((value & ~(((long)-1) << (offsetShift + bitsForOffset))) >>> offsetShift);
-    	return (int) (value >>> offsetShift);
+        // holy smokes java... -1 << 64 == -1 ???
+        //        return (int) ((value & ~(((long)-1) << (offsetShift + bitsForOffset))) >>> offsetShift);
+        return (int) (value >>> offsetShift);
     }
 
     public void resetOffset(int offset) {

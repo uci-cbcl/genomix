@@ -15,7 +15,6 @@
 
 package edu.uci.ics.genomix.data.types;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -26,10 +25,6 @@ import junit.framework.Assert;
 
 import org.junit.Test;
 
-import edu.uci.ics.genomix.data.types.EDGETYPE;
-import edu.uci.ics.genomix.data.types.Kmer;
-import edu.uci.ics.genomix.data.types.VKmer;
-import edu.uci.ics.genomix.data.types.VKmerList;
 import edu.uci.ics.genomix.data.utils.GeneCode;
 
 public class VKmerFixedTest {

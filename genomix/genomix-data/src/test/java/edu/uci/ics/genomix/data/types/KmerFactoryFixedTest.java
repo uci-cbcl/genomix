@@ -18,8 +18,6 @@ package edu.uci.ics.genomix.data.types;
 import org.junit.Assert;
 import org.junit.Test;
 
-import edu.uci.ics.genomix.data.types.KmerFactory;
-import edu.uci.ics.genomix.data.types.VKmer;
 import edu.uci.ics.genomix.data.utils.GeneCode;
 
 public class KmerFactoryFixedTest {
@@ -28,19 +26,19 @@ public class KmerFactoryFixedTest {
     KmerFactory kmerFactory = new KmerFactory(9);
 
     @Test
-    public void TestGetKmerByRead(){
+    public void TestGetKmerByRead() {
         VKmer vkmer = new VKmer();
         vkmer.setAsCopy(kmerFactory.getKmerByRead(9, array, 0));
         Assert.assertEquals("AGCTGACCG", vkmer.toString());
     }
-    
+
     @Test
-    public void TestGetKmerByReadReverse(){
+    public void TestGetKmerByReadReverse() {
         VKmer vkmer = new VKmer();
         vkmer.setAsCopy(kmerFactory.getKmerByReadReverse(9, array, 0));
         Assert.assertEquals("CGGTCAGCT", vkmer.toString());
     }
-    
+
     @Test
     public void TestGetLastKmerFromChain() {
         VKmer vkmer = new VKmer();
@@ -185,7 +183,7 @@ public class KmerFactoryFixedTest {
         Assert.assertEquals(vkmer.toString(), "AGCTGAC");
         VKmer reversed = kmerFactory.reverse(vkmer);
         Assert.assertEquals(reversed.toString(), "CAGTCGA");
-        
+
         vkmer.setFromStringBytes(8, ("AATAGAAC").getBytes(), 0);
         Assert.assertEquals(vkmer.toString(), "AATAGAAC");
         reversed.reset(8);

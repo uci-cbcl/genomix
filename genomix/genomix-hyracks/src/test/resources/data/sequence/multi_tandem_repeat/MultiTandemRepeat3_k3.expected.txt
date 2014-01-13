@@ -1,5 +1,5 @@
 CGA	{FF:null	FR:[ATC]	RF:[CGC]	RR:null	5':null, ~5':null	kmer:null	cov:1.0x}
-CGC	{FF:[GCC,GCA]	FR:[CGC]	RF:[CGA,CGC]	RR:[CCG]	5':[1-0_0 readSeq: CGCGCGCATCGCGCCGCGCGCGGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCCG mateReadSeq: null], ~5':null	kmer:null	cov:50.0x}
+CGC	{FF:[GCC,GCA]	FR:[CGC]	RF:[CGA,CGC]	RR:[CCG]	5':[1-0_0-0 readSeq: CGCGCGCATCGCGCCGCGCGCGGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCCG mateReadSeq: null], ~5':null	kmer:null	cov:50.0x}
 CCG	{FF:[CGC]	FR:null	RF:null	RR:[GCC]	5':null, ~5':null	kmer:null	cov:3.0x}
 GCA	{FF:null	FR:[ATG]	RF:null	RR:[CGC]	5':null, ~5':null	kmer:null	cov:1.0x}
 GCC	{FF:[CCG]	FR:null	RF:null	RR:[CGC]	5':null, ~5':null	kmer:null	cov:3.0x}

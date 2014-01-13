@@ -55,7 +55,6 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
 
     public static final RecordDescriptor readKmerOutputRec = new RecordDescriptor(new ISerializerDeserializer[2]);
 
-    private static final Pattern genePattern = Pattern.compile("[AGCT]+");
     private static final Pattern libraryPattern = Pattern.compile(".*library-(\\d+).readids.*");
 
     public ReadsKeyValueParserFactory(JobConf conf) throws HyracksDataException {
