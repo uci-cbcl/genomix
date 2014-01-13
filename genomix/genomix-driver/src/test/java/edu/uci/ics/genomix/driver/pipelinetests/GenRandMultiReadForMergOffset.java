@@ -1,31 +1,28 @@
 package edu.uci.ics.genomix.driver.pipelinetests;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.logging.Logger;
-
 import org.apache.commons.io.FileUtils;
-
 import edu.uci.ics.genomix.data.types.Kmer;
 import edu.uci.ics.genomix.hyracks.graph.driver.GenomixHyracksDriver;
 
-public class SingleLongReadCreateTool {
-    /**
-     * it is better to set the kmerSize a big value in case of duplicates, 
-     * the target path which contain this string will be generated automatically
-     * target path: relative path: longreadfortest
-     */
+public class GenRandMultiReadForMergOffset {
+
     private static final char[] symbols = new char[4];
     private static final Logger LOG = Logger.getLogger(GenomixHyracksDriver.class.getName());
+
     static {
         symbols[0] = 'A';
         symbols[1] = 'C';
         symbols[2] = 'G';
         symbols[3] = 'T';
     }
-    
+
     public enum KmerDir {
         FORWARD,
         REVERSE,
@@ -35,24 +32,26 @@ public class SingleLongReadCreateTool {
     private char[] buf;
     private HashSet<Kmer> nonDupSet;
     private int k;
+    private int kmerNum;
     private Kmer tempKmer;
     private Kmer tempReverseKmer;
     private KmerDir curKmerDir = KmerDir.FORWARD;
     private String targetPath;
-    
-    public SingleLongReadCreateTool(int kmerSize, int length) {
-        if (length < 1)
-            throw new IllegalArgumentException("length < 1: " + length);
-        buf = new char[length];
+
+    public GenRandMultiReadForMergOffset(int kmerSize, int kmerNum) {
+        if (kmerNum < 1)
+            throw new IllegalArgumentException("length < 1: " + kmerNum);
+        buf = new char[kmerSize + kmerNum - 1];
         this.k = kmerSize;
-        this.nonDupSet = new HashSet<Kmer>(length);
+        this.kmerNum = kmerNum;
+        this.nonDupSet = new HashSet<Kmer>(kmerNum);
         Kmer.setGlobalKmerLength(kmerSize);
         tempKmer = new Kmer();
         tempReverseKmer = new Kmer();
-        targetPath = "longreadfortest" + File.separator + "singlelongread_1.fastq";
+        targetPath = "randommerge" + File.separator + "randommergeseq.fastq";
     }
 
-    public void generateString() {
+    public String generateString() {
         String tmp = "";
         int count = 4;
         LOG.info("Begin to generate string !");
@@ -63,8 +62,8 @@ public class SingleLongReadCreateTool {
                 tempKmer.setFromStringBytes(tmp.getBytes(), 0);
                 tempReverseKmer.setReversedFromStringBytes(tmp.getBytes(), 0);
                 curKmerDir = tempKmer.compareTo(tempReverseKmer) <= 0 ? KmerDir.FORWARD : KmerDir.REVERSE;
-                switch (curKmerDir.toString()){
-                    case "FORWARD":
+                switch (curKmerDir) {
+                    case FORWARD:
                         if (!nonDupSet.contains(tempKmer)) {
                             nonDupSet.add(new Kmer(tempKmer));
                             idx++;
@@ -76,7 +75,7 @@ public class SingleLongReadCreateTool {
                         } else
                             count--;
                         break;
-                    case "REVERSE":
+                    case REVERSE:
                         if (!nonDupSet.contains(tempReverseKmer)) {
                             nonDupSet.add(new Kmer(tempReverseKmer));
                             idx++;
@@ -92,24 +91,36 @@ public class SingleLongReadCreateTool {
                 idx++;
         }
         LOG.info("End to generate string !");
+        return new String(buf);
     }
-    
+
     public void writeToDisk() throws IOException {
-        String targetStr = new String(buf);
-        FileUtils.writeStringToFile(new File(targetPath), targetStr);
+        String[] reads = new String[this.kmerNum - 1];
+        for (int i = 0; i < this.kmerNum - 1; i++) {
+            reads[i] = new String(buf, i, k + 1);
+        }
+        File file = new File(targetPath);
+        BufferedWriter writer = null;
+        file.getParentFile().mkdirs();
+        writer = new BufferedWriter(new FileWriter(targetPath));
+        for (int i = 0; i < reads.length; i++) {
+            writer.write(i + "\t" + reads[i]);
+            writer.newLine();
+        }
+        writer.close();
     }
-    
+
     public void cleanDiskFile() throws IOException, InterruptedException {
         File targetFile = new File(targetPath);
-        if(targetFile.getParentFile().exists()){
-        String cleanFile = "rm -r -f " + targetFile.getParent();
-        Process p = Runtime.getRuntime().exec(cleanFile);
-        p.waitFor();
-        if (p.exitValue() != 0)
-            throw new RuntimeException("Failed to delete the path" + targetFile.getParent());
+        if (targetFile.getParentFile().exists()) {
+            String cleanFile = "rm -r -f " + targetFile.getParent();
+            Process p = Runtime.getRuntime().exec(cleanFile);
+            p.waitFor();
+            if (p.exitValue() != 0)
+                throw new RuntimeException("Failed to delete the path" + targetFile.getParent());
         }
     }
-    
+
     public String getTestDir() {
         return targetPath;
     }

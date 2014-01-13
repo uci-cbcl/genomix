@@ -122,6 +122,7 @@ public class BatchTestFilesTest {
         conf.setInt(GenomixJobConf.FRAME_LIMIT, 4096);
 
         manager = new GenomixClusterManager(true, conf);
+        manager.stopCluster();
         manager.setNumberOfNC(numberOfNC);
         manager.setNumberOfDataNodesInLocalMiniHDFS(numberOfNC);
         manager.startCluster();
