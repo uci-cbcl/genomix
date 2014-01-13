@@ -758,12 +758,22 @@ public class BspUtils {
     }
 
     /**
-     * Get the size memory limit for the grouping algorithm (hash only)
+     * Get the memory limit for the grouping algorithm (hash only)
      * 
      * @param conf
-     * @return
+     * @return the memory limit for hash-based grouping
      */
     public static int getGroupingMemoryLimit(Configuration conf) {
+        return conf.getInt(PregelixJob.GROUPING_MEM, 1000);
+    }
+
+    /**
+     * Get the memory limit for the sort algorithm
+     * 
+     * @param conf
+     * @return the memory limit for sorting
+     */
+    public static int getSortMemoryLimit(Configuration conf) {
         return conf.getInt(PregelixJob.GROUPING_MEM, 1000);
     }
 

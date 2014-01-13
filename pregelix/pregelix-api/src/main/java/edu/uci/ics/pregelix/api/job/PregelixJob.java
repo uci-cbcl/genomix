@@ -101,6 +101,8 @@ public class PregelixJob extends Job {
     public static final String GROUPING_ALGORITHM = "pregelix.groupalg";
     /** the memory assigned to group-by */
     public static final String GROUPING_MEM = "pregelix.groupmem";
+    /** the memory assigned for the sort operator */
+    public static final String SORT_MEM = "pregelix.sortmem";
 
     /**
      * Construct a Pregelix job from an existing configuration
@@ -322,6 +324,15 @@ public class PregelixJob extends Job {
      */
     final public void setGroupByMemoryLimit(int numberOfPages) {
         getConfiguration().setInt(GROUPING_MEM, numberOfPages);
+    }
+
+    /**
+     * Set the memory buget for sort operators (only hash-based)
+     * 
+     * @param numberOfPages
+     */
+    final public void setSortMemoryLimit(int numberOfPages) {
+        getConfiguration().setInt(SORT_MEM, numberOfPages);
     }
 
     @Override

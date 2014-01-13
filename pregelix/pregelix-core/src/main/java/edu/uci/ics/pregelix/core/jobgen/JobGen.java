@@ -179,7 +179,7 @@ public abstract class JobGen implements IJobGen {
         int specifiedFrameSize = BspUtils.getFrameSize(job.getConfiguration());
         if (specifiedFrameSize > 0) {
             frameSize = specifiedFrameSize;
-            maxFrameNumber = (int) (((long) 32 * MB) / frameSize);
+            maxFrameNumber = BspUtils.getSortMemoryLimit(conf);
         }
         if (maxFrameNumber <= 0) {
             maxFrameNumber = 1;
