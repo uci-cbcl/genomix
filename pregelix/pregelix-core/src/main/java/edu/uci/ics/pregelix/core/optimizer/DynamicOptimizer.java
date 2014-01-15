@@ -32,6 +32,7 @@ import edu.uci.ics.hyracks.dataflow.std.file.ConstantFileSplitProvider;
 import edu.uci.ics.hyracks.dataflow.std.file.FileSplit;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
+import edu.uci.ics.pregelix.api.util.BspUtils;
 import edu.uci.ics.pregelix.core.jobgen.JobGen;
 import edu.uci.ics.pregelix.core.jobgen.clusterconfig.ClusterConfig;
 import edu.uci.ics.pregelix.dataflow.util.IterationUtils;
@@ -177,8 +178,7 @@ public class DynamicOptimizer implements IOptimizer {
         // the available memory for each grouping operator instance's working space
         long memoryLimit = (memorySize - Math.max(bufferCache, memoryUsed) - networkMem)
                 / (2 * maxParallelismPerMachine);
-        if (memoryLimit < messageByteSize) {
-            job.setGroupByAlgorithm(true);
+        if (memoryLimit < messageByteSize && BspUtils.getGroupingAlgorithm(job.getConfiguration())==false) {
             job.setGroupByMemoryLimit((int) (memoryLimit / frameSize));
         }
     }
