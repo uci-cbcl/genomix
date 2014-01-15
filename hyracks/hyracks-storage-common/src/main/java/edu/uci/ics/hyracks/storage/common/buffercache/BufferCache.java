@@ -715,7 +715,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
     @Override
     public void stop(boolean dumpState, OutputStream os) throws IOException {
         if (dumpState) {
-            os.write(dumpState().getBytes());
+            dumpState(os);
         }
         close();
     }
@@ -723,5 +723,9 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
     @Override
     public void addPage(ICachedPageInternal page) {
         cachedPages.add(page);
+    }
+
+    public void dumpState(OutputStream os) throws IOException {
+        os.write(dumpState().getBytes());
     }
 }
