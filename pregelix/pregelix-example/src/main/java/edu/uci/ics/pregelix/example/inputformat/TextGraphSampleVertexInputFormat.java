@@ -18,7 +18,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.hadoop.io.FloatWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.InputSplit;
@@ -30,31 +29,31 @@ import edu.uci.ics.pregelix.api.io.VertexReader;
 import edu.uci.ics.pregelix.api.io.text.TextVertexInputFormat;
 import edu.uci.ics.pregelix.api.io.text.TextVertexInputFormat.TextVertexReader;
 import edu.uci.ics.pregelix.api.util.BspUtils;
-import edu.uci.ics.pregelix.example.io.DoubleWritable;
+import edu.uci.ics.pregelix.example.io.BooleanWritable;
+import edu.uci.ics.pregelix.example.io.NullWritable;
 import edu.uci.ics.pregelix.example.io.VLongWritable;
 
-public class TextShortestPathsInputFormat extends
-        TextVertexInputFormat<VLongWritable, DoubleWritable, FloatWritable, DoubleWritable> {
+public class TextGraphSampleVertexInputFormat extends
+        TextVertexInputFormat<VLongWritable, BooleanWritable, NullWritable, BooleanWritable> {
 
     @Override
-    public VertexReader<VLongWritable, DoubleWritable, FloatWritable, DoubleWritable> createVertexReader(
+    public VertexReader<VLongWritable, BooleanWritable, NullWritable, BooleanWritable> createVertexReader(
             InputSplit split, TaskAttemptContext context) throws IOException {
-        return new TextShortestPathsGraphReader(textInputFormat.createRecordReader(split, context));
+        return new TextSampleGraphReader(textInputFormat.createRecordReader(split, context));
     }
 }
 
 @SuppressWarnings("rawtypes")
-class TextShortestPathsGraphReader extends
-        TextVertexReader<VLongWritable, DoubleWritable, FloatWritable, DoubleWritable> {
+class TextSampleGraphReader extends TextVertexReader<VLongWritable, BooleanWritable, NullWritable, BooleanWritable> {
 
     private final static String separator = " ";
     private Vertex vertex;
-    private FloatWritable initValue = new FloatWritable(1.0f);
     private VLongWritable vertexId = new VLongWritable();
     private List<VLongWritable> pool = new ArrayList<VLongWritable>();
     private int used = 0;
+    private BooleanWritable value = new BooleanWritable(false);
 
-    public TextShortestPathsGraphReader(RecordReader<LongWritable, Text> lineRecordReader) {
+    public TextSampleGraphReader(RecordReader<LongWritable, Text> lineRecordReader) {
         super(lineRecordReader);
     }
 
@@ -65,14 +64,14 @@ class TextShortestPathsGraphReader extends
 
     @SuppressWarnings("unchecked")
     @Override
-    public Vertex<VLongWritable, DoubleWritable, FloatWritable, DoubleWritable> getCurrentVertex() throws IOException,
+    public Vertex<VLongWritable, BooleanWritable, NullWritable, BooleanWritable> getCurrentVertex() throws IOException,
             InterruptedException {
         used = 0;
         if (vertex == null)
             vertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());
-
         vertex.getMsgList().clear();
         vertex.getEdges().clear();
+
         vertex.reset();
         Text line = getRecordReader().getCurrentValue();
         String[] fields = line.toString().trim().split(separator);
@@ -93,10 +92,10 @@ class TextShortestPathsGraphReader extends
                 dest = Long.parseLong(fields[i]);
                 VLongWritable destId = allocate();
                 destId.set(dest);
-                vertex.addEdge(destId, initValue);
+                vertex.addEdge(destId, value);
             }
         }
-        // vertex.sortEdges();
+        vertex.setVertexValue(value);
         return vertex;
     }
 

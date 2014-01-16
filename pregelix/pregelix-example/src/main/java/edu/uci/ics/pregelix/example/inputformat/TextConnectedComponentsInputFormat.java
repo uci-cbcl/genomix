@@ -73,7 +73,7 @@ class TextConnectedComponentsGraphReader extends
 
         vertex.reset();
         Text line = getRecordReader().getCurrentValue();
-        String[] fields = line.toString().split(separator);
+        String[] fields = line.toString().trim().split(separator);
 
         if (fields.length > 0) {
             /**

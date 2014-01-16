@@ -227,7 +227,11 @@ public class ClientCounterContext implements IClusterCounterContext {
             in.close();
             return response.toString();
         } catch (Exception e) {
-            throw new IllegalStateException(e);
+            if (!(e instanceof java.net.ConnectException)) {
+                throw new IllegalStateException(e);
+            } else {
+                return "";
+            }
         }
     }
 
