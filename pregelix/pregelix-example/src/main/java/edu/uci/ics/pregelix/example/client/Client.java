@@ -141,7 +141,7 @@ public class Client {
          * set customized key value pairs
          */
         String customizedProperties = options.customizedProperties;
-        if (customizedProperties.indexOf(",") >= 0) {
+        if (customizedProperties.length() > 0) {
             String[] properties = customizedProperties.split(",");
             for (String property : properties) {
                 String[] keyValue = property.split("=");

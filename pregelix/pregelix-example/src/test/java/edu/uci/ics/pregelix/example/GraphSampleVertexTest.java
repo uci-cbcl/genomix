@@ -47,14 +47,13 @@ public class GraphSampleVertexTest {
         try {
             PregelixJob job = new PregelixJob(GraphSampleVertex.class.getName());
             job.setVertexClass(GraphSampleVertex.class);
-            job.setVertexClass(GraphSampleVertex.class);
             job.setVertexInputFormatClass(TextGraphSampleVertexInputFormat.class);
             job.setVertexOutputFormatClass(GraphSampleVertexOutputFormat.class);
             job.setMessageCombinerClass(GraphSampleVertex.SimpleSampleCombiner.class);
             job.addGlobalAggregatorClass(GraphSampleVertex.GlobalSamplingAggregator.class);
             job.setNoramlizedKeyComputerClass(VLongNormalizedKeyComputer.class);
-            job.setDynamicVertexValueSize(true);
-            job.getConfiguration().setFloat(GraphSampleVertex.GLOBAL_RATE, 0.5f);
+            job.setFixedVertexValueSize(true);
+            job.getConfiguration().set(GraphSampleVertex.GLOBAL_RATE, "0.5f");
             FileInputFormat.setInputPaths(job, INPUTPATH);
             FileOutputFormat.setOutputPath(job, new Path(OUTPUTPAH));
 

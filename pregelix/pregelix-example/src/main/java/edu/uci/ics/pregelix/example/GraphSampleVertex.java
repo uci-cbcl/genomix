@@ -200,7 +200,7 @@ public class GraphSampleVertex extends Vertex<VLongWritable, BooleanWritable, Bo
         job.setMessageCombinerClass(GraphSampleVertex.SimpleSampleCombiner.class);
         job.addGlobalAggregatorClass(GraphSampleVertex.GlobalSamplingAggregator.class);
         job.setNoramlizedKeyComputerClass(VLongNormalizedKeyComputer.class);
-        job.setDynamicVertexValueSize(true);
+        job.setFixedVertexValueSize(true);
         Client.run(args, job);
     }
 
