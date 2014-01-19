@@ -201,20 +201,21 @@ public class JobGenerator {
 
     public static void main(String[] args) throws IOException {
         FileUtils.forceMkdir(new File(outputBase));
-        genUnrollTandemRepeatGraph();
-        genMapReduceGraph();
-        genP1ForMergeGraph();
-        genP4ForMergeGraph();
-        genRemoveLowCoverageGraph();
-        genTipAddGraph();
-        genTipRemoveGraph();
-        genBridgeAddGraph();
-        genBridgeRemoveGraph();
-        genBubbleAddGraph();
-        genBubbleMergeGraph();
-        genBubbleMergeWithSearchGraph();
-        genSymmetryCheckerGraph();
+//        genUnrollTandemRepeatGraph();
+//        genMapReduceGraph();
+//        genP1ForMergeGraph();
+//        genTipAddGraph();
+//        genBridgeAddGraph();
+//        genBridgeRemoveGraph();
+//        genBubbleAddGraph();
+//        genBubbleMergeGraph();
+//        genBubbleMergeWithSearchGraph();
+//        genSymmetryCheckerGraph();
+        
         genExtractSubGraph();
+        genTipRemoveGraph();
+        genRemoveLowCoverageGraph();
+        genP4ForMergeGraph();
     }
 
 }
