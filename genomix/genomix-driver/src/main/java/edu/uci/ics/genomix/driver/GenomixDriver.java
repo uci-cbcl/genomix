@@ -70,6 +70,7 @@ import edu.uci.ics.genomix.pregelix.operator.extractsubgraph.ExtractSubgraphVert
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.P1ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.P4ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.removelowcoverage.RemoveLowCoverageVertex;
+import edu.uci.ics.genomix.pregelix.operator.removelowcoverage.ShiftLowCoverageReadSetVertex;
 import edu.uci.ics.genomix.pregelix.operator.scaffolding2.RayVertex;
 import edu.uci.ics.genomix.pregelix.operator.simplebubblemerge.SimpleBubbleMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.symmetrychecker.SymmetryCheckerVertex;
@@ -223,6 +224,8 @@ public class GenomixDriver {
                 pregelixJobs.add(SimpleBubbleMergeVertex.getConfiguredJob(conf, SimpleBubbleMergeVertex.class));
                 break;
             case LOW_COVERAGE:
+                pregelixJobs.add(ShiftLowCoverageReadSetVertex.getConfiguredJob(conf,
+                        ShiftLowCoverageReadSetVertex.class));
                 pregelixJobs.add(RemoveLowCoverageVertex.getConfiguredJob(conf, RemoveLowCoverageVertex.class));
                 break;
             case BRIDGE:
@@ -241,7 +244,8 @@ public class GenomixDriver {
 
                 if (conf.get(GenomixJobConf.SCAFFOLDING_SERIAL_RUN_MIN_LENGTH_THRESHOLD) != null) {
                     // create individual jobs for each Node above threshold, starting at the longest
-                    int minLength = Integer.parseInt(conf.get(GenomixJobConf.SCAFFOLDING_SERIAL_RUN_MIN_LENGTH_THRESHOLD));
+                    int minLength = Integer.parseInt(conf
+                            .get(GenomixJobConf.SCAFFOLDING_SERIAL_RUN_MIN_LENGTH_THRESHOLD));
 
                     // get all the node lengths
                     flushPendingJobs(conf);
@@ -726,7 +730,7 @@ public class GenomixDriver {
         } finally {
             if (Boolean.parseBoolean(conf.get(GenomixJobConf.RUN_LOCAL))) {
                 // force the in-memory pregelix NC to shut down
-//                System.exit(0);
+                //                System.exit(0);
             }
         }
     }

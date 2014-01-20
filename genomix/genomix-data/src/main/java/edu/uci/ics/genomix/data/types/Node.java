@@ -58,7 +58,6 @@ public class Node implements Writable, Serializable {
 
     public static class NeighborInfo {
         public EDGETYPE et;
-        public ReadIdSet readIds;
         public VKmer kmer;
 
         public NeighborInfo(EDGETYPE edgeType, VKmer kmer) {

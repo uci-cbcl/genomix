@@ -75,6 +75,14 @@ public abstract class ExternalableTreeSet<T extends WritableComparable<T> & Seri
         this.readFromLocal = this.writeToLocal;
     }
 
+    public void reset() {
+        loadInMemorySetFromPath();
+        if (inMemorySet.size() > 0) {
+            isChanged = true;
+        }
+        inMemorySet.clear();
+    }
+
     /**
      * A explicit load operation from path to inMemorySet.
      * Every operation that visit the inMemorySet should call this function.
@@ -380,4 +388,5 @@ public abstract class ExternalableTreeSet<T extends WritableComparable<T> & Seri
     public static void forceWriteEntireBody(boolean entire) {
         writeEntireBody = entire;
     }
+
 }
