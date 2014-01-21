@@ -41,4 +41,16 @@ public class ReadHeadInfoTest {
             Assert.assertEquals(pos.getOffset(), i);
         }
     }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void TestOverflow() {
+        for (int i = 1 << 23; i < 1 << 24; i += 1000) {
+            ReadHeadInfo pos = new ReadHeadInfo((byte) 1, (byte) 1, 1l, i, null, null);
+            Assert.assertTrue(false);;
+        }
+        for (int i = 1 << 23; i < 1 << 24; i += 1000) {
+            ReadHeadInfo pos = new ReadHeadInfo((byte) 1, (byte) 1, 1l, -i, null, null);
+            Assert.assertTrue(false);;
+        }
+    }
 }
