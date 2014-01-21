@@ -45,6 +45,7 @@ public class ShiftLowCoverageReadSetVertex extends DeBruijnGraphCleanVertex<Vert
             acceptNewReadSet(msgIterator);
         }
         if (isLowCoverageVertex() && hasReadSet()) {
+            LOG.info("Here is one head: " + getVertexId());
             shiftReadSetToNeighors();
             clearupMyReadSet();
         }

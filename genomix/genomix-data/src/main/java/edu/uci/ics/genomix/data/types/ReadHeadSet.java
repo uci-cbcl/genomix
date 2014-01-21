@@ -159,6 +159,11 @@ public class ReadHeadSet extends ExternalableTreeSet<ReadHeadInfo> implements It
         t.write(out);
     }
 
+    public void reset() {
+        super.reset();
+
+    }
+
     /**
      * Please do not change the iterator's value,
      * Unless you are sure the memory and disk inconsistency will not cause any trouble

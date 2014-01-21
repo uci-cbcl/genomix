@@ -33,4 +33,12 @@ public class ReadHeadInfoTest {
             //Assert.assertEquals(pos1.toString(), pos.toString());
         }
     }
+
+    @Test
+    public void TestNegative() {
+        for (int i = -1; Math.abs(i) < ((1 << 23) - 1); i *= 2) {
+            ReadHeadInfo pos = new ReadHeadInfo((byte) 1, (byte) 1, 1l, i, null, null);
+            Assert.assertEquals(pos.getOffset(), i);
+        }
+    }
 }
