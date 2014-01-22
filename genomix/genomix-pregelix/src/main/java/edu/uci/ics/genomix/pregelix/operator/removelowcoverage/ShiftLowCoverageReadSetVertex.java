@@ -99,6 +99,9 @@ public class ShiftLowCoverageReadSetVertex extends DeBruijnGraphCleanVertex<Vert
             //    ----->
             VKmer destForward = kmerFactory.getSubKmerFromChain(info.getOffset() - (Kmer.getKmerLength() - 1) + 1,
                     Kmer.getKmerLength(), info.getThisReadSequence());
+            if (destForward == null) {
+                continue;
+            }
             VKmer destReverse = destForward.reverse();
             boolean flipped = destForward.compareTo(destReverse) > 0;
 
