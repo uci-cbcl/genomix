@@ -223,21 +223,12 @@ public class GenomixDriver {
             case BUBBLE:
                 pregelixJobs.add(SimpleBubbleMergeVertex.getConfiguredJob(conf, SimpleBubbleMergeVertex.class));
                 break;
-            case LOW_COVERAGE:
-                curOutput = conf.get(GenomixJobConf.HDFS_WORK_PATH) + File.separator + String.format("%02d-", stepNum)
-                        + step + "-job-" + "shift";
-                FileInputFormat.setInputPaths(conf, new Path(prevOutput));
-                FileOutputFormat.setOutputPath(conf, new Path(curOutput));
+            case SHIFT_LOW_COVERAGE:
                 pregelixJobs.add(ShiftLowCoverageReadSetVertex.getConfiguredJob(conf,
                         ShiftLowCoverageReadSetVertex.class));
-
-                prevOutput = curOutput;
-                curOutput = conf.get(GenomixJobConf.HDFS_WORK_PATH) + File.separator + String.format("%02d-", stepNum)
-                        + step + "-job-" + "remove";
-                FileInputFormat.setInputPaths(conf, new Path(prevOutput));
-                FileOutputFormat.setOutputPath(conf, new Path(curOutput));
+                break;
+            case REMOVE_LOW_COVERAGE:
                 pregelixJobs.add(RemoveLowCoverageVertex.getConfiguredJob(conf, RemoveLowCoverageVertex.class));
-
                 break;
             case BRIDGE:
                 pregelixJobs.add(BridgeRemoveVertex.getConfiguredJob(conf, BridgeRemoveVertex.class));

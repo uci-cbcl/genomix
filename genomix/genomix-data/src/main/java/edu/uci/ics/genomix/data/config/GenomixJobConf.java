@@ -207,7 +207,8 @@ public class GenomixJobConf extends JobConf {
         BRIDGE,
         BUBBLE,
         BUBBLE_COMPLEX,
-        LOW_COVERAGE,
+        SHIFT_LOW_COVERAGE,
+        REMOVE_LOW_COVERAGE,
         TIP_SINGLE_NODE,
         TIP,
         SCAFFOLD,
@@ -465,9 +466,10 @@ public class GenomixJobConf extends JobConf {
 
         if (get(PIPELINE_ORDER) == null) {
             set(PIPELINE_ORDER,
-                    Patterns.stringFromArray(new Patterns[] { Patterns.BUILD, Patterns.MERGE, Patterns.LOW_COVERAGE,
-                            Patterns.MERGE, Patterns.TIP_SINGLE_NODE, Patterns.MERGE, Patterns.BUBBLE, Patterns.MERGE,
-                            Patterns.SPLIT_REPEAT, Patterns.MERGE, Patterns.SCAFFOLD, Patterns.MERGE }));
+                    Patterns.stringFromArray(new Patterns[] { Patterns.BUILD, Patterns.MERGE,
+                            Patterns.REMOVE_LOW_COVERAGE, Patterns.MERGE, Patterns.TIP_SINGLE_NODE, Patterns.MERGE,
+                            Patterns.BUBBLE, Patterns.MERGE, Patterns.SPLIT_REPEAT, Patterns.MERGE, Patterns.SCAFFOLD,
+                            Patterns.MERGE }));
         }
 
         if (get(PLOT_SUBGRAPH_GRAPH_VERBOSITY) == null)
