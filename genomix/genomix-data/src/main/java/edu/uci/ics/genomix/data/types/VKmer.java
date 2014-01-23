@@ -954,4 +954,5 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
     public VKmer reverse() {
         return reverse(this);
     }
+
 }

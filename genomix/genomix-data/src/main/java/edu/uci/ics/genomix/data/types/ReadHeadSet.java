@@ -10,7 +10,7 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.SortedSet;
 
-public class ReadHeadSet extends ExternalableTreeSet<ReadHeadInfo> {
+public class ReadHeadSet extends ExternalableTreeSet<ReadHeadInfo> implements Iterable<ReadHeadInfo> {
     private static final long serialVersionUID = 1L;
 
     public ReadHeadSet() {
@@ -100,19 +100,32 @@ public class ReadHeadSet extends ExternalableTreeSet<ReadHeadInfo> {
         }
     }
 
-    public void prependOffsets(int newThisOffset) {
+    /**
+     * ATCT --> --> TCTT => ATCTT
+     * then TCTT's readSet offset need to prepend the extra length
+     * 
+     * @param preOffset
+     */
+    public void prependOffsets(int preOffset) {
         Iterator<ReadHeadInfo> iter = super.resetableIterator();
         while (iter.hasNext()) {
             ReadHeadInfo p = iter.next();
-            p.resetOffset(newThisOffset + p.getOffset());
+            p.resetOffset(preOffset + p.getOffset());
         }
     }
 
-    public void flipOffset(int newOtherOffset) {
+    /**
+     * ATCT --> <-- AAGA => ATCTT
+     * then the AAGA's readSet offset need to flip
+     * TCTTAAAA original 3, now should be [5 - 1] - 3 = 1;
+     * 
+     * @param lastOffsetOfMerged
+     */
+    public void flipOffset(int lastOffsetOfMerged) {
         Iterator<ReadHeadInfo> iter = super.resetableIterator();
         while (iter.hasNext()) {
             ReadHeadInfo p = iter.next();
-            p.resetOffset(newOtherOffset - p.getOffset());
+            p.resetOffset(lastOffsetOfMerged - p.getOffset());
         }
     }
 
@@ -144,6 +157,20 @@ public class ReadHeadSet extends ExternalableTreeSet<ReadHeadInfo> {
     @Override
     public void writeNonGenericElement(DataOutput out, ReadHeadInfo t) throws IOException {
         t.write(out);
+    }
+
+    public void reset() {
+        super.reset();
+
+    }
+
+    /**
+     * Please do not change the iterator's value,
+     * Unless you are sure the memory and disk inconsistency will not cause any trouble
+     */
+    @Override
+    public Iterator<ReadHeadInfo> iterator() {
+        return super.readOnlyIterator();
     }
 
 }

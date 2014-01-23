@@ -19,6 +19,8 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
     private static final int bitsForLibrary = 4;
     private static final int bitsForOffset = 24;
     private static final int bitsForReadId = totalBits - bitsForOffset - bitsForLibrary - bitsForMate;
+
+    private static final int signMaskForOffset = 1 << (bitsForOffset - 1);
     // the offset (position) covers the leading bits, followed by the library, then mate, and finally, the readid
     // to recover each value, >>> by:
     private static final int readIdShift = 0;
@@ -110,10 +112,16 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
             throw new IllegalArgumentException(
                     "byte specified for readId will lose some of its bits when saved! (was: " + readId
                             + " but only allowed " + bitsForReadId + " bits!");
-        if (offset != (offset & ~(-1l << (totalBits - bitsForOffset))))
+        // for the offset, in order to allow the negative offset, we need to do some reformats
+        // the bitsForOffset is split into [sign, rest(23]
+        if (Math.abs(offset) > signMaskForOffset - 1) {
             throw new IllegalArgumentException(
                     "byte specified for offset will lose some of its bits when saved! (was: " + offset
                             + " but only allowed " + bitsForOffset + " bits!");
+        }
+        if (offset < 0) {
+            offset = -offset | signMaskForOffset;
+        }
 
         return ((((long) (offset)) << offsetShift) + (((long) (libraryId)) << libraryIdShift)
                 + (((long) (mateId)) << mateIdShift) + (((long) (readId)) << readIdShift));
@@ -161,7 +169,11 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
     public int getOffset() {
         // holy smokes java... -1 << 64 == -1 ???
         //        return (int) ((value & ~(((long)-1) << (offsetShift + bitsForOffset))) >>> offsetShift);
-        return (int) (value >>> offsetShift);
+        int offset = (int) (value >>> offsetShift);
+        if ((offset & signMaskForOffset) != 0) {
+            offset = -(offset & (signMaskForOffset - 1));
+        }
+        return offset;
     }
 
     public void resetOffset(int offset) {

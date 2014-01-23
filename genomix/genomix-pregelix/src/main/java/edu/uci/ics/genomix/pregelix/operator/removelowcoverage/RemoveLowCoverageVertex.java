@@ -16,7 +16,7 @@ import edu.uci.ics.genomix.pregelix.base.VertexValueWritable.State;
  * and removed. This is then followed by recompressing the graph.
  */
 public class RemoveLowCoverageVertex extends DeBruijnGraphCleanVertex<VertexValueWritable, MessageWritable> {
-    private static float minAverageCoverage = -1;
+    protected static float minAverageCoverage = -1;
 
     /**
      * initiate kmerSize, length
