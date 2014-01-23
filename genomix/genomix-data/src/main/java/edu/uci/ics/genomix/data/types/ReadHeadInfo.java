@@ -20,7 +20,6 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
     private static final int bitsForOffset = 24;
     private static final int bitsForReadId = totalBits - bitsForOffset - bitsForLibrary - bitsForMate;
 
-    private static final int signMaskForOffset = 1 << (bitsForOffset - 1);
     // the offset (position) covers the leading bits, followed by the library, then mate, and finally, the readid
     // to recover each value, >>> by:
     private static final int readIdShift = 0;
@@ -32,7 +31,7 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
     public static final byte MAX_MATE_VALUE = (byte) (-1 >>> (totalBits - bitsForMate));
     public static final byte MAX_LIBRARY_VALUE = (byte) (-1 >>> (totalBits - bitsForLibrary));
     public static final long MAX_READID_VALUE = -1 >>> (totalBits - bitsForReadId);
-    public static final int MAX_OFFSET_VALUE = (int) (-1 >>> (totalBits - bitsForOffset));
+    public static final int MAX_OFFSET_VALUE = (int) (-1 >>> (totalBits - (bitsForOffset - 1)));
 
     protected static ReadHeadInfo getLowerBoundInfo(int offset) {
         return new ReadHeadInfo((byte) 0, (byte) 0, 0l, offset, null, null);
@@ -114,13 +113,13 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
                             + " but only allowed " + bitsForReadId + " bits!");
         // for the offset, in order to allow the negative offset, we need to do some reformats
         // the bitsForOffset is split into [sign, rest(23]
-        if (Math.abs(offset) > signMaskForOffset - 1) {
+        if (Math.abs(offset) > MAX_OFFSET_VALUE) {
             throw new IllegalArgumentException(
                     "byte specified for offset will lose some of its bits when saved! (was: " + offset
                             + " but only allowed " + bitsForOffset + " bits!");
         }
         if (offset < 0) {
-            offset = -offset | signMaskForOffset;
+            offset = -offset | (MAX_OFFSET_VALUE + 1);
         }
 
         return ((((long) (offset)) << offsetShift) + (((long) (libraryId)) << libraryIdShift)
@@ -170,8 +169,8 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
         // holy smokes java... -1 << 64 == -1 ???
         //        return (int) ((value & ~(((long)-1) << (offsetShift + bitsForOffset))) >>> offsetShift);
         int offset = (int) (value >>> offsetShift);
-        if ((offset & signMaskForOffset) != 0) {
-            offset = -(offset & (signMaskForOffset - 1));
+        if ((offset & (MAX_OFFSET_VALUE + 1)) != 0) {
+            offset = -(offset & MAX_OFFSET_VALUE);
         }
         return offset;
     }
