@@ -32,7 +32,7 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
     public static final byte MAX_MATE_VALUE = (byte) (-1 >>> (totalBits - bitsForMate));
     public static final byte MAX_LIBRARY_VALUE = (byte) (-1 >>> (totalBits - bitsForLibrary));
     public static final long MAX_READID_VALUE = -1 >>> (totalBits - bitsForReadId);
-    public static final int MAX_OFFSET_VALUE = (int) (-1 >>> (totalBits - bitsForOffset));
+    public static final int MAX_OFFSET_VALUE = (int) (-1 >>> (totalBits - bitsForOffset + 1));
 
     protected static ReadHeadInfo getLowerBoundInfo(int offset) {
         return new ReadHeadInfo((byte) 0, (byte) 0, 0l, offset, null, null);
