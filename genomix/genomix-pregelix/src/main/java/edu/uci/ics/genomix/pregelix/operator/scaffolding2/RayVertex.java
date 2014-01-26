@@ -92,7 +92,12 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
             // manually clear state
             getVertexValue().visited = false;
             getVertexValue().intersection = false;
-            getVertexValue().flippedFromInitialDirection = false;
+            // FIXME
+            if (INITIAL_DIRECTION == DIR.REVERSE){
+            	getVertexValue().flippedFromInitialDirection = true;
+            }else {
+            	getVertexValue().flippedFromInitialDirection = false;
+            }
             getVertexValue().stopSearch = false;
         }
     }
@@ -144,6 +149,8 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         } else {
             initialMsg.setFrontierFlipped(true);
             initialMsg.setEdgeTypeBackToFrontier(EDGETYPE.FF);
+            //FIXME
+            initialMsg.setCandidateFlipped(true);
         }
         return new ArrayList<RayMessage>(Collections.singletonList(initialMsg)).iterator();
     }
@@ -522,8 +529,9 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
             maxMsgLength = Math.max(maxMsgLength, msgs.get(i).getToScoreKmer().getKmerLetterLength());
         }
         int minLength = Math.min(MAX_DISTANCE, maxMsgLength);
+        //FIXME
+        //minLength = vertex.getKmerLength() + minLength - Kmer.getKmerLength() + 1 - Kmer.getKmerLength() -1;
         minLength = minLength - Kmer.getKmerLength() + 1;
-
         // I'm now allowed to score the first minLength kmers according to my readids
         ArrayList<RayScores> singleEndScores = voteFromReads(true, vertex, vertex.flippedFromInitialDirection, msgs,
                 myOffset, walkLength, minLength);
@@ -624,6 +632,10 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
      */
     private static ArrayList<RayScores> voteFromReads(boolean singleEnd, RayValue vertex, boolean vertexFlipped,
             List<RayMessage> candidateMsgs, int nodeOffset, int walkLength, int msgKmerLength) {
+    	//FIXME
+    	//if (INITIAL_DIRECTION == DIR.REVERSE){
+    	//	vertexFlipped = !vertexFlipped;
+    	//}
         SortedSet<ReadHeadInfo> readSubsetOrientedWithSearch = getReadSubsetOrientedWithSearch(singleEnd, vertex,
                 vertexFlipped, nodeOffset, walkLength);
 
@@ -654,28 +666,37 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
                     // ruleC is about the minimum value in the comparison of the single kmers adjacent to the frontier
                     // but we're currently using it as the minimum across many kmers.  We'll have to think about this 
                     // rule some more and what it means in a merged graph
-
+                    int tmp = 0;
                     if (singleEnd) {
+                    	// FIXME
                         int localOffset = walkLength - nodeOffset + kmerIndex;
                         if (!vertexFlipped) {
                             localOffset -= read.getOffset();
-                        } else {
+                            tmp = read.getOffset();
+                        } else {  
                             // need to flip the read so it points with the search
+                        	//FIXME
                             localOffset -= (vertex.getKmerLength() - 1 - read.getOffset());
-                            read = new ReadHeadInfo(read);
-                            read.set(read.getMateId(), read.getLibraryId(), read.getReadId(), read.getOffset(), read
-                                    .getThisReadSequence().reverse(), null);
+                            tmp = (vertex.getKmerLength() - 1 - read.getOffset());
+                            //localOffset -= vertex.getKmerLength() - (read.getOffset() + readLength) - 1 ;
+                            //int tmp = read.getOffset() - 
+                            //if (!msg.getCandidateFlipped()) {
+                            //read = new ReadHeadInfo(read);
+                            //read.set(read.getMateId(), read.getLibraryId(), read.getReadId(), read.getOffset(), read
+                                  //  .getThisReadSequence().reverse(), null);
+                            //}
                         }
                         if (read.getThisReadSequence().matchesExactly(localOffset, candidateKmer, kmerIndex,
                                 Kmer.getKmerLength())) {
                             match = true;
                         }
                     } else {
-                        int readLength = 100;
-                        int outerDistanceMean = 500;
-                        int outerDistanceStd = 30;
+                        int readLength = 10;
+                        int outerDistanceMean = 21;
+                        int outerDistanceStd = 0;
                         int mateStart = nodeOffset + read.getOffset() + outerDistanceMean - readLength;
                         int candidateInMate = walkLength - mateStart + kmerIndex;
+                        tmp = read.getOffset();
                         // since read.thisSeq is in the same orientation as the search direction, 
                         // the mate sequence is flipped wrt search direction. we reverse it to be in 
                         // the same direction as the search direction.
@@ -686,7 +707,8 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
                         }
                     }
                     if (match) {
-                        ruleATotal += walkLength - nodeOffset - read.getOffset();
+                        //ruleATotal += walkLength - nodeOffset - read.getOffset();
+                        ruleATotal += walkLength - nodeOffset - tmp;
                         ruleBTotal++;
                         ruleCTotal++;
                     }
@@ -755,7 +777,10 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         if (startOffset >= myLength || endOffset < 0) {
             return EMPTY_SORTED_SET;
         }
-        return orientedReads.getOffSetRange(Math.max(0, startOffset), Math.min(myLength, endOffset));
+        
+       // return orientedReads.getOffSetRange(Math.max(0, startOffset), Math.min(myLength, endOffset));
+        return orientedReads.getOffSetRange(0, vertex.getKmerLength());
+
     }
 
     // local variables for compareScoresAndPrune

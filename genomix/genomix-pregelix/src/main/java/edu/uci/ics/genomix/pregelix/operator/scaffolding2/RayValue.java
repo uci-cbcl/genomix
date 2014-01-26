@@ -123,7 +123,9 @@ public class RayValue extends VertexValueWritable {
                 // my max is negative-- no valid readids
                 return true;
             }
-            return getFlippedReadIds().getOffSetRange(0, myLength - numBasesToSkip).isEmpty();
+            //FIXME
+            return getFlippedReadIds().getOffSetRange(0, Math.max(0, getKmerLength() - numBasesToSkip)).isEmpty();
+            //return getFlippedReadIds().getOffSetRange(0, myLength - numBasesToSkip).isEmpty();
         }
     }
 
