@@ -776,6 +776,16 @@ public class BspUtils {
     public static int getSortMemoryLimit(Configuration conf) {
         return conf.getInt(PregelixJob.GROUPING_MEM, 1000);
     }
+    
+    /**
+     * Get the desired
+     * 
+     * @param conf
+     * @return
+     */
+    public static int getNumberWorkers(Configuration conf){
+        return conf.getInt(PregelixJob.NUM_WORKERS, -1);
+    }
 
     public static Writable readGlobalAggregateValue(Configuration conf, String jobId, String aggClassName)
             throws HyracksDataException {

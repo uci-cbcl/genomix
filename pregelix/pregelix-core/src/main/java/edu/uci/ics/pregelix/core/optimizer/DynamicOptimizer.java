@@ -114,7 +114,8 @@ public class DynamicOptimizer implements IOptimizer {
         for (Entry<String, IntWritable> entry : machineToDegreeOfParallelism.entrySet()) {
             String loc = entry.getKey();
             //reserve one core for heartbeat
-            int load = (int) counterContext.getCounter(Counters.NUM_PROCESSOR, false).get() - 2;
+            int load = (int) counterContext.getCounter(Counters.NUM_PROCESSOR, false).get();
+            load = load > 3 ? load - 2 : load;
             IntWritable count = machineToDegreeOfParallelism.get(loc);
             count.set(load);
             dop += load;
@@ -178,7 +179,7 @@ public class DynamicOptimizer implements IOptimizer {
         // the available memory for each grouping operator instance's working space
         long memoryLimit = (memorySize - Math.max(bufferCache, memoryUsed) - networkMem)
                 / (2 * maxParallelismPerMachine);
-        if (memoryLimit < messageByteSize && BspUtils.getGroupingAlgorithm(job.getConfiguration())==false) {
+        if (memoryLimit < messageByteSize && BspUtils.getGroupingAlgorithm(job.getConfiguration()) == false) {
             job.setGroupByMemoryLimit((int) (memoryLimit / frameSize));
         }
     }

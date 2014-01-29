@@ -124,6 +124,7 @@ import edu.uci.ics.pregelix.dataflow.std.TreeIndexBulkReLoadOperatorDescriptor;
 import edu.uci.ics.pregelix.dataflow.std.TreeSearchFunctionUpdateOperatorDescriptor;
 import edu.uci.ics.pregelix.dataflow.std.base.IRecordDescriptorFactory;
 import edu.uci.ics.pregelix.dataflow.std.base.IRuntimeHookFactory;
+import edu.uci.ics.pregelix.dataflow.std.sort.FastSortOperatorDescriptor;
 import edu.uci.ics.pregelix.runtime.bootstrap.IndexLifeCycleManagerProvider;
 import edu.uci.ics.pregelix.runtime.bootstrap.StorageManagerInterface;
 import edu.uci.ics.pregelix.runtime.bootstrap.VirtualBufferCacheProvider;
@@ -939,8 +940,8 @@ public abstract class JobGen implements IJobGen {
             /**
              * construct local sort operator
              */
-            IOperatorDescriptor localSort = new ExternalSortOperatorDescriptor(spec, maxFrameNumber, keyFields,
-                    nkmFactory, sortCmpFactories, rdUnnestedMessage, Algorithm.QUICK_SORT);
+            IOperatorDescriptor localSort = new FastSortOperatorDescriptor(spec, maxFrameNumber, keyFields,
+                    rdUnnestedMessage);
             setLocationConstraint(spec, localSort);
 
             /**
@@ -963,8 +964,7 @@ public abstract class JobGen implements IJobGen {
 
             ITuplePartitionComputerFactory partionFactory = getVertexPartitionComputerFactory();
             spec.connect(new OneToOneConnectorDescriptor(spec), localSort, 0, localGby, 0);
-            spec.connect(new MToNPartitioningMergingConnectorDescriptor(spec, partionFactory, keyFields,
-                    sortCmpFactories, nkmFactory), localGby, 0, globalGby, 0);
+            spec.connect(new edu.uci.ics.pregelix.dataflow.std.connectors.MToNPartitioningMergingConnectorDescriptor(spec, partionFactory, keyFields), localGby, 0, globalGby, 0);
             return Pair.of(localSort, globalGby);
         } else {
             int frameLimit = BspUtils.getGroupingMemoryLimit(conf);

@@ -103,6 +103,8 @@ public class PregelixJob extends Job {
     public static final String GROUPING_MEM = "pregelix.groupmem";
     /** the memory assigned for the sort operator */
     public static final String SORT_MEM = "pregelix.sortmem";
+    /** the number of workers */
+    public static final String NUM_WORKERS = "pregelix.numworkers";
 
     /**
      * Construct a Pregelix job from an existing configuration
@@ -333,6 +335,15 @@ public class PregelixJob extends Job {
      */
     final public void setSortMemoryLimit(int numberOfPages) {
         getConfiguration().setInt(SORT_MEM, numberOfPages);
+    }
+
+    /**
+     * Set the number of workers
+     * 
+     * @param numWorkers
+     */
+    final public void setNumWorkers(int numWorkers) {
+        getConfiguration().setInt(NUM_WORKERS, numWorkers);
     }
 
     @Override
