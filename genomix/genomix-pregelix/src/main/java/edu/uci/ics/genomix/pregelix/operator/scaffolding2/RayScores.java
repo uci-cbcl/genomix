@@ -111,10 +111,13 @@ public class RayScores implements Writable {
     private double getMFactor(float frontierCoverage) {
         if (frontierCoverage >= 2 && frontierCoverage <= 19) {
             return 3;
+        	//return 1.2;
         } else if (frontierCoverage >= 20 && frontierCoverage <= 24) {
             return 2;
+            //return 1.1;
         } else if (frontierCoverage >= 25) {
             return 1.3;
+            //return 1.05;
         } else {
             return 0;
         }
