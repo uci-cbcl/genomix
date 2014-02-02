@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.pregelix.dataflow.util;
+package edu.uci.ics.pregelix.dataflow.std.util;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;

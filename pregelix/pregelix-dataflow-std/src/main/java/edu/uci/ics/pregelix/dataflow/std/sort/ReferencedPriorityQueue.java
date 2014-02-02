@@ -20,8 +20,8 @@ import java.util.BitSet;
 import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputer;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
-import edu.uci.ics.hyracks.dataflow.std.util.ReferenceEntry;
 import edu.uci.ics.pregelix.dataflow.std.sort.RunMergingFrameReader.EntryComparator;
+import edu.uci.ics.pregelix.dataflow.std.util.ReferenceEntry;
 
 public class ReferencedPriorityQueue {
     private final int frameSize;

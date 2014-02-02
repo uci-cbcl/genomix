@@ -25,7 +25,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
-import edu.uci.ics.hyracks.dataflow.std.util.ReferenceEntry;
+import edu.uci.ics.pregelix.dataflow.std.util.ReferenceEntry;
 
 public class RunMergingFrameReader implements IFrameReader {
     private final IHyracksTaskContext ctx;
@@ -141,8 +141,8 @@ public class RunMergingFrameReader implements IFrameReader {
     private EntryComparator createEntryComparator(final RawBinaryComparator[] comparators) {
         return new EntryComparator();
     }
-    
-    class EntryComparator implements Comparator<ReferenceEntry>{
+
+    class EntryComparator implements Comparator<ReferenceEntry> {
 
         @Override
         public int compare(ReferenceEntry tp1, ReferenceEntry tp2) {
@@ -171,6 +171,6 @@ public class RunMergingFrameReader implements IFrameReader {
             }
             return 0;
         }
-        
+
     }
 }
