@@ -969,7 +969,7 @@ public abstract class JobGen implements IJobGen {
             return Pair.of(localSort, globalGby);
         } else {
             int frameLimit = BspUtils.getGroupingMemoryLimit(conf);
-            int hashTableSize = Math.round((float) maxFrameNumber / 1000f) * tableSize;
+            int hashTableSize = Math.round((float) frameLimit / 1000f) * tableSize;
             /**
              * construct local group-by operator
              */
