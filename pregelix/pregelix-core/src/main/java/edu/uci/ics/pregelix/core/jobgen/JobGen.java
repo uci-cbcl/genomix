@@ -139,7 +139,7 @@ public abstract class JobGen implements IJobGen {
     private static final Logger LOGGER = Logger.getLogger(JobGen.class.getName());
     protected static final int MB = 1048576;
     protected static final float DEFAULT_BTREE_FILL_FACTOR = 1.00f;
-    protected static final int tableSize = 10485767;
+    protected static int tableSize = 1575767;
     protected static final String PRIMARY_INDEX = "primary";
     protected Configuration conf;
     protected PregelixJob pregelixJob;
@@ -147,7 +147,7 @@ public abstract class JobGen implements IJobGen {
     protected IStorageManagerInterface storageManagerInterface = StorageManagerInterface.INSTANCE;
     protected String jobId = UUID.randomUUID().toString();;
     protected int frameSize = ClusterConfig.getFrameSize();
-    protected int maxFrameNumber = (int) (((long) 32 * MB) / frameSize);
+    protected int maxFrameNumber = (int) (((long) 64 * MB) / frameSize);
     protected IOptimizer optimizer;
 
     private static final Map<String, String> MERGE_POLICY_PROPERTIES;
@@ -181,6 +181,7 @@ public abstract class JobGen implements IJobGen {
         if (specifiedFrameSize > 0) {
             frameSize = specifiedFrameSize;
             maxFrameNumber = BspUtils.getSortMemoryLimit(conf);
+            tableSize = Math.round((float) maxFrameNumber / 1000f) * tableSize;
         }
         if (maxFrameNumber <= 0) {
             maxFrameNumber = 1;
