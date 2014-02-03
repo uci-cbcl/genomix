@@ -964,7 +964,8 @@ public abstract class JobGen implements IJobGen {
 
             ITuplePartitionComputerFactory partionFactory = getVertexPartitionComputerFactory();
             spec.connect(new OneToOneConnectorDescriptor(spec), localSort, 0, localGby, 0);
-            spec.connect(new edu.uci.ics.pregelix.dataflow.std.connectors.MToNPartitioningMergingConnectorDescriptor(spec, partionFactory, keyFields), localGby, 0, globalGby, 0);
+            spec.connect(new edu.uci.ics.pregelix.dataflow.std.connectors.MToNPartitioningMergingConnectorDescriptor(
+                    spec, partionFactory, keyFields), localGby, 0, globalGby, 0);
             return Pair.of(localSort, globalGby);
         } else {
             int frameLimit = BspUtils.getGroupingMemoryLimit(conf);
@@ -974,22 +975,22 @@ public abstract class JobGen implements IJobGen {
             ITuplePartitionComputerFactory partionFactory = getVertexPartitionComputerFactory();
             IAggregatorDescriptorFactory aggregatorFactory = DataflowUtils.getSerializableAggregatorFactory(conf,
                     false, false);
-            IAggregatorDescriptorFactory mergeFactory = DataflowUtils
-                    .getSerializableAggregatorFactory(conf, true, true);
             IOperatorDescriptor localGby = new ExternalGroupOperatorDescriptor(spec, keyFields, frameLimit,
                     sortCmpFactories, nkmFactory, aggregatorFactory, aggregatorFactory, rdUnnestedMessage,
-                    new HashSpillableTableFactory(partionFactory, tableSize), false);
+                    new HashSpillableTableFactory(partionFactory, tableSize), true);
             setLocationConstraint(spec, localGby);
 
             /**
              * construct global group-by operator
              */
-            IOperatorDescriptor globalGby = new ExternalGroupOperatorDescriptor(spec, keyFields, frameLimit,
-                    sortCmpFactories, nkmFactory, mergeFactory, mergeFactory, rdUnnestedMessage,
-                    new HashSpillableTableFactory(partionFactory, tableSize), true);
+            IClusteredAggregatorDescriptorFactory aggregatorFactoryFinal = DataflowUtils
+                    .getAccumulatingAggregatorFactory(conf, true, true);
+            IOperatorDescriptor globalGby = new ClusteredGroupOperatorDescriptor(spec, keyFields, sortCmpFactories,
+                    aggregatorFactoryFinal, rdFinal);
             setLocationConstraint(spec, globalGby);
 
-            spec.connect(new MToNPartitioningConnectorDescriptor(spec, partionFactory), localGby, 0, globalGby, 0);
+            spec.connect(new edu.uci.ics.pregelix.dataflow.std.connectors.MToNPartitioningMergingConnectorDescriptor(
+                    spec, partionFactory, keyFields), localGby, 0, globalGby, 0);
             return Pair.of(localGby, globalGby);
         }
     }

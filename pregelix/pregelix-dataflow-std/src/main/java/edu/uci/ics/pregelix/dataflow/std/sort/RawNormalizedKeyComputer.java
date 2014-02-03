@@ -28,6 +28,6 @@ public class RawNormalizedKeyComputer implements INormalizedKeyComputer {
                 nk += (bytes[start + i] & 0xff);
             }
         }
-        return nk;
+        return nk ^ Integer.MIN_VALUE;
     }
 }

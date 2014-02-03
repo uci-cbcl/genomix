@@ -15,9 +15,7 @@
 package edu.uci.ics.pregelix.dataflow.std.sort;
 
 import java.io.IOException;
-import java.util.BitSet;
 
-import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputer;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.pregelix.dataflow.std.sort.RunMergingFrameReader.EntryComparator;
@@ -28,11 +26,10 @@ public class ReferencedPriorityQueue {
     private final RecordDescriptor recordDescriptor;
     private final ReferenceEntry entries[];
     private final int size;
-    private final BitSet runAvail;
     private int nItems;
 
     private final EntryComparator comparator;
-    private final INormalizedKeyComputer nmkComputer = new RawNormalizedKeyComputer();
+    private final RawNormalizedKeyComputer nmkComputer = new RawNormalizedKeyComputer();
     private final int[] keyFields;
 
     public ReferencedPriorityQueue(int frameSize, RecordDescriptor recordDescriptor, int initSize,
@@ -46,10 +43,11 @@ public class ReferencedPriorityQueue {
         nItems = initSize;
         size = (initSize + 1) & 0xfffffffe;
         entries = new ReferenceEntry[size];
-        runAvail = new BitSet(size);
-        runAvail.set(0, initSize, true);
         for (int i = 0; i < size; i++) {
             entries[i] = new ReferenceEntry(i, null, -1, keyFields, nmkComputer);
+        }
+        for (int i = initSize; i < size; i++) {
+            entries[i].setExhausted();
         }
     }
 
@@ -93,9 +91,9 @@ public class ReferencedPriorityQueue {
         int slot = (size >> 1) + (min.getRunid() >> 1);
 
         ReferenceEntry curr = e;
-        while (!runAvail.isEmpty() && slot > 0) {
+        while (nItems > 0 && slot > 0) {
             int c = 0;
-            if (!runAvail.get(entries[slot].getRunid())) {
+            if (entries[slot].isExhausted()) {
                 // run of entries[slot] is exhausted, i.e. not available, curr
                 // wins
                 c = 1;
@@ -103,7 +101,7 @@ public class ReferencedPriorityQueue {
                                                             * entries[slot] is
                                                             * not MIN value
                                                             */
-                    && runAvail.get(curr.getRunid() /* curr run is available */)) {
+                    && !curr.isExhausted() /* curr run is available */) {
 
                 if (curr.getAccessor() != null) {
                     c = comparator.compare(entries[slot], curr);
@@ -119,7 +117,7 @@ public class ReferencedPriorityQueue {
                 entries[slot] = curr;
                 curr = tmp;// winner to pass up
             }// else curr wins
-            slot >>= 1;
+            slot = slot >> 1;
         }
         // set new entries[0]
         entries[0] = curr;
@@ -132,14 +130,14 @@ public class ReferencedPriorityQueue {
      */
     public ReferenceEntry pop() {
         ReferenceEntry min = entries[0];
-        runAvail.clear(min.getRunid());
+        min.setExhausted();
         add(min);
         nItems--;
         return min;
     }
 
     public boolean areRunsExhausted() {
-        return runAvail.isEmpty();
+        return nItems <= 0;
     }
 
     public int size() {

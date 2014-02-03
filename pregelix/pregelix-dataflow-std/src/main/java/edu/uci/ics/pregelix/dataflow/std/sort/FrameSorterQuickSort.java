@@ -41,12 +41,12 @@ public class FrameSorterQuickSort implements IFrameSorter {
     private int dataFrameCount;
     private int[] tPointers;
     private int tupleCount;
-   
-    private final RawBinaryComparator[] comparators = new RawBinaryComparator[]{new RawBinaryComparator()};
+
+    private final RawBinaryComparator[] comparators = new RawBinaryComparator[] { new RawBinaryComparator() };
     private final RawNormalizedKeyComputer nkc = new RawNormalizedKeyComputer();
 
-    public FrameSorterQuickSort(IHyracksTaskContext ctx, int[] sortFields,
-            RecordDescriptor recordDescriptor) throws HyracksDataException {
+    public FrameSorterQuickSort(IHyracksTaskContext ctx, int[] sortFields, RecordDescriptor recordDescriptor)
+            throws HyracksDataException {
         this.ctx = ctx;
         this.sortFields = sortFields;
         buffers = new ArrayList<ByteBuffer>();
@@ -208,7 +208,7 @@ public class FrameSorterQuickSort implements IFrameSorter {
         int j1 = tPointers[tp1 * 4 + 1];
         int v1 = tPointers[tp1 * 4 + 3];
         if (v1 != tp2v) {
-            return ((((long) v1) & 0xffffffffL) < (((long) tp2v) & 0xffffffffL)) ? -1 : 1;
+            return v1 < tp2v ? -1 : 1;
         }
         int i2 = tp2i;
         int j2 = tp2j;

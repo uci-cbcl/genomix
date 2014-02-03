@@ -14,17 +14,18 @@
  */
 package edu.uci.ics.pregelix.dataflow.std.util;
 
-import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputer;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
+import edu.uci.ics.pregelix.dataflow.std.sort.RawNormalizedKeyComputer;
 
 public class ReferenceEntry {
     private final int runid;
     private FrameTupleAccessor acccessor;
     private int tupleIndex;
     private int[] tPointers;
+    private boolean exhausted = false;
 
     public ReferenceEntry(int runid, FrameTupleAccessor fta, int tupleIndex, int[] keyFields,
-            INormalizedKeyComputer nmkComputer) {
+            RawNormalizedKeyComputer nmkComputer) {
         super();
         this.runid = runid;
         this.acccessor = fta;
@@ -58,12 +59,20 @@ public class ReferenceEntry {
         return tPointers[0];
     }
 
-    public void setTupleIndex(int tupleIndex, int[] keyFields, INormalizedKeyComputer nmkComputer) {
+    public void setTupleIndex(int tupleIndex, int[] keyFields, RawNormalizedKeyComputer nmkComputer) {
         initTPointer(acccessor, tupleIndex, keyFields, nmkComputer);
     }
 
+    public void setExhausted() {
+        this.exhausted = true;
+    }
+
+    public boolean isExhausted() {
+        return this.exhausted;
+    }
+
     private void initTPointer(FrameTupleAccessor fta, int tupleIndex, int[] keyFields,
-            INormalizedKeyComputer nmkComputer) {
+            RawNormalizedKeyComputer nmkComputer) {
         this.tupleIndex = tupleIndex;
         byte[] b1 = fta.getBuffer().array();
         for (int f = 0; f < keyFields.length; ++f) {
