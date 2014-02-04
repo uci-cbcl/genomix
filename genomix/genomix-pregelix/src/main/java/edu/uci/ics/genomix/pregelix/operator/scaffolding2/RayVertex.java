@@ -751,6 +751,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
     // local variables for getReadSubsetOrientedWithSearch
     @SuppressWarnings("unchecked")
     private static final SortedSet<ReadHeadInfo> EMPTY_SORTED_SET = SetUtils.EMPTY_SORTED_SET;
+	
 
     private static SortedSet<ReadHeadInfo> getReadSubsetOrientedWithSearch(boolean singleEnd, RayValue vertex,
             boolean vertexFlipped, int nodeOffset, int walkLength) {
@@ -1038,6 +1039,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
 		writer.println(walkIds.toString());
 		writer.close();
 	}
+	
 
     public static PregelixJob getConfiguredJob(
             GenomixJobConf conf,
@@ -1084,5 +1086,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         }
         return lastSeen;
     }
-
+    
+    
+    
 }
