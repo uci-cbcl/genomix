@@ -26,7 +26,7 @@ import edu.uci.ics.genomix.pregelix.operator.symmetrychecker.SymmetryCheckerVert
 import edu.uci.ics.genomix.pregelix.operator.test.BridgeAddVertex;
 import edu.uci.ics.genomix.pregelix.operator.test.BubbleAddVertex;
 import edu.uci.ics.genomix.pregelix.operator.test.MapReduceVertex;
-import edu.uci.ics.genomix.pregelix.operator.test.RayAddSimpleBranch;
+//import edu.uci.ics.genomix.pregelix.operator.test.RayAddSimpleBranch;
 import edu.uci.ics.genomix.pregelix.operator.test.TipAddVertex;
 import edu.uci.ics.genomix.pregelix.operator.tipremove.SingleNodeTipRemoveVertex;
 import edu.uci.ics.genomix.pregelix.operator.unrolltandemrepeat.UnrollTandemRepeat;

@@ -48,14 +48,14 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
     private static int MIN_OUTER_DISTANCE;
     private static int MAX_DISTANCE; // the max(readlengths, outerdistances)
 
-    public static final boolean REMOVE_OTHER_OUTGOING = false; // whether to remove other outgoing branches when a dominant edge is chosen
+    public static final boolean REMOVE_OTHER_OUTGOING = true; // whether to remove other outgoing branches when a dominant edge is chosen
     public static final boolean REMOVE_OTHER_INCOMING = false; // whether to remove other incoming branches when a dominant edge is chosen
     public static final boolean CANDIDATES_SCORE_WALK = false; // whether to have the candidates score the walk
     private static final boolean EXPAND_CANDIDATE_BRANCHES = false; // whether to get kmer from all possible candidate branches
     PrintWriter writer;
     
-    public void writeOnFile() throws FileNotFoundException, UnsupportedEncodingException {
-        String s = "/home/ubuntu/workspace/Results/" + getVertexValue().toString().split("\t")[5] + ".txt";
+    public void writeOnFile(String Name) throws FileNotFoundException, UnsupportedEncodingException {
+        String s = "/home/elmira/WORK/RESULTS/" + Name.toString() + ".txt";
         writer = new PrintWriter(s, "UTF-8");
     }
     
@@ -99,7 +99,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
 
         if (getSuperstep() == 1) {
             // manually clear state
-            getVertexValue().visited = false;
+            //getVertexValue().visited = false;
             getVertexValue().intersection = false;
             // FIXME
             if (INITIAL_DIRECTION == DIR.REVERSE){
@@ -210,7 +210,8 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
                                 + " and recieved msg " + msg.getMessageType() + " " + msg.getEdgeTypeBackToFrontier()
                                 + " " + msg.getSourceVertexId());
                     }
-                    vertex.visited = false;
+                    //vertex.visited = false;
+                    vertex.visitedList.remove(msg.getSourceVertexId());
                     break;
                 case STOP:
                     // I am a frontier node but one of my neighbors was already included in a different walk.
@@ -263,17 +264,15 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         // must explicitly check if this node was visited already (would have happened in 
         // this iteration as a previously processed msg!)
         
-        if (vertex.visited) {
-        	writeOnFile();
-        	writer.println(msg.getWalkIds().toString());
-        	writer.close();
+        if (vertex.visitedList.contains(getVertexId())) {
+        	storeWalk(msg.getWalkIds());
             vertex.intersection = true;
             vertex.stopSearch = true;
             LOG.info("start branch comparison had to stop at " + id + " with total length: " + msg.getWalkLength()
                     + "\n>id " + id + "\n" + msg.getAccumulatedWalkKmer());
             return;
         }
-        vertex.visited = true;
+        vertex.visitedList.add(getVertexId());
         // I am the new frontier but this message is coming from the previous frontier; I was the "candidate"
         vertex.flippedFromInitialDirection = msg.getCandidateFlipped();
         DIR nextDir = msg.getEdgeTypeBackToFrontier().mirror().neighborDir();
@@ -286,9 +285,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
 
         if (vertex.degree(nextDir) == 0) {
             // this walk has reached a dead end!  nothing to do in this case.
-        	writeOnFile();
-        	writer.println(msg.getWalkIds().toString());
-        	writer.close();
+        	storeWalk(msg.getWalkIds());
             LOG.info("reached dead end at " + id + " with total length: " + msg.getWalkLength() + "\n>id " + id + "\n"
                     + msg.getAccumulatedWalkKmer());
             return;
@@ -368,9 +365,9 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         VKmer id = getVertexId();
         RayValue vertex = getVertexValue();
         DIR nextDir = msg.getEdgeTypeBackToPrev().mirror().neighborDir();
-
         // already visited -> the frontier must stop!
-        if (vertex.visited) {
+        if (vertex.visitedList.contains(msg.getSourceVertexId())) {
+        	storeWalk(msg.getWalkIds());
             vertex.intersection = true;
             outgoingMsg.reset();
             outgoingMsg.setMessageType(RayMessageType.STOP);
@@ -563,6 +560,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         }
         // each message has a single-element list containing the candidates' total score of the accumulatedKmer
         // we need to add that single element to the path score it corresponds to
+        /**
         if (id.equals(frontierNode)) { // only include the candidate's mutual scores once (here, in the frontier's scores)
             for (int i = 0; i < msgs.size(); i++) {
                 if (msgs.get(i).getSingleEndScores().size() > 0) {
@@ -570,6 +568,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
                 }
             }
         }
+        **/
         if (pairedEndScores != null) {
             outgoingMsg.getPairedEndScores().addAll(pairedEndScores);
         }
@@ -876,6 +875,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         int numSingleEndPaths = singleEndScores.size() > 0 ? singleEndScores.size() : -1;
         int numPairedEndPaths = pairedEndScores.size() > 0 ? pairedEndScores.get(0).size() : -1;
         if (numSingleEndPaths == -1 && numPairedEndPaths == -1) {
+        	storeWalk(walkIds);
             LOG.info("failed to find a dominant edge (no scores available!). Started at "
                     + msgs.get(0).getSourceVertexId() + " and will stop at " + id + " with total length: "
                     + msgs.get(0).getWalkLength() + "\n>id " + id + "\n" + msgs.get(0).getAccumulatedWalkKmer());
@@ -948,7 +948,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         }
 
         // look for a single-end dominator if we didn't find a paired-end one
-        if (!dominantEdgeFound && singleEndScores.size() > 0) {
+        if (!dominantEdgeFound && singleEndScores.size() > 0) {;
             for (int queryI = 0; queryI < numPaths; queryI++) {
                 equalSingleEdgeFound = false;
                 for (int targetJ = 0; targetJ < numPaths; targetJ++) {
@@ -1009,14 +1009,20 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
             sendMsg(dominantKmer, outgoingMsg);
             LOG.info("dominant edge found: " + dominantEdgeType + ":" + dominantKmer);
         } else {
-        	writeOnFile();
-        	writer.println(walkIds);
-        	writer.close();
+        	storeWalk(walkIds);
             LOG.info("failed to find a dominant edge. Started at " + msgs.get(0).getSourceVertexId()
                     + " and will stop at " + id + " with total length: " + msgs.get(0).getWalkLength() + "\n>id " + id
                     + "\n" + msgs.get(0).getAccumulatedWalkKmer());
         }
     }
+
+	public void storeWalk(VKmerList walk) throws FileNotFoundException,
+			UnsupportedEncodingException {
+		writeOnFile(walk.getPosition(0).toString());
+		walkIds.append(getVertexId());
+		writer.println(walkIds.toString());
+		writer.close();
+	}
 
     public static PregelixJob getConfiguredJob(
             GenomixJobConf conf,
