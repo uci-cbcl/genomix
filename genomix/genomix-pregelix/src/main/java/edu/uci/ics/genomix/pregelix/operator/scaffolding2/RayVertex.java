@@ -211,7 +211,9 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
                                 + " " + msg.getSourceVertexId());
                     }
                     //vertex.visited = false;
-                    vertex.visitedList.remove(msg.getSourceVertexId());
+                    List<VKmer> tmp = vertex.getVisitedList();
+                    tmp.remove(msg.getWalkIds().getPosition(0));
+                    vertex.setVisitedList(tmp);
                     break;
                 case STOP:
                     // I am a frontier node but one of my neighbors was already included in a different walk.
@@ -263,8 +265,8 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
 
         // must explicitly check if this node was visited already (would have happened in 
         // this iteration as a previously processed msg!)
-        
-        if (vertex.visitedList.contains(getVertexId())) {
+        if(msg.getWalkLength() > 0){
+        if (vertex.getVisitedList().contains(msg.getWalkIds().getPosition(0))) {
         	storeWalk(msg.getWalkIds());
             vertex.intersection = true;
             vertex.stopSearch = true;
@@ -272,7 +274,18 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
                     + "\n>id " + id + "\n" + msg.getAccumulatedWalkKmer());
             return;
         }
-        vertex.visitedList.add(getVertexId());
+        List <VKmer> tmp = vertex.getVisitedList();
+    	tmp.add(id);
+    	vertex.setVisitedList(tmp);
+        } 
+        
+        if (msg.getWalkLength() == 0){
+        	List <VKmer> visit = vertex.getVisitedList();
+        	visit.add(id);
+        	vertex.setVisitedList(visit);
+        	//vertex.visitedList.add(id);
+        }
+        
         // I am the new frontier but this message is coming from the previous frontier; I was the "candidate"
         vertex.flippedFromInitialDirection = msg.getCandidateFlipped();
         DIR nextDir = msg.getEdgeTypeBackToFrontier().mirror().neighborDir();
@@ -366,7 +379,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         RayValue vertex = getVertexValue();
         DIR nextDir = msg.getEdgeTypeBackToPrev().mirror().neighborDir();
         // already visited -> the frontier must stop!
-        if (vertex.visitedList.contains(msg.getSourceVertexId())) {
+        if (vertex.getVisitedList().contains(msg.getWalkIds().getPosition(0))) {
         	storeWalk(msg.getWalkIds());
             vertex.intersection = true;
             outgoingMsg.reset();
@@ -988,6 +1001,8 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
                         if (et != dominantEdgeType || !kmer.equals(dominantKmer)) {
                             outgoingMsg.reset();
                             outgoingMsg.setMessageType(RayMessageType.PRUNE_EDGE);
+                            outgoingMsg.setWalkIds(walkIds);
+                            outgoingMsg.setWalkLength(walkLength);
                             outgoingMsg.setEdgeTypeBackToFrontier(et.mirror());
                             outgoingMsg.setSourceVertexId(id);
                             sendMsg(kmer, outgoingMsg);
