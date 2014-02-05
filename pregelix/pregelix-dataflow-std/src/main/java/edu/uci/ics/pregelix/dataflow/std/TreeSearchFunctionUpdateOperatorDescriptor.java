@@ -46,12 +46,12 @@ public class TreeSearchFunctionUpdateOperatorDescriptor extends AbstractTreeInde
     protected boolean lowKeyInclusive;
     protected boolean highKeyInclusive;
 
-    private final IUpdateFunctionFactory functionFactory;
-    private final IRuntimeHookFactory preHookFactory;
-    private final IRuntimeHookFactory postHookFactory;
-    private final IRecordDescriptorFactory inputRdFactory;
+    protected final IUpdateFunctionFactory functionFactory;
+    protected final IRuntimeHookFactory preHookFactory;
+    protected final IRuntimeHookFactory postHookFactory;
+    protected final IRecordDescriptorFactory inputRdFactory;
 
-    private final int outputArity;
+    protected final int outputArity;
 
     public TreeSearchFunctionUpdateOperatorDescriptor(JobSpecification spec, RecordDescriptor recDesc,
             IStorageManagerInterface storageManager, IIndexLifecycleManagerProvider lcManagerProvider,

@@ -74,7 +74,6 @@ import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorDescript
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexDropOperatorDescriptor;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexBulkLoadOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexCreateOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallbackFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.dataflow.LSMBTreeDataflowHelperFactory;
@@ -101,6 +100,7 @@ import edu.uci.ics.pregelix.core.data.TypeTraits;
 import edu.uci.ics.pregelix.core.hadoop.config.ConfigurationFactory;
 import edu.uci.ics.pregelix.core.jobgen.clusterconfig.ClusterConfig;
 import edu.uci.ics.pregelix.core.util.DataflowUtils;
+import edu.uci.ics.pregelix.core.util.TreeIndexTypeUtils;
 import edu.uci.ics.pregelix.dataflow.ClearStateOperatorDescriptor;
 import edu.uci.ics.pregelix.dataflow.EmptySinkOperatorDescriptor;
 import edu.uci.ics.pregelix.dataflow.EmptyTupleSourceOperatorDescriptor;
@@ -113,6 +113,7 @@ import edu.uci.ics.pregelix.dataflow.VertexFileWriteOperatorDescriptor;
 import edu.uci.ics.pregelix.dataflow.VertexWriteOperatorDescriptor;
 import edu.uci.ics.pregelix.dataflow.base.IConfigurationFactory;
 import edu.uci.ics.pregelix.dataflow.std.RuntimeHookOperatorDescriptor;
+import edu.uci.ics.pregelix.dataflow.std.KeyChunkValueTreeIndexBulkLoadOperatorDescriptor;
 import edu.uci.ics.pregelix.dataflow.std.TreeIndexBulkReLoadOperatorDescriptor;
 import edu.uci.ics.pregelix.dataflow.std.TreeSearchFunctionUpdateOperatorDescriptor;
 import edu.uci.ics.pregelix.dataflow.std.base.IRecordDescriptorFactory;
@@ -153,9 +154,9 @@ public abstract class JobGen implements IJobGen {
     public JobGen(PregelixJob job) {
         init(job);
     }
-    
+
     public JobGen(PregelixJob job, String jobId) {
-        if(jobId!=null){
+        if (jobId != null) {
             this.jobId = jobId;
         }
         init(job);
@@ -224,14 +225,10 @@ public abstract class JobGen implements IJobGen {
     public JobSpecification generateCreatingJob() throws HyracksException {
         Class<? extends WritableComparable<?>> vertexIdClass = BspUtils.getVertexIndexClass(conf);
         JobSpecification spec = new JobSpecification();
-        ITypeTraits[] typeTraits = new ITypeTraits[2];
-        typeTraits[0] = new TypeTraits(false);
-        typeTraits[1] = new TypeTraits(false);
-        IBinaryComparatorFactory[] comparatorFactories = new IBinaryComparatorFactory[1];
-        comparatorFactories[0] = JobGenUtil.getIBinaryComparatorFactory(0, vertexIdClass);
+        ITypeTraits[] typeTraits = TreeIndexTypeUtils.TypeTraits;
+        IBinaryComparatorFactory[] comparatorFactories = TreeIndexTypeUtils.getBinaryComparatorFactories(vertexIdClass);
+        int[] keyFields = TreeIndexTypeUtils.KeyFields;
 
-        int[] keyFields = new int[1];
-        keyFields[0] = 0;
         IFileSplitProvider fileSplitProvider = ClusterConfig.getFileSplitProvider(jobId, PRIMARY_INDEX);
         TreeIndexCreateOperatorDescriptor btreeCreate = new TreeIndexCreateOperatorDescriptor(spec,
                 storageManagerInterface, lcManagerProvider, fileSplitProvider, typeTraits, comparatorFactories,
@@ -554,16 +551,15 @@ public abstract class JobGen implements IJobGen {
         /**
          * construct tree bulk load operator
          */
-        int[] fieldPermutation = new int[2];
-        fieldPermutation[0] = 0;
-        fieldPermutation[1] = 1;
-        ITypeTraits[] typeTraits = new ITypeTraits[2];
-        typeTraits[0] = new TypeTraits(false);
-        typeTraits[1] = new TypeTraits(false);
-        TreeIndexBulkLoadOperatorDescriptor btreeBulkLoad = new TreeIndexBulkLoadOperatorDescriptor(spec,
-                storageManagerInterface, lcManagerProvider, fileSplitProvider, typeTraits, comparatorFactories,
+        int[] fieldPermutation = TreeIndexTypeUtils.FieldPermutation;
+        ITypeTraits[] typeTraits = TreeIndexTypeUtils.TypeTraits;
+        IBinaryComparatorFactory[] indexComparatorFactories = TreeIndexTypeUtils
+                .getBinaryComparatorFactories(vertexIdClass);
+
+        KeyChunkValueTreeIndexBulkLoadOperatorDescriptor btreeBulkLoad = new KeyChunkValueTreeIndexBulkLoadOperatorDescriptor(spec,
+                storageManagerInterface, lcManagerProvider, fileSplitProvider, typeTraits, indexComparatorFactories,
                 sortFields, fieldPermutation, DEFAULT_BTREE_FILL_FACTOR, true, 0, false,
-                getIndexDataflowHelperFactory(), NoOpOperationCallbackFactory.INSTANCE);
+                getIndexDataflowHelperFactory(), NoOpOperationCallbackFactory.INSTANCE, TreeIndexTypeUtils.CHUNK_SIZE);
         ClusterConfig.setLocationConstraint(spec, btreeBulkLoad);
 
         /**

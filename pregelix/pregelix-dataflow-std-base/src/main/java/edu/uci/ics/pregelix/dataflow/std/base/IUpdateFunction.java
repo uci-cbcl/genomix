@@ -25,8 +25,15 @@ public interface IUpdateFunction extends IFunction {
     /**
      * update the tuple pointed by tupleRef called after process,
      * one-input-tuple-at-a-time
+     * if the tuple is fixed length, the updated vertex value will directly write in-place, and mark the cursor as updated.
+     * else the (vertexID, vertex) pair will write into the cloneUpdateTb.
      * 
      * @param tupleRef
+     *            the tuple pointer
+     * @param cloneUpdateTb
+     *            the buffer to store the copied (vertexid, vertex) pair
+     * @param cursor
+     *            the original cursor inside the TreeIndex to update the vertex value in-place.
      * @throws HyracksDataException
      */
     public void update(ITupleReference tupleRef, ArrayTupleBuilder cloneUpdateTb, IIndexCursor cursor)

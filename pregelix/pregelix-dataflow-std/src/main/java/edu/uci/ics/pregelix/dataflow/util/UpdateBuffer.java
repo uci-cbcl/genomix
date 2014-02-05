@@ -95,7 +95,7 @@ public class UpdateBuffer {
         for (int i = 0; i <= currentInUse; i++) {
             ByteBuffer buffer = buffers.get(i);
             fta.reset(buffer);
-            for (int j = 0; j < fta.getTupleCount(); j++) {
+            for (int j = 0; j < fta.getTupleCount(); j++) {  
                 tuple.reset(fta, j);
                 try {
                     bta.update(tuple);

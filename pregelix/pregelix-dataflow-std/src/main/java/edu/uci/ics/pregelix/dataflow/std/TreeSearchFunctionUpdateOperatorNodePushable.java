@@ -75,11 +75,11 @@ public class TreeSearchFunctionUpdateOperatorNodePushable extends AbstractUnaryI
     protected RecordDescriptor recDesc;
 
     private final IFrameWriter[] writers;
-    private final FunctionProxy functionProxy;
-    private ArrayTupleBuilder cloneUpdateTb;
-    private final UpdateBuffer updateBuffer;
-    private final SearchKeyTupleReference tempTupleReference = new SearchKeyTupleReference();
-    private final StorageType storageType;
+    protected final FunctionProxy functionProxy;
+    protected ArrayTupleBuilder cloneUpdateTb;
+    protected final UpdateBuffer updateBuffer;
+    protected final SearchKeyTupleReference tempTupleReference = new SearchKeyTupleReference();
+    protected final StorageType storageType;
 
     public TreeSearchFunctionUpdateOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc,
             IHyracksTaskContext ctx, int partition, IRecordDescriptorProvider recordDescProvider, boolean isForward,
@@ -166,7 +166,7 @@ public class TreeSearchFunctionUpdateOperatorNodePushable extends AbstractUnaryI
             cloneUpdateTb = new ArrayTupleBuilder(index.getFieldCount());
             updateBuffer.setFieldCount(index.getFieldCount());
         } catch (Exception e) {
-        	closeResource();
+            closeResource();
             throw new HyracksDataException(e);
         }
     }
@@ -206,7 +206,7 @@ public class TreeSearchFunctionUpdateOperatorNodePushable extends AbstractUnaryI
                 writeSearchResults();
             }
         } catch (Exception e) {
-        	closeResource();
+            closeResource();
             throw new HyracksDataException(e);
         }
     }
