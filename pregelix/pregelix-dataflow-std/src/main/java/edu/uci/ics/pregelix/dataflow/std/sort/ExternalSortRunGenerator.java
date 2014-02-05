@@ -21,10 +21,13 @@ import java.util.List;
 import edu.uci.ics.hyracks.api.comm.IFrameReader;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.dataflow.common.io.RunFileWriter;
+import edu.uci.ics.pregelix.dataflow.group.ClusteredGroupWriter;
+import edu.uci.ics.pregelix.dataflow.group.IClusteredAggregatorDescriptorFactory;
 
 public class ExternalSortRunGenerator implements IFrameWriter {
     private final IHyracksTaskContext ctx;
@@ -32,12 +35,26 @@ public class ExternalSortRunGenerator implements IFrameWriter {
     private final List<IFrameReader> runs;
     private final int maxSortFrames;
 
+    private final int[] groupFields;
+    private final IBinaryComparator[] comparators;
+    private final IClusteredAggregatorDescriptorFactory aggregatorFactory;
+    private final RecordDescriptor inRecordDesc;
+    private final RecordDescriptor outRecordDesc;
+
     public ExternalSortRunGenerator(IHyracksTaskContext ctx, int[] sortFields, RecordDescriptor recordDesc,
-            int framesLimit) throws HyracksDataException {
+            int framesLimit, int[] groupFields, IBinaryComparator[] comparators,
+            IClusteredAggregatorDescriptorFactory aggregatorFactory, RecordDescriptor outRecordDesc)
+            throws HyracksDataException {
         this.ctx = ctx;
-        frameSorter = new FrameSorterQuickSort(ctx, sortFields, recordDesc);
-        runs = new LinkedList<IFrameReader>();
-        maxSortFrames = framesLimit - 1;
+        this.frameSorter = new FrameSorterQuickSort(ctx, sortFields, recordDesc);
+        this.runs = new LinkedList<IFrameReader>();
+        this.maxSortFrames = framesLimit - 1;
+
+        this.groupFields = groupFields;
+        this.comparators = comparators;
+        this.aggregatorFactory = aggregatorFactory;
+        this.inRecordDesc = recordDesc;
+        this.outRecordDesc = outRecordDesc;
     }
 
     @Override
@@ -70,11 +87,14 @@ public class ExternalSortRunGenerator implements IFrameWriter {
         FileReference file = ctx.getJobletContext().createManagedWorkspaceFile(
                 ExternalSortRunGenerator.class.getSimpleName());
         RunFileWriter writer = new RunFileWriter(file, ctx.getIOManager());
-        writer.open();
+        ClusteredGroupWriter pgw = new ClusteredGroupWriter(ctx, groupFields, comparators, aggregatorFactory,
+                this.inRecordDesc, this.outRecordDesc, writer);
+        pgw.open();
+
         try {
-            frameSorter.flushFrames(writer);
+            frameSorter.flushFrames(pgw);
         } finally {
-            writer.close();
+            pgw.close();
         }
         frameSorter.reset();
         runs.add(writer.createReader());

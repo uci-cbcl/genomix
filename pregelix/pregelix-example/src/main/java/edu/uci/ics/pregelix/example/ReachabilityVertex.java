@@ -83,6 +83,17 @@ public class ReachabilityVertex extends Vertex<VLongWritable, ByteWritable, Floa
             msgList.add(agg);
             return msgList;
         }
+        
+        @Override
+        public void stepPartial2(VLongWritable vertexIndex, ByteWritable partialAggregate) throws HyracksDataException {
+            int newState = agg.get() | partialAggregate.get();
+            agg.set((byte) newState);
+        }
+        
+        @Override
+        public ByteWritable finishPartial2() {
+            return agg;
+        }
     }
 
     private ByteWritable tmpVertexValue = new ByteWritable();

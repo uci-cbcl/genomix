@@ -77,6 +77,18 @@ public class GraphSampleVertex extends Vertex<VLongWritable, BooleanWritable, Bo
             msgList.add(agg);
             return msgList;
         }
+
+        @Override
+        public void stepPartial2(VLongWritable vertexIndex, BooleanWritable partialAggregate)
+                throws HyracksDataException {
+            agg.set(partialAggregate.get());
+        }
+
+        @Override
+        public BooleanWritable finishPartial2() {
+            // TODO Auto-generated method stub
+            return null;
+        }
     }
 
     public static class GlobalSamplingAggregator

@@ -53,8 +53,9 @@ public class ConnectedComponentsVertex extends Vertex<VLongWritable, VLongWritab
         @Override
         public void stepPartial(VLongWritable vertexIndex, VLongWritable msg) throws HyracksDataException {
             long value = msg.get();
-            if (min > value)
+            if (min > value) {
                 min = value;
+            }
         }
 
         @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -66,8 +67,9 @@ public class ConnectedComponentsVertex extends Vertex<VLongWritable, VLongWritab
 
         @Override
         public void stepFinal(VLongWritable vertexIndex, VLongWritable partialAggregate) throws HyracksDataException {
-            if (min > partialAggregate.get())
+            if (min > partialAggregate.get()) {
                 min = partialAggregate.get();
+            }
         }
 
         @Override
@@ -82,6 +84,20 @@ public class ConnectedComponentsVertex extends Vertex<VLongWritable, VLongWritab
             msgList.clear();
             msgList.add(agg);
             return msgList;
+        }
+
+        @Override
+        public void stepPartial2(VLongWritable vertexIndex, VLongWritable partialAggregate) throws HyracksDataException {
+            long value = partialAggregate.get();
+            if (min > value) {
+                min = value;
+            }
+        }
+
+        @Override
+        public VLongWritable finishPartial2() {
+            agg.set(min);
+            return agg;
         }
     }
 

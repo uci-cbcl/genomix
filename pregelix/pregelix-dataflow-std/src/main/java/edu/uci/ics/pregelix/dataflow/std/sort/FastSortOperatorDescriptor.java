@@ -26,6 +26,7 @@ import edu.uci.ics.hyracks.api.dataflow.ActivityId;
 import edu.uci.ics.hyracks.api.dataflow.IActivityGraphBuilder;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.TaskId;
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -36,7 +37,8 @@ import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractStateObject;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
- 
+import edu.uci.ics.pregelix.dataflow.group.IClusteredAggregatorDescriptorFactory;
+
 public class FastSortOperatorDescriptor extends AbstractOperatorDescriptor {
     private static final long serialVersionUID = 1L;
 
@@ -45,16 +47,28 @@ public class FastSortOperatorDescriptor extends AbstractOperatorDescriptor {
 
     private final int[] sortFields;
     private final int framesLimit;
-    
+
+    private final int[] groupFields;
+    private final IClusteredAggregatorDescriptorFactory aggregatorFactory;
+    private final IClusteredAggregatorDescriptorFactory partialAggregatorFactory;
+    private final RecordDescriptor outRecordDesc;
+
     public FastSortOperatorDescriptor(IOperatorDescriptorRegistry spec, int framesLimit, int[] sortFields,
-            RecordDescriptor recordDescriptor) {
+            RecordDescriptor recordDescriptor, int[] groupFields,
+            IClusteredAggregatorDescriptorFactory aggregatorFactory,
+            IClusteredAggregatorDescriptorFactory partialAggregatorFactory, RecordDescriptor outRecordDesc) {
         super(spec, 1, 1);
         this.framesLimit = framesLimit;
         this.sortFields = sortFields;
         if (framesLimit <= 1) {
             throw new IllegalStateException();// minimum of 2 fames (1 in,1 out)
         }
-        recordDescriptors[0] = recordDescriptor;
+        this.recordDescriptors[0] = recordDescriptor;
+
+        this.groupFields = groupFields;
+        this.aggregatorFactory = aggregatorFactory;
+        this.partialAggregatorFactory = partialAggregatorFactory;
+        this.outRecordDesc = outRecordDesc;
     }
 
     @Override
@@ -108,7 +122,9 @@ public class FastSortOperatorDescriptor extends AbstractOperatorDescriptor {
 
                 @Override
                 public void open() throws HyracksDataException {
-                    runGen = new ExternalSortRunGenerator(ctx, sortFields,  recordDescriptors[0], framesLimit);
+                    runGen = new ExternalSortRunGenerator(ctx, sortFields, recordDescriptors[0], framesLimit,
+                            groupFields, new IBinaryComparator[] { new RawBinaryComparator() }, aggregatorFactory,
+                            outRecordDesc);
                     runGen.open();
                 }
 
@@ -155,7 +171,9 @@ public class FastSortOperatorDescriptor extends AbstractOperatorDescriptor {
                     IFrameSorter frameSorter = state.frameSorter;
                     int necessaryFrames = Math.min(runs.size() + 2, framesLimit);
                     ExternalSortRunMerger merger = new ExternalSortRunMerger(ctx, frameSorter, runs, sortFields,
-                           recordDescriptors[0], necessaryFrames, writer);
+                            outRecordDesc, necessaryFrames, writer, groupFields,
+                            new IBinaryComparator[] { new RawBinaryComparator() }, aggregatorFactory,
+                            partialAggregatorFactory);
                     merger.process();
                 }
             };

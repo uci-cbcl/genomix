@@ -924,14 +924,17 @@ public abstract class JobGen implements IJobGen {
      * @return the start and end (if any) operators of the grouping pipeline
      */
     protected Pair<IOperatorDescriptor, IOperatorDescriptor> generateGroupingOperators(JobSpecification spec,
-            int iteration, Class<? extends Writable> vertexIdClass, Class<? extends Writable> messageValueClass)
-            throws HyracksException {
+            int iteration, Class<? extends Writable> vertexIdClass) throws HyracksException {
         int[] keyFields = new int[] { 0 };
+        Class<? extends Writable> messageValueClass = BspUtils.getMessageValueClass(conf);
+        Class<? extends Writable> partialCombineValueClass = BspUtils.getPartialCombineValueClass(conf);
         INormalizedKeyComputerFactory nkmFactory = JobGenUtil.getINormalizedKeyComputerFactory(conf);
         IBinaryComparatorFactory[] sortCmpFactories = new IBinaryComparatorFactory[1];
         sortCmpFactories[0] = JobGenUtil.getIBinaryComparatorFactory(iteration, vertexIdClass);
         RecordDescriptor rdUnnestedMessage = DataflowUtils.getRecordDescriptorFromKeyValueClasses(conf,
                 vertexIdClass.getName(), messageValueClass.getName());
+        RecordDescriptor rdCombinedMessage = DataflowUtils.getRecordDescriptorFromKeyValueClasses(conf,
+                vertexIdClass.getName(), partialCombineValueClass.getName());
         RecordDescriptor rdFinal = DataflowUtils.getRecordDescriptorFromKeyValueClasses(conf, vertexIdClass.getName(),
                 MsgList.class.getName());
         boolean sortOrHash = BspUtils.getGroupingAlgorithm(conf);
@@ -940,18 +943,13 @@ public abstract class JobGen implements IJobGen {
             /**
              * construct local sort operator
              */
-            IOperatorDescriptor localSort = new FastSortOperatorDescriptor(spec, maxFrameNumber, keyFields,
-                    rdUnnestedMessage);
-            setLocationConstraint(spec, localSort);
-
-            /**
-             * construct local pre-clustered group-by operator
-             */
             IClusteredAggregatorDescriptorFactory aggregatorFactory = DataflowUtils.getAccumulatingAggregatorFactory(
                     conf, false, false);
-            IOperatorDescriptor localGby = new ClusteredGroupOperatorDescriptor(spec, keyFields, sortCmpFactories,
-                    aggregatorFactory, rdUnnestedMessage);
-            setLocationConstraint(spec, localGby);
+            IClusteredAggregatorDescriptorFactory partialAggregatorFactory = DataflowUtils
+                    .getAccumulatingAggregatorFactory(conf, false, true);
+            IOperatorDescriptor localSort = new FastSortOperatorDescriptor(spec, maxFrameNumber, keyFields,
+                    rdUnnestedMessage, keyFields, aggregatorFactory, partialAggregatorFactory, rdCombinedMessage);
+            setLocationConstraint(spec, localSort);
 
             /**
              * construct global group-by operator
@@ -963,9 +961,8 @@ public abstract class JobGen implements IJobGen {
             setLocationConstraint(spec, globalGby);
 
             ITuplePartitionComputerFactory partionFactory = getVertexPartitionComputerFactory();
-            spec.connect(new OneToOneConnectorDescriptor(spec), localSort, 0, localGby, 0);
             spec.connect(new edu.uci.ics.pregelix.dataflow.std.connectors.MToNPartitioningMergingConnectorDescriptor(
-                    spec, partionFactory, keyFields), localGby, 0, globalGby, 0);
+                    spec, partionFactory, keyFields), localSort, 0, globalGby, 0);
             return Pair.of(localSort, globalGby);
         } else {
             int frameLimit = BspUtils.getGroupingMemoryLimit(conf);

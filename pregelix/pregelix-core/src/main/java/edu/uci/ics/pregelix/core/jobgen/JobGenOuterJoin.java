@@ -133,7 +133,7 @@ public class JobGenOuterJoin extends JobGen {
          * construct group-by operator pipeline
          */
         Pair<IOperatorDescriptor, IOperatorDescriptor> groupOps = generateGroupingOperators(spec, iteration,
-                vertexIdClass, messageValueClass);
+                vertexIdClass);
         IOperatorDescriptor groupStartOperator = groupOps.getLeft();
         IOperatorDescriptor groupEndOperator = groupOps.getRight();
 
@@ -307,7 +307,7 @@ public class JobGenOuterJoin extends JobGen {
          * construct group-by operator pipeline
          */
         Pair<IOperatorDescriptor, IOperatorDescriptor> groupOps = generateGroupingOperators(spec, iteration,
-                vertexIdClass, messageValueClass);
+                vertexIdClass);
         IOperatorDescriptor groupStartOperator = groupOps.getLeft();
         IOperatorDescriptor groupEndOperator = groupOps.getRight();
 

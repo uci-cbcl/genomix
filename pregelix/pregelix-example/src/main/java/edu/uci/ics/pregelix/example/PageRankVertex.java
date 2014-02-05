@@ -100,6 +100,18 @@ public class PageRankVertex extends Vertex<VLongWritable, DoubleWritable, FloatW
         public void setPartialCombineState(DoubleWritable combineState) {
             sum = combineState.get();
         }
+
+        @Override
+        public void stepPartial2(VLongWritable vertexIndex, DoubleWritable partialAggregate)
+                throws HyracksDataException {
+            sum += partialAggregate.get();
+        }
+
+        @Override
+        public DoubleWritable finishPartial2() {
+            agg.set(sum);
+            return agg;
+        }
     }
 
     @Override

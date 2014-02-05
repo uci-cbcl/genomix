@@ -84,8 +84,12 @@ public class AggregationFunction implements IAggregateFunction {
 
     @Override
     public void step(IFrameTupleReference tuple) throws HyracksDataException {
-        if (!partialAggAsInput) {
-            combiner.stepPartial(key, (WritableSizable) value);
+        if (!isFinalStage) {
+            if (!partialAggAsInput) {
+                combiner.stepPartial(key, (WritableSizable) value);
+            } else {
+                combiner.stepPartial2(key, value);
+            }
         } else {
             combiner.stepFinal(key, value);
         }
@@ -95,12 +99,16 @@ public class AggregationFunction implements IAggregateFunction {
     public void finish() throws HyracksDataException {
         try {
             if (!isFinalStage) {
-                combinedResult = combiner.finishPartial();
+                if (!partialAggAsInput) {
+                    combinedResult = combiner.finishPartial();
+                } else {
+                    combinedResult = combiner.finishPartial2();
+                }
             } else {
                 combinedResult = combiner.finishFinal();
             }
             combinedResult.write(output);
-        } catch (IOException e) {
+        } catch (Exception e) {
             throw new HyracksDataException(e);
         }
     }
@@ -109,7 +117,11 @@ public class AggregationFunction implements IAggregateFunction {
     public void finishAll() throws HyracksDataException {
         try {
             if (!isFinalStage) {
-                combinedResult = combiner.finishPartial();
+                if (!partialAggAsInput) {
+                    combinedResult = combiner.finishPartial();
+                } else {
+                    combinedResult = combiner.finishPartial2();
+                }
             } else {
                 combinedResult = combiner.finishFinalAll();
             }
@@ -139,8 +151,12 @@ public class AggregationFunction implements IAggregateFunction {
                 keyRead = true;
             }
             value.readFields(valueInput);
-            if (!partialAggAsInput) {
-                return combiner.estimateAccumulatedStateByteSizePartial(key, (WritableSizable) value);
+            if (!isFinalStage) {
+                if (!partialAggAsInput) {
+                    return combiner.estimateAccumulatedStateByteSizePartial(key, (WritableSizable) value);
+                } else {
+                    return combiner.estimateAccumulatedStateByteSizePartial2(key, value);
+                }
             } else {
                 return combiner.estimateAccumulatedStateByteSizeFinal(key, value);
             }

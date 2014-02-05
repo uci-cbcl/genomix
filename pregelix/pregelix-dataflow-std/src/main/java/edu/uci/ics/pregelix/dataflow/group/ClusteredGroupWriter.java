@@ -60,7 +60,8 @@ public class ClusteredGroupWriter implements IFrameWriter {
         appender.reset(outFrame, true);
 
         tupleBuilder = new ArrayTupleBuilder(outRecordDesc.getFields().length);
-        this.aggregator = aggregatorFactory.createAggregator(ctx, inRecordDesc, outRecordDesc, groupFields, groupFields, writer, outFrame, appender);
+        this.aggregator = aggregatorFactory.createAggregator(ctx, inRecordDesc, outRecordDesc, groupFields,
+                groupFields, writer, outFrame, appender);
         this.aggregateState = aggregator.createAggregateStates();
     }
 
@@ -154,9 +155,11 @@ public class ClusteredGroupWriter implements IFrameWriter {
     @Override
     public void close() throws HyracksDataException {
         if (!first) {
-            writeOutput(copyFrameAccessor, copyFrameAccessor.getTupleCount() - 1);
-            if (appender.getTupleCount() > 0) {
-                FrameUtils.flushFrame(outFrame, writer);
+            if (copyFrameAccessor.getTupleCount() > 0) {
+                writeOutput(copyFrameAccessor, copyFrameAccessor.getTupleCount() - 1);
+                if (appender.getTupleCount() > 0) {
+                    FrameUtils.flushFrame(outFrame, writer);
+                }
             }
         }
         aggregateState.close();
