@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 
@@ -16,6 +18,7 @@ public class WalkHandler {
 	private static final int kmerSize = 21;
 	private static HashMap <VKmer, VKmerList> walkIdMap = new HashMap<VKmer, VKmerList>();
 	private static HashMap <VKmer, VKmer> walkKmerMap = new HashMap<VKmer, VKmer>();
+	private static List<String> walkList = new ArrayList<String>();
 	
 	/**
 	 * Reads all .txt file from a directory and build a hashmap for walks.
@@ -41,6 +44,7 @@ public class WalkHandler {
 	        	vkmer.setAsCopy(parts[1]);
 	        	walkIdMap.put(node, walk);
 	        	walkKmerMap.put(node, vkmer);
+	        	walkList.add(vkmer.toString());
 	        }
 	    }
 		
@@ -126,6 +130,36 @@ public class WalkHandler {
 		
 		
 	}
+	
+	/**
+	 * This method aligns string walks. It considers the same cases as compareWalk.
+	 * @param walk1
+	 * @param walk2
+	 * @return
+	 */
+	
+	public static ArrayList<String> alignWalk(String walk1, String walk2){
+		ArrayList<String> walks = new ArrayList<String>(2);
+		String walk = new String();
+		String overlap = new String();
+		overlap = longestSubstring(walk1, walk2);
+		int overlapSize = overlap.length();
+		if (overlapSize > MIN_OVERLAPSIZE ){
+			if (walk1.endsWith(overlap)){
+					walks.add(walk1.substring(0, walk1.length() - overlapSize));
+					walks.add(walk2);
+					return walks;
+			}else if (walk2.endsWith(overlap)){
+					walks.add(walk1);
+					walks.add(walk2.substring(0, walk2.length() - overlapSize));
+					return walks;
+			}
+		}
+		
+		walks.add(walk1);
+		walks.add(walk2);
+		return walks;
+	}
 
 	public ArrayList<VKmerList> keepWalkOrder(VKmerList walk1,
 			 VKmerList walk, ArrayList<VKmerList> walks, int first) {
@@ -141,66 +175,69 @@ public class WalkHandler {
 		}
 	}
 	
-	
-	
-	/**
-	public VKmer buildAWalk(VKmerList walk){
-		boolean[] walkDir = new boolean[walk.size()]; 
-		EDGETYPE edge;
-		EDGETYPE tmp = findEdge(walk.getPosition(0), walk.getPosition(1));
-		boolean checkEdge;
-		for (int i = 0; i < walk.size()-2; i++){
-			edge = findEdge(walk.getPosition(i), walk.getPosition(i+1));
-			checkEdge  = checkFoundEdge(edge, tmp);
-			tmp = checkEdge ? edge : edge.mirror();
-			
+	public static String longestSubstring(String str1, String str2) {
+		 
+		StringBuilder sb = new StringBuilder();
+		if (str1 == null || str1.isEmpty() || str2 == null || str2.isEmpty())
+		  return "";
+		 
+		// ignore case
+		//str1 = str1.toLowerCase();
+		//str2 = str2.toLowerCase();
+		 
+		// java initializes them already with 0
+		int[][] num = new int[str1.length()][str2.length()];
+		int maxlen = 0;
+		int lastSubsBegin = 0;
+		 
+		for (int i = 0; i < str1.length(); i++) {
+		for (int j = 0; j < str2.length(); j++) {
+		  if (str1.charAt(i) == str2.charAt(j)) {
+		    if ((i == 0) || (j == 0))
+		       num[i][j] = 1;
+		    else
+		       num[i][j] = 1 + num[i - 1][j - 1];
+		 
+		    if (num[i][j] > maxlen) {
+		      maxlen = num[i][j];
+		      // generate substring from str1 => i
+		      int thisSubsBegin = i - num[i][j] + 1;
+		      if (lastSubsBegin == thisSubsBegin) {
+		         //if the current LCS is the same as the last time this block ran
+		         sb.append(str1.charAt(i));
+		      } else {
+		         //this block resets the string builder if a different LCS is found
+		         lastSubsBegin = thisSubsBegin;
+		         sb = new StringBuilder();
+		         sb.append(str1.substring(lastSubsBegin, i + 1));
+		      }
+		   }
 		}
-		return null;
-		
-	}
-	
-	//NotWorking
-	//Need to do it another way
-	
-	public EDGETYPE findEdge(VKmer vkmer1, VKmer vkmer2) {
-		boolean ff,fr,rf,rr;
-		ff = vkmer1.toString().regionMatches(1, vkmer2.toString(), 0, kmerSize - 1);
-		fr = vkmer1.toString().regionMatches(1, vkmer2.reverse().toString(), 0, kmerSize - 1);
-		rf = vkmer1.reverse().toString().regionMatches(1, vkmer2.toString(), 0, kmerSize - 1 );
-		rr = vkmer1.reverse().toString().regionMatches(1, vkmer2.reverse().toString(), 0, kmerSize -1);
-		
-		
-		if(vkmer1.toString().regionMatches(1, vkmer2.toString(), 0, kmerSize - 1)){
-			return EDGETYPE.FF;
-		}else if (vkmer1.toString().regionMatches(1, vkmer2.reverse().toString(), 0, kmerSize - 1)){
-			return EDGETYPE.FR;
-		}else if (vkmer1.reverse().toString().regionMatches(1, vkmer2.toString(), 0, kmerSize - 1 )){
-			return EDGETYPE.RF;
-		}else if (vkmer1.reverse().toString().regionMatches(1, vkmer2.reverse().toString(), 0, kmerSize -1)){
-			return EDGETYPE.RR;
+		}}
+		 
+		return sb.toString();
 		}
 		
-			return null;
+	public static void processWalks(){
+		ArrayList<String> walks = new ArrayList<String>(2);
+		int numWalk = walkList.size();
+		for (int i = 0; i< numWalk ; i++){
+			for (int j = i+1 ; j < numWalk ; j++){
+				walks = alignWalk(walkList.get(j), walkList.get(i));	
+				walkList.set(j, walks.get(0));
+				walkList.set(i, walks.get(1));
+			}
+		}
 	}
 	
-	public boolean checkFoundEdge(EDGETYPE edge1, EDGETYPE edge2){
-		if (edge1 == EDGETYPE.FF || edge1 == EDGETYPE.RF){
-			if (edge2 == EDGETYPE.FF || edge2 == EDGETYPE.FR){
-				return true;
-			}else {
-				return false;
-			}
-		} 
-		if (edge1 == EDGETYPE.FR || edge1 == EDGETYPE.RR){
-			if (edge2 == EDGETYPE.RF || edge2 == EDGETYPE.RR){
-				return true;
-			}else {
-				return false;
-			}
-		}		
-		
-		return false;
-		
+	
+	public static void main(String[] args){
+		System.out.println(longestSubstring("ACGTTTCT" , "GTATTTCT"));
+		System.out.println(alignWalk("TTTCT" , "GTATTTCT").toString());
+		walkList.add("ACGTTTCT");
+		walkList.add("GTATTTCT");
+		walkList.add("TTC");
+		processWalks();
+		System.out.println(walkList.toString());
 	}
-	**/
 }
