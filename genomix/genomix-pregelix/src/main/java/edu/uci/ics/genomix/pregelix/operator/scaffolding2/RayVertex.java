@@ -267,7 +267,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         // this iteration as a previously processed msg!)
         if(msg.getWalkLength() > 0){
         if (vertex.getVisitedList().contains(msg.getWalkIds().getPosition(0))) {
-        	storeWalk(msg.getWalkIds());
+        	storeWalk(msg.getWalkIds(),msg.getAccumulatedWalkKmer());
             vertex.intersection = true;
             vertex.stopSearch = true;
             LOG.info("start branch comparison had to stop at " + id + " with total length: " + msg.getWalkLength()
@@ -298,7 +298,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
 
         if (vertex.degree(nextDir) == 0) {
             // this walk has reached a dead end!  nothing to do in this case.
-        	storeWalk(msg.getWalkIds());
+        	storeWalk(msg.getWalkIds(),msg.getAccumulatedWalkKmer());
             LOG.info("reached dead end at " + id + " with total length: " + msg.getWalkLength() + "\n>id " + id + "\n"
                     + msg.getAccumulatedWalkKmer());
             return;
@@ -380,7 +380,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         DIR nextDir = msg.getEdgeTypeBackToPrev().mirror().neighborDir();
         // already visited -> the frontier must stop!
         if (vertex.getVisitedList().contains(msg.getWalkIds().getPosition(0))) {
-        	storeWalk(msg.getWalkIds());
+        	storeWalk(msg.getWalkIds(),msg.getAccumulatedWalkKmer());
             vertex.intersection = true;
             outgoingMsg.reset();
             outgoingMsg.setMessageType(RayMessageType.STOP);
@@ -811,6 +811,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
     private ArrayList<RayScores> pairedEndScores = new ArrayList<>();
     private VKmerList walkIds = new VKmerList();
     private ArrayList<Integer> walkOffsets = new ArrayList<>();
+    private VKmer accumulatedWalk = new VKmer();
 
     /**
      * I'm the frontier node and am now receiving the total scores from each node in the walk.
@@ -882,6 +883,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
             }
             walkIds.append(msg.getWalkIds().getPosition(0));
             walkOffsets.add(msg.getWalkOffsets().get(0));
+            accumulatedWalk = msg.getAccumulatedWalkKmer();
         }
         LOG.info("in prune for " + id + " scores are singleend: " + singleEndScores + " pairedend: " + pairedEndScores);
 
@@ -889,7 +891,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         int numSingleEndPaths = singleEndScores.size() > 0 ? singleEndScores.size() : -1;
         int numPairedEndPaths = pairedEndScores.size() > 0 ? pairedEndScores.get(0).size() : -1;
         if (numSingleEndPaths == -1 && numPairedEndPaths == -1) {
-        	storeWalk(walkIds);
+        	storeWalk(walkIds, accumulatedWalk);
             LOG.info("failed to find a dominant edge (no scores available!). Started at "
                     + msgs.get(0).getSourceVertexId() + " and will stop at " + id + " with total length: "
                     + msgs.get(0).getWalkLength() + "\n>id " + id + "\n" + msgs.get(0).getAccumulatedWalkKmer());
@@ -1025,18 +1027,29 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
             sendMsg(dominantKmer, outgoingMsg);
             LOG.info("dominant edge found: " + dominantEdgeType + ":" + dominantKmer);
         } else {
-        	storeWalk(walkIds);
+        	storeWalk(walkIds, msgs.get(0).getAccumulatedWalkKmer());
             LOG.info("failed to find a dominant edge. Started at " + msgs.get(0).getSourceVertexId()
                     + " and will stop at " + id + " with total length: " + msgs.get(0).getWalkLength() + "\n>id " + id
                     + "\n" + msgs.get(0).getAccumulatedWalkKmer());
         }
     }
 
-	public void storeWalk(VKmerList walk) throws FileNotFoundException,
+	public void storeWalk(VKmerList walk, VKmer accumulatedWalk) throws FileNotFoundException,
 			UnsupportedEncodingException {
-		writeOnFile(walk.getPosition(0).toString());
-		walkIds.append(getVertexId());
-		writer.println(walkIds.toString());
+		VKmer firstKmer = new VKmer();
+		//VKmer firstKmerReverse = new VKmer();
+		firstKmer.setAsCopy(accumulatedWalk.toString().substring(0, kmerSize));
+		if (walk.contains(firstKmer)){
+			writeOnFile(firstKmer.toString());
+		}else {
+			firstKmer.reverse();
+			writeOnFile(firstKmer.toString());
+		}
+		
+		writer.print(">");
+		writer.print(walkIds.toString());
+		writer.print("\n");
+		writer.print(accumulatedWalk);
 		writer.close();
 	}
 	

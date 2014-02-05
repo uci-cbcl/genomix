@@ -14,7 +14,8 @@ import edu.uci.ics.genomix.data.types.VKmerList;
 public class WalkHandler {
 	private static final int MIN_OVERLAPSIZE = 4;
 	private static final int kmerSize = 21;
-	private static HashMap <VKmer, VKmerList> walkMap = new HashMap<VKmer, VKmerList>();
+	private static HashMap <VKmer, VKmerList> walkIdMap = new HashMap<VKmer, VKmerList>();
+	private static HashMap <VKmer, VKmer> walkKmerMap = new HashMap<VKmer, VKmer>();
 	
 	/**
 	 * Reads all .txt file from a directory and build a hashmap for walks.
@@ -25,21 +26,25 @@ public class WalkHandler {
 	public HashMap <VKmer, VKmerList> loadWalkMap(final File directory) throws IOException{
 		VKmerList walk = new VKmerList();
 		VKmer node = new VKmer();
+		VKmer vkmer = new VKmer();
 		for (final File file : directory.listFiles()) {
 			walk.clear();
 	        if (!file.isDirectory()) {
 	        	String content = FileUtils.readFileToString(file);
-	        	String [] words = content.split("[\\W]");
+	        	String [] parts = content.split("\n");
+	        	String [] words = parts[0].split("[\\W]");
 	        	for (String word : words){
 	        		node.setAsCopy(word);
 	        		walk.append(node);;
 	        	}
 	        	node.setAsCopy(file.getName());
-	        	walkMap.put(node, walk);
+	        	vkmer.setAsCopy(parts[1]);
+	        	walkIdMap.put(node, walk);
+	        	walkKmerMap.put(node, vkmer);
 	        }
 	    }
 		
-		return walkMap;
+		return walkIdMap;
 		
 	}
 	/**
@@ -49,7 +54,7 @@ public class WalkHandler {
 	 * @return
 	 */
 	public VKmerList loadWalk(VKmer id){
-		return walkMap.get(id);
+		return walkIdMap.get(id);
 	}
 	
 	/**
@@ -136,6 +141,9 @@ public class WalkHandler {
 		}
 	}
 	
+	
+	
+	/**
 	public VKmer buildAWalk(VKmerList walk){
 		boolean[] walkDir = new boolean[walk.size()]; 
 		EDGETYPE edge;
@@ -155,6 +163,12 @@ public class WalkHandler {
 	//Need to do it another way
 	
 	public EDGETYPE findEdge(VKmer vkmer1, VKmer vkmer2) {
+		boolean ff,fr,rf,rr;
+		ff = vkmer1.toString().regionMatches(1, vkmer2.toString(), 0, kmerSize - 1);
+		fr = vkmer1.toString().regionMatches(1, vkmer2.reverse().toString(), 0, kmerSize - 1);
+		rf = vkmer1.reverse().toString().regionMatches(1, vkmer2.toString(), 0, kmerSize - 1 );
+		rr = vkmer1.reverse().toString().regionMatches(1, vkmer2.reverse().toString(), 0, kmerSize -1);
+		
 		
 		if(vkmer1.toString().regionMatches(1, vkmer2.toString(), 0, kmerSize - 1)){
 			return EDGETYPE.FF;
@@ -188,4 +202,5 @@ public class WalkHandler {
 		return false;
 		
 	}
+	**/
 }
