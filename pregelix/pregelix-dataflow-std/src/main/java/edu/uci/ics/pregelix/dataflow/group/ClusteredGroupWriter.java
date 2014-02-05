@@ -77,15 +77,12 @@ public class ClusteredGroupWriter implements IFrameWriter {
         int nTuples = inFrameAccessor.getTupleCount();
         for (int i = 0; i < nTuples; ++i) {
             if (first) {
-
                 tupleBuilder.reset();
                 for (int j = 0; j < groupFields.length; j++) {
                     tupleBuilder.addField(inFrameAccessor, i, groupFields[j]);
                 }
                 aggregator.init(tupleBuilder, inFrameAccessor, i, aggregateState);
-
                 first = false;
-
             } else {
                 if (i == 0) {
                     switchGroupIfRequired(copyFrameAccessor, copyFrameAccessor.getTupleCount() - 1, inFrameAccessor, i);
@@ -102,7 +99,6 @@ public class ClusteredGroupWriter implements IFrameWriter {
             FrameTupleAccessor currTupleAccessor, int currTupleIndex) throws HyracksDataException {
         if (!sameGroup(prevTupleAccessor, prevTupleIndex, currTupleAccessor, currTupleIndex)) {
             writeOutput(prevTupleAccessor, prevTupleIndex);
-
             tupleBuilder.reset();
             for (int j = 0; j < groupFields.length; j++) {
                 tupleBuilder.addField(currTupleAccessor, currTupleIndex, groupFields[j]);
@@ -115,10 +111,6 @@ public class ClusteredGroupWriter implements IFrameWriter {
 
     private void writeOutput(final FrameTupleAccessor lastTupleAccessor, int lastTupleIndex)
             throws HyracksDataException {
-        tupleBuilder.reset();
-        for (int j = 0; j < groupFields.length; j++) {
-            tupleBuilder.addField(lastTupleAccessor, lastTupleIndex, groupFields[j]);
-        }
         aggregator.outputFinalResult(tupleBuilder, lastTupleAccessor, lastTupleIndex, aggregateState);
         if (!appender.appendSkipEmptyField(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray(), 0,
                 tupleBuilder.getSize())) {
