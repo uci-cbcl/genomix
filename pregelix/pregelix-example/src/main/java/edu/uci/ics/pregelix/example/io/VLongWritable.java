@@ -88,10 +88,9 @@ public class VLongWritable extends org.apache.hadoop.io.VLongWritable implements
             return;
         }
         long i = 0;
-        input.readFully(data, numBytes, len - 1);
-        numBytes += len - 1;
-        for (int idx = 1; idx < len; idx++) {
-            byte b = data[idx];
+        for (int idx = 0; idx < len - 1; idx++) {
+            byte b = input.readByte();
+            data[numBytes++] = b;
             i = i << 8;
             i = i | (b & 0xFF);
         }
