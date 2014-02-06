@@ -16,9 +16,12 @@
 package edu.uci.ics.pregelix.example.io;
 
 import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.io.WritableComparator;
+import org.apache.hadoop.io.WritableUtils;
 
 import edu.uci.ics.pregelix.api.io.WritableSizable;
 import edu.uci.ics.pregelix.example.utils.SerDeUtils;
@@ -32,6 +35,9 @@ import edu.uci.ics.pregelix.example.utils.SerDeUtils;
 @SuppressWarnings("rawtypes")
 public class VLongWritable extends org.apache.hadoop.io.VLongWritable implements WritableSizable {
 
+    private byte[] data = new byte[10];
+    private int numBytes = -1;
+
     public VLongWritable() {
     }
 
@@ -39,26 +45,66 @@ public class VLongWritable extends org.apache.hadoop.io.VLongWritable implements
         set(value);
     }
 
+    @Override
+    public void set(long value) {
+        super.set(value);
+        numBytes = -1;
+    }
+
     public int sizeInBytes() {
-        long i = get();
-        if (i >= -112 && i <= 127) {
-            return 1;
-        }
+        if (numBytes < 0) {
+            long i = get();
+            if (i >= -112 && i <= 127) {
+                return 1;
+            }
 
-        int len = -112;
-        if (i < 0) {
-            i ^= -1L; // take one's complement'
-            len = -120;
-        }
+            int len = -112;
+            if (i < 0) {
+                i ^= -1L; // take one's complement'
+                len = -120;
+            }
 
-        long tmp = i;
-        while (tmp != 0) {
-            tmp = tmp >> 8;
-            len--;
-        }
+            long tmp = i;
+            while (tmp != 0) {
+                tmp = tmp >> 8;
+                len--;
+            }
 
-        len = (len < -120) ? -(len + 120) : -(len + 112);
-        return len + 1;
+            len = (len < -120) ? -(len + 120) : -(len + 112);
+            return len + 1;
+        } else {
+            return numBytes;
+        }
+    }
+
+    @Override
+    public void readFields(DataInput input) throws IOException {
+        numBytes = 0;
+        byte firstByte = input.readByte();
+        data[numBytes++] = firstByte;
+        int len = WritableUtils.decodeVIntSize(firstByte);
+        if (len == 1) {
+            super.set(firstByte);
+            return;
+        }
+        long i = 0;
+        input.readFully(data, numBytes, len - 1);
+        numBytes += len - 1;
+        for (int idx = 1; idx < len; idx++) {
+            byte b = data[idx];
+            i = i << 8;
+            i = i | (b & 0xFF);
+        }
+        super.set((WritableUtils.isNegativeVInt(firstByte) ? (i ^ -1L) : i));
+    }
+
+    @Override
+    public void write(DataOutput output) throws IOException {
+        if (numBytes < 0) {
+            super.write(output);
+        } else {
+            output.write(data, 0, numBytes);
+        }
     }
 
     /** A Comparator optimized for LongWritable. */

@@ -778,10 +778,10 @@ public class BspUtils {
     }
     
     /**
-     * Get the desired
+     * Get the desired number of workers
      * 
      * @param conf
-     * @return
+     * @return the number of workers
      */
     public static int getNumberWorkers(Configuration conf){
         return conf.getInt(PregelixJob.NUM_WORKERS, -1);

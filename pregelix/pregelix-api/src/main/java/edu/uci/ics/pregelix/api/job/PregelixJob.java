@@ -105,6 +105,8 @@ public class PregelixJob extends Job {
     public static final String SORT_MEM = "pregelix.sortmem";
     /** the number of workers */
     public static final String NUM_WORKERS = "pregelix.numworkers";
+    /** the application allows to skip combiner key during aggregations */
+    public static final String SKIP_COMBINER_KEY = "pregelix.skipCombinerKey";
 
     /**
      * Construct a Pregelix job from an existing configuration
@@ -300,6 +302,11 @@ public class PregelixJob extends Job {
         getConfiguration().setBoolean(DYNAMIC_OPTIMIZATION, dynamicOpt);
     }
 
+    /**
+     * Set the counter aggregator class
+     * 
+     * @param aggClass
+     */
     final public void setCounterAggregatorClass(Class<? extends HadoopCountersAggregator<?, ?, ?, ?, ?>> aggClass) {
         if (Modifier.isAbstract(aggClass.getModifiers())) {
             throw new IllegalArgumentException("Aggregate class must be a concrete class, not an abstract one! (was "
@@ -344,6 +351,18 @@ public class PregelixJob extends Job {
      */
     final public void setNumWorkers(int numWorkers) {
         getConfiguration().setInt(NUM_WORKERS, numWorkers);
+    }
+
+    /**
+     * Whether an application allows to skip the combiner key during message combination,
+     * this is a performance improvement tip.
+     * By default, the key is not skipped
+     * 
+     * @param skip
+     *            true to skip; otherwise, not.
+     */
+    final public void setSkipCombinerKey(boolean skip) {
+        getConfiguration().setBoolean(SKIP_COMBINER_KEY, skip);
     }
 
     @Override
