@@ -156,6 +156,7 @@ public class ConnectedComponentsVertex extends Vertex<VLongWritable, VLongWritab
         job.setMessageCombinerClass(ConnectedComponentsVertex.SimpleMinCombiner.class);
         job.setNoramlizedKeyComputerClass(VLongNormalizedKeyComputer.class);
         job.setDynamicVertexValueSize(true);
+        job.setSkipCombinerKey(true);
         Client.run(args, job);
     }
 

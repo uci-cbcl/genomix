@@ -776,15 +776,25 @@ public class BspUtils {
     public static int getSortMemoryLimit(Configuration conf) {
         return conf.getInt(PregelixJob.GROUPING_MEM, 1000);
     }
-    
+
     /**
      * Get the desired number of workers
      * 
      * @param conf
      * @return the number of workers
      */
-    public static int getNumberWorkers(Configuration conf){
+    public static int getNumberWorkers(Configuration conf) {
         return conf.getInt(PregelixJob.NUM_WORKERS, -1);
+    }
+
+    /**
+     * Get whether the combiner key can be skipped when calling a user-defined combine function
+     * 
+     * @param conf
+     * @return true to skip; false otherwise
+     */
+    public static boolean getSkipCombinerKey(Configuration conf) {
+        return conf.getBoolean(PregelixJob.SKIP_COMBINER_KEY, false);
     }
 
     public static Writable readGlobalAggregateValue(Configuration conf, String jobId, String aggClassName)

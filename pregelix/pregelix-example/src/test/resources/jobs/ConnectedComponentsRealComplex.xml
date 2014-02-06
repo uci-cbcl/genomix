@@ -69,7 +69,6 @@
 <property><name>mapred.job.name</name><value>ConnectedComponents</value></property>
 <property><name>hadoop.util.hash.type</name><value>murmur</value></property>
 <property><name>mapred.map.max.attempts</name><value>4</value></property>
-<property><name>pregelix.incStateLength</name><value>true</value></property>
 <property><name>mapred.job.tracker.handler.count</name><value>10</value></property>
 <property><name>mapred.tasktracker.expiry.interval</name><value>600000</value></property>
 <property><name>mapred.jobtracker.maxtasks.per.job</name><value>-1</value></property>
@@ -80,6 +79,7 @@
 <property><name>mapred.output.compression.codec</name><value>org.apache.hadoop.io.compress.DefaultCodec</value></property>
 <property><name>io.map.index.skip</name><value>0</value></property>
 <property><name>ipc.server.tcpnodelay</name><value>false</value></property>
+<property><name>pregelix.skipCombinerKey</name><value>true</value></property>
 <property><name>hadoop.logfile.size</name><value>10000000</value></property>
 <property><name>mapred.reduce.tasks.speculative.execution</name><value>true</value></property>
 <property><name>fs.checkpoint.period</name><value>3600</value></property>

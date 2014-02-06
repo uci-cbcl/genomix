@@ -83,13 +83,13 @@ public class ReachabilityVertex extends Vertex<VLongWritable, ByteWritable, Floa
             msgList.add(agg);
             return msgList;
         }
-        
+
         @Override
         public void stepPartial2(VLongWritable vertexIndex, ByteWritable partialAggregate) throws HyracksDataException {
             int newState = agg.get() | partialAggregate.get();
             agg.set((byte) newState);
         }
-        
+
         @Override
         public ByteWritable finishPartial2() {
             return agg;
@@ -231,6 +231,8 @@ public class ReachabilityVertex extends Vertex<VLongWritable, ByteWritable, Floa
         job.setVertexOutputFormatClass(SimpleReachibilityVertexOutputFormat.class);
         job.setMessageCombinerClass(ReachabilityVertex.SimpleReachibilityCombiner.class);
         job.setNoramlizedKeyComputerClass(VLongNormalizedKeyComputer.class);
+        job.setSkipCombinerKey(true);
+        job.setFixedVertexValueSize(true);
         Client.run(args, job);
         System.out.println("reachable? " + readReachibilityResult(job.getConfiguration()));
     }

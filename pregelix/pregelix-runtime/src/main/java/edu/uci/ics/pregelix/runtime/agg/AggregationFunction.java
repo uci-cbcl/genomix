@@ -55,6 +55,7 @@ public class AggregationFunction implements IAggregateFunction {
     private Writable combinedResult;
     private MsgList msgList = new MsgList();
     private boolean keyRead = false;
+    private boolean skipKey = false;
 
     public AggregationFunction(IHyracksTaskContext ctx, IConfigurationFactory confFactory, DataOutput tmpOutput,
             IFrameWriter groupByOutputWriter, boolean isFinalStage, boolean partialAggAsInput)
@@ -68,6 +69,7 @@ public class AggregationFunction implements IAggregateFunction {
         combiner = BspUtils.createMessageCombiner(conf);
         key = BspUtils.createVertexIndex(conf);
         value = !partialAggAsInput ? BspUtils.createMessageValue(conf) : BspUtils.createPartialCombineValue(conf);
+        skipKey = BspUtils.getSkipCombinerKey(conf);
     }
 
     @Override
@@ -146,7 +148,7 @@ public class AggregationFunction implements IAggregateFunction {
         valueInputStream.setByteBuffer(buffer, valueStart);
 
         try {
-            if (!keyRead) {
+            if (!keyRead && !skipKey) {
                 key.readFields(keyInput);
                 keyRead = true;
             }

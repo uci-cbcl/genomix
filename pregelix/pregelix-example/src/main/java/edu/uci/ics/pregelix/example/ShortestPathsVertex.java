@@ -152,6 +152,8 @@ public class ShortestPathsVertex extends Vertex<VLongWritable, DoubleWritable, F
         job.setMessageCombinerClass(ShortestPathsVertex.SimpleMinCombiner.class);
         job.setNoramlizedKeyComputerClass(VLongNormalizedKeyComputer.class);
         job.getConfiguration().setLong(SOURCE_ID, 0);
+        job.setSkipCombinerKey(true);
+        job.setFixedVertexValueSize(true);
         Client.run(args, job);
     }
 
