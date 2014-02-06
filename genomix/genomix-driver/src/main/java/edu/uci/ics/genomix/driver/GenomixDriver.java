@@ -70,7 +70,7 @@ import edu.uci.ics.genomix.pregelix.operator.extractsubgraph.ExtractSubgraphVert
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.P1ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.P4ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.removelowcoverage.RemoveLowCoverageVertex;
-import edu.uci.ics.genomix.pregelix.operator.removelowcoverage.ShiftLowCoverageReadSetVertex;
+//import edu.uci.ics.genomix.pregelix.operator.removelowcoverage.ShiftLowCoverageReadSetVertex;
 import edu.uci.ics.genomix.pregelix.operator.scaffolding2.RayVertex;
 import edu.uci.ics.genomix.pregelix.operator.simplebubblemerge.SimpleBubbleMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.symmetrychecker.SymmetryCheckerVertex;
@@ -219,14 +219,16 @@ public class GenomixDriver {
                 break;
             case TIP:
                 pregelixJobs.add(TipRemoveWithSearchVertex.getConfiguredJob(conf, TipRemoveWithSearchVertex.class));
-                break;
+                break; 
             case BUBBLE:
                 pregelixJobs.add(SimpleBubbleMergeVertex.getConfiguredJob(conf, SimpleBubbleMergeVertex.class));
                 break;
+            /**    
             case SHIFT_LOW_COVERAGE:
                 pregelixJobs.add(ShiftLowCoverageReadSetVertex.getConfiguredJob(conf,
                         ShiftLowCoverageReadSetVertex.class));
                 break;
+                **/
             case REMOVE_LOW_COVERAGE:
                 pregelixJobs.add(RemoveLowCoverageVertex.getConfiguredJob(conf, RemoveLowCoverageVertex.class));
                 break;
@@ -547,7 +549,7 @@ public class GenomixDriver {
                 allPatterns.add(i, Patterns.RAY_SCAFFOLD_FORWARD);
                 //allPatterns.add(i + 1, Patterns.MERGE);
                 //allPatterns.add(i + 1, Patterns.STATS);
-                allPatterns.add(i + 1, Patterns.RAY_SCAFFOLD_REVERSE);
+                //allPatterns.add(i + 1, Patterns.RAY_SCAFFOLD_REVERSE);
             }
         }
 
