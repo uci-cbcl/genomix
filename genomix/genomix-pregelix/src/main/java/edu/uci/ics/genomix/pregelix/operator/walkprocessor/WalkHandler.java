@@ -1,4 +1,4 @@
-package edu.uci.ics.genomix.preglix.operator.walkprocessor;
+package edu.uci.ics.genomix.pregelix.operator.walkprocessor;
 
 import java.io.File;
 import java.io.FileNotFoundException;
