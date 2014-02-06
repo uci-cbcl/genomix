@@ -1,5 +1,6 @@
 package edu.uci.ics.genomix.pregelix.operator.scaffolding2;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -8,6 +9,7 @@ import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
@@ -16,6 +18,7 @@ import java.util.TreeMap;
 import java.util.logging.Logger;
 
 import org.apache.commons.collections.SetUtils;
+import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapred.Counters;
 import org.apache.hadoop.mapred.Counters.Counter;
@@ -53,6 +56,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
     public static final boolean CANDIDATES_SCORE_WALK = false; // whether to have the candidates score the walk
     private static final boolean EXPAND_CANDIDATE_BRANCHES = false; // whether to get kmer from all possible candidate branches
     PrintWriter writer;
+    private static final File directory = new File("/home/elmira/WORK/RESULTS/");
     
     public void writeOnFile(String Name) throws FileNotFoundException, UnsupportedEncodingException {
         String s = "/home/elmira/WORK/RESULTS/" + Name.toString() + ".txt";
@@ -159,6 +163,12 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
             initialMsg.setEdgeTypeBackToFrontier(EDGETYPE.FF);
             //FIXME
             initialMsg.setCandidateFlipped(true);
+            try {
+				initialMsg.setWalkIds(loadWalkMap(directory));
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
         }
         return new ArrayList<RayMessage>(Collections.singletonList(initialMsg)).iterator();
     }
@@ -1053,6 +1063,25 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
 		writer.close();
 	}
 	
+	public VKmerList loadWalkMap(final File directory) throws IOException{
+		VKmerList walk = new VKmerList();
+		VKmer node = new VKmer();
+		for (final File file : directory.listFiles()) {
+			walk.clear();
+	        if ((!file.isDirectory() && (file.getName().equals(getVertexId().toString() + "txt")) || (file.getName().equals(getVertexId().reverse().toString() + "txt")))) {
+	        	String content = FileUtils.readFileToString(file);
+	        	String [] parts = content.split("\n");
+	        	String [] words = parts[0].split("[\\W]");
+	        	for (String word : words){
+	        		node.setAsCopy(word);
+	        		walk.append(node);
+	        	}
+	        	return walk;
+	        }
+	    }
+		 return null;
+		
+	}
 
     public static PregelixJob getConfiguredJob(
             GenomixJobConf conf,

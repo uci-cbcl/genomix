@@ -1,7 +1,10 @@
 package edu.uci.ics.genomix.preglix.operator.walkprocessor;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -9,7 +12,6 @@ import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 
-import edu.uci.ics.genomix.data.types.EDGETYPE;
 import edu.uci.ics.genomix.data.types.VKmer;
 import edu.uci.ics.genomix.data.types.VKmerList;
 
@@ -19,7 +21,12 @@ public class WalkHandler {
 	private static HashMap <VKmer, VKmerList> walkIdMap = new HashMap<VKmer, VKmerList>();
 	private static HashMap <VKmer, VKmer> walkKmerMap = new HashMap<VKmer, VKmer>();
 	private static List<String> walkList = new ArrayList<String>();
+	static PrintWriter writer;
 	
+    public static void writeOnFile() throws FileNotFoundException, UnsupportedEncodingException {
+        String s = "/home/elmira/WORK/RESULTS/result.txt";
+        writer = new PrintWriter(s, "UTF-8");
+    }
 	/**
 	 * Reads all .txt file from a directory and build a hashmap for walks.
 	 * @param directory
@@ -153,6 +160,14 @@ public class WalkHandler {
 					walks.add(walk1);
 					walks.add(walk2.substring(0, walk2.length() - overlapSize));
 					return walks;
+			}else if (walk1.contains(walk2)){
+				walks.add(walk1);
+				walks.add(walk);
+				return walks;
+			}else if (walk2.contains(walk1)){
+				walks.add(walk);
+				walks.add(walk2);
+				return walks;
 			}
 		}
 		
@@ -230,14 +245,32 @@ public class WalkHandler {
 		}
 	}
 	
-	
-	public static void main(String[] args){
+	public static void printWalks() throws FileNotFoundException, UnsupportedEncodingException{
+		int numWalk = 0;
+		writeOnFile();
+		for (String walk : walkList){
+			numWalk++;
+			if (!(walk == null)){
+			if (walk.length() > 0){
+				writer.print(">");
+				writer.print("Contig Number " + numWalk);
+				writer.print("\n");
+				writer.print(walk);
+				writer.print("\n");
+			}
+			}
+		}
+		writer.close();
+	}
+	public static void main(String[] args) throws FileNotFoundException, UnsupportedEncodingException{
+		
 		System.out.println(longestSubstring("ACGTTTCT" , "GTATTTCT"));
-		System.out.println(alignWalk("TTTCT" , "GTATTTCT").toString());
+		System.out.println(alignWalk("ATTTC" , "GTATTTCT").toString());
 		walkList.add("ACGTTTCT");
 		walkList.add("GTATTTCT");
-		walkList.add("TTC");
+		walkList.add("ATTTC");
 		processWalks();
-		System.out.println(walkList.toString());
+		printWalks();
+		
 	}
 }
