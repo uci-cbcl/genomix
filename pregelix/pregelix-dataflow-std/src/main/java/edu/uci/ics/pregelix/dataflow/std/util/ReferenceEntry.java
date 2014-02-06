@@ -17,7 +17,7 @@ package edu.uci.ics.pregelix.dataflow.std.util;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.pregelix.dataflow.std.sort.RawNormalizedKeyComputer;
 
-public class ReferenceEntry {
+public final class ReferenceEntry {
     private final int runid;
     private FrameTupleAccessor acccessor;
     private int tupleIndex;

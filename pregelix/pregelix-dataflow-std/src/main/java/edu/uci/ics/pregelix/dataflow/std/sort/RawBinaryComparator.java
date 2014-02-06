@@ -16,7 +16,7 @@ package edu.uci.ics.pregelix.dataflow.std.sort;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 
-public class RawBinaryComparator implements IBinaryComparator {
+public final class RawBinaryComparator implements IBinaryComparator {
 
     @Override
     public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {

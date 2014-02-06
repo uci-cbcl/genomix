@@ -21,12 +21,10 @@ import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.std.group.AggregateState;
-import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptor;
 
 public class ClusteredGroupWriter implements IFrameWriter {
     private final int[] groupFields;
@@ -40,8 +38,6 @@ public class ClusteredGroupWriter implements IFrameWriter {
 
     private final ByteBuffer outFrame;
     private final FrameTupleAppender appender;
-    private final ArrayTupleBuilder tupleBuilder;
-
     private boolean first;
 
     public ClusteredGroupWriter(IHyracksTaskContext ctx, int[] groupFields, IBinaryComparator[] comparators,
@@ -56,10 +52,9 @@ public class ClusteredGroupWriter implements IFrameWriter {
         copyFrameAccessor.reset(copyFrame);
 
         outFrame = ctx.allocateFrame();
-        appender = new FrameTupleAppender(ctx.getFrameSize());
+        appender = new FrameTupleAppender(ctx.getFrameSize(), outRecordDesc.getFields().length);
         appender.reset(outFrame, true);
 
-        tupleBuilder = new ArrayTupleBuilder(outRecordDesc.getFields().length);
         this.aggregator = aggregatorFactory.createAggregator(ctx, inRecordDesc, outRecordDesc, groupFields,
                 groupFields, writer, outFrame, appender);
         this.aggregateState = aggregator.createAggregateStates();
@@ -77,11 +72,7 @@ public class ClusteredGroupWriter implements IFrameWriter {
         int nTuples = inFrameAccessor.getTupleCount();
         for (int i = 0; i < nTuples; ++i) {
             if (first) {
-                tupleBuilder.reset();
-                for (int j = 0; j < groupFields.length; j++) {
-                    tupleBuilder.addField(inFrameAccessor, i, groupFields[j]);
-                }
-                aggregator.init(tupleBuilder, inFrameAccessor, i, aggregateState);
+                aggregator.init(inFrameAccessor, i, aggregateState);
                 first = false;
             } else {
                 if (i == 0) {
@@ -99,27 +90,20 @@ public class ClusteredGroupWriter implements IFrameWriter {
             FrameTupleAccessor currTupleAccessor, int currTupleIndex) throws HyracksDataException {
         if (!sameGroup(prevTupleAccessor, prevTupleIndex, currTupleAccessor, currTupleIndex)) {
             writeOutput(prevTupleAccessor, prevTupleIndex);
-            tupleBuilder.reset();
-            for (int j = 0; j < groupFields.length; j++) {
-                tupleBuilder.addField(currTupleAccessor, currTupleIndex, groupFields[j]);
-            }
-            aggregator.init(tupleBuilder, currTupleAccessor, currTupleIndex, aggregateState);
+            aggregator.init(currTupleAccessor, currTupleIndex, aggregateState);
         } else {
-            aggregator.aggregate(currTupleAccessor, currTupleIndex, null, 0, aggregateState);
+            aggregator.aggregate(currTupleAccessor, currTupleIndex, aggregateState);
         }
     }
 
     private void writeOutput(final FrameTupleAccessor lastTupleAccessor, int lastTupleIndex)
             throws HyracksDataException {
-        aggregator.outputFinalResult(tupleBuilder, lastTupleAccessor, lastTupleIndex, aggregateState);
-        if (!appender.appendSkipEmptyField(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray(), 0,
-                tupleBuilder.getSize())) {
+        if (!aggregator.outputFinalResult(lastTupleAccessor, lastTupleIndex, aggregateState, appender)) {
             FrameUtils.flushFrame(outFrame, writer);
             appender.reset(outFrame, true);
-            if (!appender.appendSkipEmptyField(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray(), 0,
-                    tupleBuilder.getSize())) {
-                throw new HyracksDataException("The output of size " + tupleBuilder.getSize()
-                        + " cannot be fit into a frame of size " + outFrame.array().length);
+            if (!aggregator.outputFinalResult(lastTupleAccessor, lastTupleIndex, aggregateState, appender)) {
+                throw new HyracksDataException("The output of size " + " cannot be fit into a frame of size "
+                        + outFrame.array().length);
             }
         }
 

@@ -29,7 +29,7 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import edu.uci.ics.hyracks.dataflow.std.group.AggregateState;
-import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptor;
+import edu.uci.ics.pregelix.dataflow.group.IAggregatorDescriptor;
 import edu.uci.ics.pregelix.dataflow.group.IClusteredAggregatorDescriptorFactory;
 import edu.uci.ics.pregelix.dataflow.std.base.IAggregateFunction;
 import edu.uci.ics.pregelix.dataflow.std.base.IAggregateFunctionFactory;
@@ -73,8 +73,8 @@ public class AccumulatingAggregatorFactory implements IClusteredAggregatorDescri
             }
 
             @Override
-            public void init(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
-                    AggregateState state) throws HyracksDataException {
+            public void init(IFrameTupleAccessor accessor, int tIndex, AggregateState state)
+                    throws HyracksDataException {
                 setGroupKeySize(accessor, tIndex);
                 initAggregateFunctions(state, true);
                 int stateSize = estimateStep(accessor, tIndex, state);
@@ -88,8 +88,8 @@ public class AccumulatingAggregatorFactory implements IClusteredAggregatorDescri
             }
 
             @Override
-            public void aggregate(IFrameTupleAccessor accessor, int tIndex, IFrameTupleAccessor stateAccessor,
-                    int stateTupleIndex, AggregateState state) throws HyracksDataException {
+            public void aggregate(IFrameTupleAccessor accessor, int tIndex, AggregateState state)
+                    throws HyracksDataException {
                 int stateSize = estimateStep(accessor, tIndex, state);
                 if (stateSize > frameSize) {
                     emitResultTuple(accessor, tIndex, state);
@@ -99,18 +99,29 @@ public class AccumulatingAggregatorFactory implements IClusteredAggregatorDescri
             }
 
             @Override
-            public boolean outputFinalResult(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
-                    AggregateState state) throws HyracksDataException {
+            public boolean outputFinalResult(IFrameTupleAccessor accessor, int tIndex, AggregateState state,
+                    FrameTupleAppender appender) throws HyracksDataException {
                 Pair<ArrayBackedValueStorage[], IAggregateFunction[]> aggState = (Pair<ArrayBackedValueStorage[], IAggregateFunction[]>) state.state;
                 ArrayBackedValueStorage[] aggOutput = aggState.getLeft();
                 IAggregateFunction[] agg = aggState.getRight();
                 for (int i = 0; i < agg.length; i++) {
                     try {
                         agg[i].finishAll();
-                        tupleBuilder.addField(aggOutput[i].getByteArray(), aggOutput[i].getStartOffset(),
-                                aggOutput[i].getLength());
                     } catch (Exception e) {
                         throw new HyracksDataException(e);
+                    }
+                }
+                //write group Keys
+                for (int i = 0; i < groupFields.length; i++) {
+                    if (!appender.appendField(accessor, tIndex, groupFields[i])) {
+                        return false;
+                    }
+                }
+                //write aggregate fields
+                for (int i = 0; i < agg.length; i++) {
+                    if (!appender.appendField(aggOutput[i].getByteArray(), aggOutput[i].getStartOffset(),
+                            aggOutput[i].getLength())) {
+                        return false;
                     }
                 }
                 return true;
@@ -122,8 +133,8 @@ public class AccumulatingAggregatorFactory implements IClusteredAggregatorDescri
             }
 
             @Override
-            public boolean outputPartialResult(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
-                    AggregateState state) throws HyracksDataException {
+            public boolean outputPartialResult(IFrameTupleAccessor accessor, int tIndex, AggregateState state,
+                    FrameTupleAppender appender) throws HyracksDataException {
                 throw new IllegalStateException("this method should not be called");
             }
 
