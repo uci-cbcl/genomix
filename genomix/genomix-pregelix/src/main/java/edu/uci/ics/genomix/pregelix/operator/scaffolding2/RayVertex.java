@@ -272,11 +272,12 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         // I'm the new frontier node... time to do some pruning
         VKmer id = getVertexId();
         RayValue vertex = getVertexValue();
-
+        VKmer seed = new VKmer();
         // must explicitly check if this node was visited already (would have happened in 
         // this iteration as a previously processed msg!)
         if(msg.getWalkLength() > 0){
-        if (vertex.getVisitedList().contains(msg.getWalkIds().getPosition(0))) {
+        	seed.setAsCopy(msg.getAccumulatedWalkKmer().toString().substring(0, kmerSize));
+        if (vertex.getVisitedList().contains(seed)) {
         	storeWalk(msg.getWalkIds(),msg.getAccumulatedWalkKmer());
             vertex.intersection = true;
             vertex.stopSearch = true;
@@ -387,9 +388,11 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
     private void sendCandidatesToFrontier(RayMessage msg) throws FileNotFoundException, UnsupportedEncodingException {
         VKmer id = getVertexId();
         RayValue vertex = getVertexValue();
+        VKmer seed = new VKmer();
         DIR nextDir = msg.getEdgeTypeBackToPrev().mirror().neighborDir();
         // already visited -> the frontier must stop!
-        if (vertex.getVisitedList().contains(msg.getWalkIds().getPosition(0))) {
+        seed.setAsCopy(msg.getAccumulatedWalkKmer().toString().substring(0, kmerSize));
+        if (vertex.getVisitedList().contains(seed)) {
         	storeWalk(msg.getWalkIds(),msg.getAccumulatedWalkKmer());
             vertex.intersection = true;
             outgoingMsg.reset();
