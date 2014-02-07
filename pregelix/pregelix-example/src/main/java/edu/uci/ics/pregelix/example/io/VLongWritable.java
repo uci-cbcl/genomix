@@ -23,6 +23,7 @@ import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.io.WritableComparator;
 import org.apache.hadoop.io.WritableUtils;
 
+import edu.uci.ics.pregelix.api.io.Pointable;
 import edu.uci.ics.pregelix.api.io.WritableSizable;
 import edu.uci.ics.pregelix.example.utils.SerDeUtils;
 
@@ -33,12 +34,14 @@ import edu.uci.ics.pregelix.example.utils.SerDeUtils;
  * @see org.apache.hadoop.io.WritableUtils#readVLong(DataInput)
  */
 @SuppressWarnings("rawtypes")
-public class VLongWritable extends org.apache.hadoop.io.VLongWritable implements WritableSizable {
+public class VLongWritable extends org.apache.hadoop.io.VLongWritable implements WritableComparable, WritableSizable,
+        Pointable {
 
     private byte[] data = new byte[10];
     private int numBytes = -1;
 
     public VLongWritable() {
+        set(0);
     }
 
     public VLongWritable(long value) {
@@ -48,33 +51,11 @@ public class VLongWritable extends org.apache.hadoop.io.VLongWritable implements
     @Override
     public void set(long value) {
         super.set(value);
-        numBytes = -1;
+        reset();
     }
 
     public int sizeInBytes() {
-        if (numBytes < 0) {
-            long i = get();
-            if (i >= -112 && i <= 127) {
-                return 1;
-            }
-
-            int len = -112;
-            if (i < 0) {
-                i ^= -1L; // take one's complement'
-                len = -120;
-            }
-
-            long tmp = i;
-            while (tmp != 0) {
-                tmp = tmp >> 8;
-                len--;
-            }
-
-            len = (len < -120) ? -(len + 120) : -(len + 112);
-            return len + 1;
-        } else {
-            return numBytes;
-        }
+        return numBytes;
     }
 
     @Override
@@ -88,9 +69,10 @@ public class VLongWritable extends org.apache.hadoop.io.VLongWritable implements
             return;
         }
         long i = 0;
-        for (int idx = 0; idx < len - 1; idx++) {
-            byte b = input.readByte();
-            data[numBytes++] = b;
+        input.readFully(data, numBytes, len - 1);
+        numBytes += len - 1;
+        for (int idx = 1; idx < len; idx++) {
+            byte b = data[idx];
             i = i << 8;
             i = i | (b & 0xFF);
         }
@@ -99,10 +81,73 @@ public class VLongWritable extends org.apache.hadoop.io.VLongWritable implements
 
     @Override
     public void write(DataOutput output) throws IOException {
-        if (numBytes < 0) {
-            super.write(output);
-        } else {
-            output.write(data, 0, numBytes);
+        output.write(data, 0, numBytes);
+    }
+
+    @Override
+    public byte[] getByteArray() {
+        return data;
+    }
+
+    @Override
+    public int getStartOffset() {
+        return 0;
+    }
+
+    @Override
+    public int getLength() {
+        return numBytes;
+    }
+
+    @Override
+    public int set(byte[] bytes, int offset) {
+        int position = offset;
+        numBytes = 0;
+        byte firstByte = bytes[position++];
+        data[numBytes++] = firstByte;
+        int len = WritableUtils.decodeVIntSize(firstByte);
+        if (len == 1) {
+            super.set(firstByte);
+            return numBytes;
+        }
+        long i = 0;
+        System.arraycopy(bytes, position, data, numBytes, len - 1);
+        numBytes += len - 1;
+        for (int idx = 1; idx < len; idx++) {
+            byte b = data[idx];
+            i = i << 8;
+            i = i | (b & 0xFF);
+        }
+        super.set((WritableUtils.isNegativeVInt(firstByte) ? (i ^ -1L) : i));
+        return numBytes;
+    }
+
+    private void reset() {
+        numBytes = 0;
+        long value = get();
+        if (value >= -112 && value <= 127) {
+            data[numBytes++] = (byte) value;
+            return;
+        }
+
+        int len = -112;
+        if (value < 0) {
+            value ^= -1L; // take one's complement'
+            len = -120;
+        }
+
+        long tmp = value;
+        while (tmp != 0) {
+            tmp = tmp >> 8;
+            len--;
+        }
+
+        data[numBytes++] = (byte) len;
+        len = (len < -120) ? -(len + 120) : -(len + 112);
+        for (int idx = len; idx != 0; idx--) {
+            int shiftbits = (idx - 1) * 8;
+            long mask = 0xFFL << shiftbits;
+            data[numBytes++] = (byte) ((value & mask) >> shiftbits);
         }
     }
 

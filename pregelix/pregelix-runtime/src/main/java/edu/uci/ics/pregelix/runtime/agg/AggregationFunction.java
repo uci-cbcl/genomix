@@ -148,11 +148,14 @@ public class AggregationFunction implements IAggregateFunction {
         valueInputStream.setByteBuffer(buffer, valueStart);
 
         try {
+            //read key if necessary
             if (!keyRead && !skipKey) {
                 key.readFields(keyInput);
                 keyRead = true;
             }
+            //read value
             value.readFields(valueInput);
+
             if (!isFinalStage) {
                 if (!partialAggAsInput) {
                     return combiner.estimateAccumulatedStateByteSizePartial(key, (WritableSizable) value);
@@ -166,5 +169,4 @@ public class AggregationFunction implements IAggregateFunction {
             throw new HyracksDataException(e);
         }
     }
-
 }
