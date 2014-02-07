@@ -277,17 +277,17 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         // this iteration as a previously processed msg!)
         if(msg.getWalkLength() > 0){
         	seed.setAsCopy(msg.getAccumulatedWalkKmer().toString().substring(0, kmerSize));
-        if (vertex.getVisitedList().contains(seed)) {
-        	storeWalk(msg.getWalkIds(),msg.getAccumulatedWalkKmer());
-            vertex.intersection = true;
-            vertex.stopSearch = true;
-            LOG.info("start branch comparison had to stop at " + id + " with total length: " + msg.getWalkLength()
-                    + "\n>id " + id + "\n" + msg.getAccumulatedWalkKmer());
-            return;
-        }
-        List <VKmer> tmp = vertex.getVisitedList();
-    	tmp.add(id);
-    	vertex.setVisitedList(tmp);
+        	if ((vertex.getVisitedList().contains(seed)) || (vertex.getVisitedList().contains(seed.reverse()))) {
+        		storeWalk(msg.getWalkIds(),msg.getAccumulatedWalkKmer());
+        		vertex.intersection = true;
+           		vertex.stopSearch = true;
+           		LOG.info("start branch comparison had to stop at " + id + " with total length: " + msg.getWalkLength()
+           				+ "\n>id " + id + "\n" + msg.getAccumulatedWalkKmer());
+           		return;
+        	}
+        	List <VKmer> tmp = vertex.getVisitedList();
+        	tmp.add(seed);
+        	vertex.setVisitedList(tmp);
         } 
         
         if (msg.getWalkLength() == 0){
@@ -392,7 +392,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         DIR nextDir = msg.getEdgeTypeBackToPrev().mirror().neighborDir();
         // already visited -> the frontier must stop!
         seed.setAsCopy(msg.getAccumulatedWalkKmer().toString().substring(0, kmerSize));
-        if (vertex.getVisitedList().contains(seed)) {
+        if ((vertex.getVisitedList().contains(seed)) || (vertex.getVisitedList().contains(seed.reverse()))) {
         	storeWalk(msg.getWalkIds(),msg.getAccumulatedWalkKmer());
             vertex.intersection = true;
             outgoingMsg.reset();
