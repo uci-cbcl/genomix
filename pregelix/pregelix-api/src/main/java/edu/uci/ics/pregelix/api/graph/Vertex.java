@@ -234,19 +234,19 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
     /**
      * Vote to halt. Once all vertex vote to halt and no more messages, a
      * Pregelix job will terminate.
-     * 
      * The state of the current vertex value is saved.
      */
     public final void voteToHalt() {
         halt = true;
         updated = true;
     }
-    
+
     /**
      * Vote to halt. Once all vertex vote to halt and no more messages, a
      * Pregelix job will terminate.
      * 
-     * @param update whether or not to save the vertex value
+     * @param update
+     *            whether or not to save the vertex value
      */
     public final void voteToHalt(boolean update) {
         halt = true;
@@ -255,18 +255,18 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
 
     /**
      * Activate a halted vertex such that it is alive again.
-     * 
      * The state of the current vertex value is saved.
      */
     public final void activate() {
         halt = false;
         updated = true;
     }
-    
+
     /**
      * Activate a halted vertex such that it is alive again.
      * 
-     * @param update whether or not to save the vertex value
+     * @param update
+     *            whether or not to save the vertex value
      */
     public final void activate(boolean update) {
         halt = false;
@@ -612,13 +612,12 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
         Vertex vertex = (Vertex) object;
         return vertexId.equals(vertex.getVertexId());
     }
-    
+
     /**
-     * called *once* per partition at the start of each iteration, 
+     * called *once* per partition at the start of each iteration,
      * before calls to open() or compute()
-     *  
-     * Users can override this method to configure the pregelix job 
-     * and vertex state. 
+     * Users can override this method to configure the pregelix job
+     * and vertex state.
      */
     public void configure(Configuration conf) {
 
