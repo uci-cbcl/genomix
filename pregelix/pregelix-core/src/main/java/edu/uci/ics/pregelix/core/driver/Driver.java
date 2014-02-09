@@ -56,6 +56,8 @@ import edu.uci.ics.pregelix.api.job.ICheckpointHook;
 import edu.uci.ics.pregelix.api.job.IIterationCompleteReporterHook;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.api.util.BspUtils;
+import edu.uci.ics.pregelix.api.util.GlobalEdgeCountAggregator;
+import edu.uci.ics.pregelix.api.util.GlobalVertexCountAggregator;
 import edu.uci.ics.pregelix.api.util.ReflectionUtils;
 import edu.uci.ics.pregelix.core.base.IDriver;
 import edu.uci.ics.pregelix.core.jobgen.JobGen;
@@ -188,6 +190,17 @@ public class Driver implements IDriver {
             LOG.info("job finished");
             StringBuffer counterBuffer = new StringBuffer();
             counterBuffer.append("performance counters\n");
+            counterBuffer.append("\t"
+                    + "total vertice: "
+                    + IterationUtils.readGlobalAggregateValue(currentJob.getConfiguration(),
+                            BspUtils.getJobId(currentJob.getConfiguration()),
+                            GlobalVertexCountAggregator.class.getName()) + "\n");
+            counterBuffer
+                    .append("\t"
+                            + "total edges: "
+                            + IterationUtils.readGlobalAggregateValue(currentJob.getConfiguration(),
+                                    BspUtils.getJobId(currentJob.getConfiguration()),
+                                    GlobalEdgeCountAggregator.class.getName()) + "\n");
             for (String counter : COUNTERS) {
                 counterBuffer.append("\t" + counter + ": " + counterContext.getCounter(counter, false).get() + "\n");
             }
