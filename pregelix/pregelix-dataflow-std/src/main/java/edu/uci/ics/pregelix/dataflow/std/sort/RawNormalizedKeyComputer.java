@@ -15,11 +15,8 @@
 
 package edu.uci.ics.pregelix.dataflow.std.sort;
 
-import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputer;
+public final class RawNormalizedKeyComputer {
 
-public final class RawNormalizedKeyComputer implements INormalizedKeyComputer {
-
-    @Override
     public int normalize(byte[] bytes, int start, int length) {
         int nk = 0;
         for (int i = 0; i < 4; i++) {
@@ -29,5 +26,16 @@ public final class RawNormalizedKeyComputer implements INormalizedKeyComputer {
             }
         }
         return nk ^ Integer.MIN_VALUE;
+    }
+
+    public int normalize4(byte[] bytes, int start, int length) {
+        int nk = 0;
+        for (int i = 4; i < 6; i++) {
+            nk <<= 8;
+            if (i < length) {
+                nk += (bytes[start + i] & 0xff);
+            }
+        }
+        return nk;
     }
 }

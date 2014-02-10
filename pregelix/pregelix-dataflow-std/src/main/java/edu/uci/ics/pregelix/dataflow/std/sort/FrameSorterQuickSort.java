@@ -25,6 +25,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
+import edu.uci.ics.hyracks.dataflow.common.util.IntSerDeUtils;
 
 public class FrameSorterQuickSort implements IFrameSorter {
     private final IHyracksTaskContext ctx;
@@ -100,13 +101,14 @@ public class FrameSorterQuickSort implements IFrameSorter {
             for (int j = 0; j < tCount; ++j) {
                 int tStart = fta1.getTupleStartOffset(j);
                 int tEnd = fta1.getTupleEndOffset(j);
-                tPointers[ptr * 4] = i;
+                tPointers[ptr * 4] = i << 16;
                 tPointers[ptr * 4 + 1] = tStart;
                 tPointers[ptr * 4 + 2] = tEnd;
                 int f0StartRel = fta1.getFieldStartOffset(j, sfIdx);
                 int f0EndRel = fta1.getFieldEndOffset(j, sfIdx);
                 int f0Start = f0StartRel + tStart + fta1.getFieldSlotsLength();
                 tPointers[ptr * 4 + 3] = nkc == null ? 0 : nkc.normalize(array, f0Start, f0EndRel - f0StartRel);
+                tPointers[ptr * 4] |= nkc == null ? 0 : (nkc.normalize4(array, f0Start, f0EndRel - f0StartRel) & 0xff);
                 ++ptr;
             }
         }
@@ -119,7 +121,7 @@ public class FrameSorterQuickSort implements IFrameSorter {
     public void flushFrames(IFrameWriter writer) throws HyracksDataException {
         appender.reset(outFrame, true);
         for (int ptr = 0; ptr < tupleCount; ++ptr) {
-            int i = tPointers[ptr * 4];
+            int i = tPointers[ptr * 4] >>> 16;
             int tStart = tPointers[ptr * 4 + 1];
             int tEnd = tPointers[ptr * 4 + 2];
             ByteBuffer buffer = buffers.get(i);
@@ -140,7 +142,8 @@ public class FrameSorterQuickSort implements IFrameSorter {
 
     private void sort(int[] tPointers, int offset, int length) {
         int m = offset + (length >> 1);
-        int mi = tPointers[m * 4];
+        int mi = tPointers[m * 4] >>> 16;
+        int mu = tPointers[m * 4] & 0xff;
         int mj = tPointers[m * 4 + 1];
         int mv = tPointers[m * 4 + 3];
 
@@ -150,7 +153,7 @@ public class FrameSorterQuickSort implements IFrameSorter {
         int d = c;
         while (true) {
             while (b <= c) {
-                int cmp = compare(tPointers, b, mi, mj, mv);
+                int cmp = compare(tPointers, b, mi, mj, mv, mu);
                 if (cmp > 0) {
                     break;
                 }
@@ -160,7 +163,7 @@ public class FrameSorterQuickSort implements IFrameSorter {
                 ++b;
             }
             while (c >= b) {
-                int cmp = compare(tPointers, c, mi, mj, mv);
+                int cmp = compare(tPointers, c, mi, mj, mv, mu);
                 if (cmp < 0) {
                     break;
                 }
@@ -203,13 +206,17 @@ public class FrameSorterQuickSort implements IFrameSorter {
         }
     }
 
-    private int compare(int[] tPointers, int tp1, int tp2i, int tp2j, int tp2v) {
-        int i1 = tPointers[tp1 * 4];
-        int j1 = tPointers[tp1 * 4 + 1];
+    private int compare(int[] tPointers, int tp1, int tp2i, int tp2j, int tp2v, int tp2u) {
         int v1 = tPointers[tp1 * 4 + 3];
         if (v1 != tp2v) {
             return v1 < tp2v ? -1 : 1;
         }
+        int u1 = tPointers[tp1 * 4] & 0xff;
+        if (u1 != tp2u) {
+            return u1 < tp2u ? -1 : 1;
+        }
+        int i1 = tPointers[tp1 * 4] >>> 16;
+        int j1 = tPointers[tp1 * 4 + 1];
         int i2 = tp2i;
         int j2 = tp2j;
         ByteBuffer buf1 = buffers.get(i1);
@@ -220,12 +227,12 @@ public class FrameSorterQuickSort implements IFrameSorter {
         fta2.reset(buf2);
         for (int f = 0; f < comparators.length; ++f) {
             int fIdx = sortFields[f];
-            int f1Start = fIdx == 0 ? 0 : buf1.getInt(j1 + (fIdx - 1) * 4);
-            int f1End = buf1.getInt(j1 + fIdx * 4);
+            int f1Start = fIdx == 0 ? 0 : IntSerDeUtils.getInt(b1, j1 + (fIdx - 1) * 4);
+            int f1End = IntSerDeUtils.getInt(b1, j1 + fIdx * 4);
             int s1 = j1 + fta1.getFieldSlotsLength() + f1Start;
             int l1 = f1End - f1Start;
-            int f2Start = fIdx == 0 ? 0 : buf2.getInt(j2 + (fIdx - 1) * 4);
-            int f2End = buf2.getInt(j2 + fIdx * 4);
+            int f2Start = fIdx == 0 ? 0 : IntSerDeUtils.getInt(b2, j2 + (fIdx - 1) * 4);
+            int f2End = IntSerDeUtils.getInt(b2, j2 + fIdx * 4);
             int s2 = j2 + fta2.getFieldSlotsLength() + f2Start;
             int l2 = f2End - f2Start;
             int c = comparators[f].compare(b1, s1, l1, b2, s2, l2);
