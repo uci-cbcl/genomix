@@ -107,6 +107,8 @@ public class PregelixJob extends Job {
     public static final String NUM_WORKERS = "pregelix.numworkers";
     /** the application allows to skip combiner key during aggregations */
     public static final String SKIP_COMBINER_KEY = "pregelix.skipCombinerKey";
+    /** the merge connector */
+    public static final String MERGE_CONNECTOR = "pregelix.merge";
 
     /**
      * Construct a Pregelix job from an existing configuration
@@ -363,6 +365,15 @@ public class PregelixJob extends Job {
      */
     final public void setSkipCombinerKey(boolean skip) {
         getConfiguration().setBoolean(SKIP_COMBINER_KEY, skip);
+    }
+    
+    /**
+     * Whether to use merge connector
+     * 
+     * @param merge
+     */
+    final public void setMergeConnector(boolean merge){
+        getConfiguration().setBoolean(MERGE_CONNECTOR, merge);
     }
 
     @Override

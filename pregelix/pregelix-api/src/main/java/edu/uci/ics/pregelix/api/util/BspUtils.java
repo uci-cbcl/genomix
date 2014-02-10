@@ -797,6 +797,16 @@ public class BspUtils {
         return conf.getBoolean(PregelixJob.SKIP_COMBINER_KEY, false);
     }
 
+    /**
+     * Get whether a merge connector is used
+     * 
+     * @param conf
+     * @return true -merge; false-no merge
+     */
+    public static boolean getMergingConnector(Configuration conf) {
+        return conf.getBoolean(PregelixJob.MERGE_CONNECTOR, true);
+    }
+
     public static Writable readGlobalAggregateValue(Configuration conf, String jobId, String aggClassName)
             throws HyracksDataException {
         try {
