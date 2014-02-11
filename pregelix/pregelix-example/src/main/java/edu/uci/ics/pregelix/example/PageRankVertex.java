@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.FloatWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.InputSplit;
@@ -113,12 +114,14 @@ public class PageRankVertex extends Vertex<VLongWritable, DoubleWritable, FloatW
             return agg;
         }
     }
+    
+    @Override
+    public void configure(Configuration conf){
+        maxIteration = conf.getInt(ITERATIONS, 10);
+    }
 
     @Override
     public void compute(Iterator<DoubleWritable> msgIterator) {
-        if (maxIteration < 0) {
-            maxIteration = getContext().getConfiguration().getInt(ITERATIONS, 10);
-        }
         if (getSuperstep() == 1) {
             tmpVertexValue.set(1.0 / getNumVertices());
             setVertexValue(tmpVertexValue);

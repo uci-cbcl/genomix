@@ -17,6 +17,7 @@ package edu.uci.ics.pregelix.example;
 
 import java.util.Iterator;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.FloatWritable;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -116,10 +117,12 @@ public class ShortestPathsVertex extends Vertex<VLongWritable, DoubleWritable, F
     }
 
     @Override
+    public void configure(Configuration conf) {
+        sourceId = conf.getLong(SOURCE_ID, SOURCE_ID_DEFAULT);
+    }
+
+    @Override
     public void compute(Iterator<DoubleWritable> msgIterator) {
-        if (sourceId < 0) {
-            sourceId = getContext().getConfiguration().getLong(SOURCE_ID, SOURCE_ID_DEFAULT);
-        }
         if (getSuperstep() == 1) {
             tmpVertexValue.set(Double.MAX_VALUE);
             setVertexValue(tmpVertexValue);

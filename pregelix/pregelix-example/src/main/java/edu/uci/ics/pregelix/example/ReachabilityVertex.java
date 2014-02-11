@@ -126,12 +126,14 @@ public class ReachabilityVertex extends Vertex<VLongWritable, ByteWritable, Floa
     private boolean isDest(VLongWritable v) {
         return (v.get() == destId);
     }
+    
+    @Override
+    public void configure(Configuration conf){
+        sourceId = conf.getLong(SOURCE_ID, SOURCE_ID_DEFAULT);
+    }
 
     @Override
     public void compute(Iterator<ByteWritable> msgIterator) throws Exception {
-        if (sourceId < 0) {
-            sourceId = getContext().getConfiguration().getLong(SOURCE_ID, SOURCE_ID_DEFAULT);
-        }
         if (destId < 0) {
             destId = getContext().getConfiguration().getLong(DEST_ID, DEST_ID_DEFAULT);
         }

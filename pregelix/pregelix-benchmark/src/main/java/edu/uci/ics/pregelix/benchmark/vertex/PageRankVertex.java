@@ -32,7 +32,7 @@ import org.apache.hadoop.io.VLongWritable;
  */
 public class PageRankVertex extends Vertex<VLongWritable, DoubleWritable, NullWritable, DoubleWritable> {
     /** Number of supersteps */
-    public static final int maxSuperStep = 5;
+    public static final int maxSuperStep = 4;
 
     @Override
     public void compute(Iterable<DoubleWritable> messages) throws IOException {
