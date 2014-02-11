@@ -220,20 +220,18 @@ public class IndexNestedLoopJoinFunctionUpdateOperatorNodePushable extends Abstr
     @Override
     public void close() throws HyracksDataException {
         try {
-            try {
-                cursor.close();
-                //batch update
-                updateBuffer.updateIndex(indexAccessor);
-            } catch (Exception e) {
-                throw new HyracksDataException(e);
-            }
-
+            cursor.close();
+            //batch update
+            updateBuffer.updateIndex(indexAccessor);
+        } catch (Exception e) {
+            closeResource();
+            throw new HyracksDataException(e);
+        } finally {
+            treeIndexOpHelper.close();
             /**
              * close the update function
              */
             functionProxy.functionClose();
-        } finally {
-            treeIndexOpHelper.close();
         }
     }
 

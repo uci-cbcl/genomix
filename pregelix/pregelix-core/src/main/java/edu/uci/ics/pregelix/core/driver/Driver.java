@@ -77,6 +77,7 @@ public class Driver implements IDriver {
     private IHyracksClientConnection hcc;
     private Class exampleClass;
     private boolean profiling = false;
+    private StringBuffer counterBuffer = new StringBuffer();
 
     public Driver(Class exampleClass) {
         this.exampleClass = exampleClass;
@@ -102,6 +103,8 @@ public class Driver implements IDriver {
     public void runJobs(List<PregelixJob> jobs, Plan planChoice, String ipAddress, int port, boolean profiling)
             throws HyracksException {
         try {
+            counterBuffer.delete(0, counterBuffer.length());
+            counterBuffer.append("performance counters\n");
             if (jobs.size() <= 0) {
                 throw new HyracksException("Please submit at least one job for execution!");
             }
@@ -188,19 +191,6 @@ public class Driver implements IDriver {
                 }
             } while (failed && retryCount < maxRetryCount);
             LOG.info("job finished");
-            StringBuffer counterBuffer = new StringBuffer();
-            counterBuffer.append("performance counters\n");
-            counterBuffer.append("\t"
-                    + "total vertice: "
-                    + IterationUtils.readGlobalAggregateValue(currentJob.getConfiguration(),
-                            BspUtils.getJobId(currentJob.getConfiguration()),
-                            GlobalVertexCountAggregator.class.getName()) + "\n");
-            counterBuffer
-                    .append("\t"
-                            + "total edges: "
-                            + IterationUtils.readGlobalAggregateValue(currentJob.getConfiguration(),
-                                    BspUtils.getJobId(currentJob.getConfiguration()),
-                                    GlobalEdgeCountAggregator.class.getName()) + "\n");
             for (String counter : COUNTERS) {
                 counterBuffer.append("\t" + counter + ": " + counterContext.getCounter(counter, false).get() + "\n");
             }
@@ -323,6 +313,18 @@ public class Driver implements IDriver {
             end = System.currentTimeMillis();
             time = end - start;
             LOG.info(job + ": iteration " + i + " finished " + time + "ms");
+            if (i == 1) {
+                counterBuffer.append("\t"
+                        + "total vertice: "
+                        + IterationUtils.readGlobalAggregateValue(job.getConfiguration(),
+                                BspUtils.getJobId(job.getConfiguration()),
+                                GlobalVertexCountAggregator.class.getName()) + "\n");
+                counterBuffer.append("\t"
+                        + "total edges: "
+                        + IterationUtils.readGlobalAggregateValue(job.getConfiguration(),
+                                BspUtils.getJobId(job.getConfiguration()),
+                                GlobalEdgeCountAggregator.class.getName()) + "\n");
+            }
             terminate = IterationUtils.readTerminationState(job.getConfiguration(), jobGen.getJobId())
                     || IterationUtils.readForceTerminationState(job.getConfiguration(), jobGen.getJobId());
             if (ckpHook.checkpoint(i) || (ckpInterval > 0 && i % ckpInterval == 0)) {

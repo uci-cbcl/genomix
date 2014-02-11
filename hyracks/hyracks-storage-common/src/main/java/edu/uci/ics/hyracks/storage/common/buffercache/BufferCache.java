@@ -16,7 +16,6 @@ package edu.uci.ics.hyracks.storage.common.buffercache;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -628,7 +627,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
             } else {
                 pinCount = cPage.pinCount.get();
             }
-            if (pinCount != 0) {
+            if (pinCount > 0) {
                 throw new IllegalStateException("Page is pinned and file is being closed. Pincount is: " + pinCount);
             }
             cPage.invalidate();

@@ -32,8 +32,11 @@ public class PJobContext {
 
     public void clearState() throws HyracksDataException {
         for (Entry<Long, List<FileReference>> entry : iterationToFiles.entrySet())
-            for (FileReference fileRef : entry.getValue())
-                fileRef.delete();
+            for (FileReference fileRef : entry.getValue()) {
+                if (fileRef != null) {
+                    fileRef.delete();
+                }
+            }
 
         iterationToFiles.clear();
         appStateMap.clear();
