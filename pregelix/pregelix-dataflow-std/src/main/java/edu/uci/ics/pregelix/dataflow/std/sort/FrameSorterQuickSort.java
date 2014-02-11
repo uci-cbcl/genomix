@@ -108,7 +108,7 @@ public class FrameSorterQuickSort implements IFrameSorter {
                 int f0EndRel = fta1.getFieldEndOffset(j, sfIdx);
                 int f0Start = f0StartRel + tStart + fta1.getFieldSlotsLength();
                 tPointers[ptr * 4 + 3] = nkc == null ? 0 : nkc.normalize(array, f0Start, f0EndRel - f0StartRel);
-                tPointers[ptr * 4] |= nkc == null ? 0 : (nkc.normalize4(array, f0Start, f0EndRel - f0StartRel) & 0xff);
+                tPointers[ptr * 4] |= nkc == null ? 0 : (nkc.normalize2(array, f0Start, f0EndRel - f0StartRel) & 0xff);
                 ++ptr;
             }
         }

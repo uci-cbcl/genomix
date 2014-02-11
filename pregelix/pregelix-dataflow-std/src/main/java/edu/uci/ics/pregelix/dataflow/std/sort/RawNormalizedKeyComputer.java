@@ -28,7 +28,7 @@ public final class RawNormalizedKeyComputer {
         return nk ^ Integer.MIN_VALUE;
     }
 
-    public int normalize4(byte[] bytes, int start, int length) {
+    public int normalize2(byte[] bytes, int start, int length) {
         int nk = 0;
         for (int i = 4; i < 6; i++) {
             nk <<= 8;
@@ -37,5 +37,16 @@ public final class RawNormalizedKeyComputer {
             }
         }
         return nk;
+    }
+
+    public int normalize4(byte[] bytes, int start, int length) {
+        int nk = 0;
+        for (int i = 4; i < 8; i++) {
+            nk <<= 8;
+            if (i < length) {
+                nk += (bytes[start + i] & 0xff);
+            }
+        }
+        return nk ^ Integer.MIN_VALUE;
     }
 }

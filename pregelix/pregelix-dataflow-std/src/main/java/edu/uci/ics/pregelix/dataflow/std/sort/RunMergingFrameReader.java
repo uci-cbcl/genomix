@@ -147,12 +147,14 @@ public class RunMergingFrameReader implements IFrameReader {
         @Override
         public int compare(ReferenceEntry tp1, ReferenceEntry tp2) {
             int nmk1 = tp1.getNormalizedKey();
-            int nmk2 = tp1.getNormalizedKey();
-            if (nmk1 > nmk2) {
-                return 1;
+            int nmk2 = tp2.getNormalizedKey();
+            if (nmk1 != nmk2) {
+                return nmk1 > nmk2 ? 1 : -1;
             }
-            if (nmk1 < nmk2) {
-                return -1;
+            int nmk3 = tp1.getNormalizedKey4();
+            int nmk4 = tp2.getNormalizedKey4();
+            if (nmk3 != nmk4) {
+                return nmk3 > nmk4 ? 1 : -1;
             }
 
             FrameTupleAccessor fta1 = (FrameTupleAccessor) tp1.getAccessor();
@@ -163,8 +165,8 @@ public class RunMergingFrameReader implements IFrameReader {
             int[] tPointers2 = tp2.getTPointers();
 
             for (int f = 0; f < sortFields.length; ++f) {
-                int c = comparators[f].compare(b1, tPointers1[2 * f + 1], tPointers1[2 * f + 2], b2,
-                        tPointers2[2 * f + 1], tPointers2[2 * f + 2]);
+                int c = comparators[f].compare(b1, tPointers1[2 * f + 2], tPointers1[2 * f + 3], b2,
+                        tPointers2[2 * f + 2], tPointers2[2 * f + 3]);
                 if (c != 0) {
                     return c;
                 }

@@ -29,7 +29,7 @@ public final class ReferenceEntry {
         super();
         this.runid = runid;
         this.acccessor = fta;
-        this.tPointers = new int[1 + 2 * keyFields.length];
+        this.tPointers = new int[2 + 2 * keyFields.length];
         if (fta != null) {
             initTPointer(fta, tupleIndex, keyFields, nmkComputer);
         }
@@ -59,6 +59,10 @@ public final class ReferenceEntry {
         return tPointers[0];
     }
 
+    public int getNormalizedKey4() {
+        return tPointers[1];
+    }
+
     public void setTupleIndex(int tupleIndex, int[] keyFields, RawNormalizedKeyComputer nmkComputer) {
         initTPointer(acccessor, tupleIndex, keyFields, nmkComputer);
     }
@@ -77,15 +81,12 @@ public final class ReferenceEntry {
         byte[] b1 = fta.getBuffer().array();
         for (int f = 0; f < keyFields.length; ++f) {
             int fIdx = keyFields[f];
-            tPointers[2 * f + 1] = fta.getTupleStartOffset(tupleIndex) + fta.getFieldSlotsLength()
+            tPointers[2 * f + 2] = fta.getTupleStartOffset(tupleIndex) + fta.getFieldSlotsLength()
                     + fta.getFieldStartOffset(tupleIndex, fIdx);
-            tPointers[2 * f + 2] = fta.getFieldEndOffset(tupleIndex, fIdx) - fta.getFieldStartOffset(tupleIndex, fIdx);
+            tPointers[2 * f + 3] = fta.getFieldEndOffset(tupleIndex, fIdx) - fta.getFieldStartOffset(tupleIndex, fIdx);
             if (f == 0) {
-                if (nmkComputer != null) {
-                    tPointers[0] = nmkComputer.normalize(b1, tPointers[1], tPointers[2]);
-                } else {
-                    tPointers[0] = 0;
-                }
+                tPointers[0] = nmkComputer == null ? 0 : nmkComputer.normalize(b1, tPointers[2], tPointers[3]);
+                tPointers[1] = nmkComputer == null ? 0 : nmkComputer.normalize4(b1, tPointers[2], tPointers[3]);
             }
         }
     }
