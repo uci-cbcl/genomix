@@ -120,12 +120,7 @@ public abstract class IndexDataflowHelper implements IIndexDataflowHelper {
             long resourceID = getResourceID();
             index = lcManager.getIndex(resourceID);
             if (index != null) {
-                try {
-                    lcManager.unregister(resourceID);
-                } catch (HyracksDataException e) {
-                    System.out.println("error: " + file.getFile().getPath() + " resourceID: " + resourceID);
-                    throw e;
-                }
+                lcManager.unregister(resourceID);
             } else {
                 index = createIndexInstance();
             }
