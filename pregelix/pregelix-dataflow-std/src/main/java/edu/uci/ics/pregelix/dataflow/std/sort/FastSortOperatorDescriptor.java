@@ -51,12 +51,14 @@ public class FastSortOperatorDescriptor extends AbstractOperatorDescriptor {
     private final int[] groupFields;
     private final IClusteredAggregatorDescriptorFactory aggregatorFactory;
     private final IClusteredAggregatorDescriptorFactory partialAggregatorFactory;
-    private final RecordDescriptor outRecordDesc;
+    private final RecordDescriptor combinedRecordDesc;
+    private final RecordDescriptor outputRecordDesc;
 
     public FastSortOperatorDescriptor(IOperatorDescriptorRegistry spec, int framesLimit, int[] sortFields,
             RecordDescriptor recordDescriptor, int[] groupFields,
             IClusteredAggregatorDescriptorFactory aggregatorFactory,
-            IClusteredAggregatorDescriptorFactory partialAggregatorFactory, RecordDescriptor outRecordDesc) {
+            IClusteredAggregatorDescriptorFactory partialAggregatorFactory, RecordDescriptor combinedRecordDesc,
+            RecordDescriptor outRecordDesc) {
         super(spec, 1, 1);
         this.framesLimit = framesLimit;
         this.sortFields = sortFields;
@@ -68,7 +70,8 @@ public class FastSortOperatorDescriptor extends AbstractOperatorDescriptor {
         this.groupFields = groupFields;
         this.aggregatorFactory = aggregatorFactory;
         this.partialAggregatorFactory = partialAggregatorFactory;
-        this.outRecordDesc = outRecordDesc;
+        this.combinedRecordDesc = combinedRecordDesc;
+        this.outputRecordDesc = outRecordDesc;
     }
 
     @Override
@@ -124,7 +127,7 @@ public class FastSortOperatorDescriptor extends AbstractOperatorDescriptor {
                 public void open() throws HyracksDataException {
                     runGen = new ExternalSortRunGenerator(ctx, sortFields, recordDescriptors[0], framesLimit,
                             groupFields, new IBinaryComparator[] { new RawBinaryComparator() }, aggregatorFactory,
-                            outRecordDesc);
+                            combinedRecordDesc);
                     runGen.open();
                 }
 
@@ -171,7 +174,7 @@ public class FastSortOperatorDescriptor extends AbstractOperatorDescriptor {
                     IFrameSorter frameSorter = state.frameSorter;
                     int necessaryFrames = Math.min(runs.size() + 2, framesLimit);
                     ExternalSortRunMerger merger = new ExternalSortRunMerger(ctx, frameSorter, runs, sortFields,
-                            outRecordDesc, necessaryFrames, writer, groupFields,
+                            combinedRecordDesc, outputRecordDesc, necessaryFrames, writer, groupFields,
                             new IBinaryComparator[] { new RawBinaryComparator() }, aggregatorFactory,
                             partialAggregatorFactory);
                     merger.process();
