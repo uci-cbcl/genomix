@@ -60,6 +60,9 @@ public class RayMessage extends MessageWritable {
 
     // TODO remove these whenever we want to (they're only used for debugging)
     public VKmerList candidatePathIds = new VKmerList();
+    
+    //Parallel Problem
+    private VKmer seed = null;
 
     public RayMessage() {
 
@@ -131,6 +134,9 @@ public class RayMessage extends MessageWritable {
         numberOfForks = other.numberOfForks;
         pathIndex = other.pathIndex;
         candidatePathIds.setAsCopy(other.candidatePathIds);
+        if (other.seed != null) {
+            seed.setAsCopy(other.seed);
+        }
     }
 
     @Override
@@ -186,6 +192,10 @@ public class RayMessage extends MessageWritable {
             pathIndex = in.readInt();
         }
         candidatePathIds.readFields(in);
+        
+        if ((messageFields & FIELDS.SEED) != 0) {
+            seed.readFields(in);
+        }
     }
 
     @Override
@@ -238,6 +248,10 @@ public class RayMessage extends MessageWritable {
             out.writeInt(pathIndex);
         }
         candidatePathIds.write(out);
+        if (seed != null) {
+            seed.write(out);
+        }
+        
     }
 
     @Override
@@ -260,6 +274,9 @@ public class RayMessage extends MessageWritable {
         }
         if (pairedEndScores != null && pairedEndScores.size() > 0) {
             fields |= FIELDS.SCORE_PAIRED_END;
+        }
+        if (seed != null){
+        	fields |= FIELDS.SEED;
         }
         return fields;
     }
@@ -291,6 +308,7 @@ public class RayMessage extends MessageWritable {
         public static final byte EDGETYPE_BACK_TO_PREV = 1 << 1;
         public static final byte NUMBER_OF_FORKS = 1 << 2;
         public static final byte PATH_INDEX = 1 << 3;
+        public static final byte SEED = 1 << 4;
     }
 
     public RayMessageType getMessageType() {
@@ -454,5 +472,6 @@ public class RayMessage extends MessageWritable {
         numberOfForks = null;
         pathIndex = null;
         candidatePathIds.clear();
+        seed = null;
     }
 }
