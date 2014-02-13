@@ -62,7 +62,7 @@ public class RayMessage extends MessageWritable {
     public VKmerList candidatePathIds = new VKmerList();
     
     //Parallel Problem
-    private VKmer seed = null;
+    public VKmer seed = null;
 
     public RayMessage() {
 
@@ -453,7 +453,14 @@ public class RayMessage extends MessageWritable {
     public int getPathIndex() {
         return pathIndex;
     }
-
+    
+    public VKmer getSeed(){
+    	return seed;
+    }
+    
+    public void setSeed(VKmer seed){
+    	this.seed = seed;
+    }
     @Override
     public void reset() {
         super.reset();
