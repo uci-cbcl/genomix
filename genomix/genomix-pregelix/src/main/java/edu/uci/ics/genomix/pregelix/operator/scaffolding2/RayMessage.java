@@ -135,7 +135,7 @@ public class RayMessage extends MessageWritable {
         pathIndex = other.pathIndex;
         candidatePathIds.setAsCopy(other.candidatePathIds);
         if (other.seed != null) {
-            seed.setAsCopy(other.seed);
+            getSeed().setAsCopy(other.seed);
         }
     }
 
@@ -194,7 +194,7 @@ public class RayMessage extends MessageWritable {
         candidatePathIds.readFields(in);
        
         if ((remainingFields & FIELDS.SEED) != 0) {
-            seed.readFields(in);
+            getSeed().readFields(in);
         }
     }
 
@@ -276,9 +276,9 @@ public class RayMessage extends MessageWritable {
         if (pairedEndScores != null && pairedEndScores.size() > 0) {
             fields |= FIELDS.SCORE_PAIRED_END;
         }
-        if (seed != null && seed.getLength() > 0){
-        	fields |= FIELDS.SEED;
-        }
+        //if (seed != null){
+        //	fields |= FIELDS.SEED;
+        //}
         return fields;
     }
 
@@ -456,6 +456,9 @@ public class RayMessage extends MessageWritable {
     }
     
     public VKmer getSeed(){
+    	if (seed == null){
+    		seed = new VKmer();
+    	}
     	return seed;
     }
     
