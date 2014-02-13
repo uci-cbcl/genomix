@@ -267,6 +267,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
             RayMessage msg = candidateMsgs.get(candIndex);
             for (int walkIndex = 0; walkIndex < msg.getWalkIds().size(); walkIndex++) {
                 outgoingMsg.setAsCopy(msg);
+                outgoingMsg.setSeed(msg.getSeed());
                 outgoingMsg.setMessageType(RayMessageType.REQUEST_SCORE);
                 outgoingMsg.getWalkOffsets().clear();
                 outgoingMsg.getWalkOffsets().add(msg.getWalkOffsets().get(walkIndex)); // the offset of the destination node
@@ -501,6 +502,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         if (readyToScore) {
             // send this complete candidate to the frontier node
             outgoingMsg.setMessageType(RayMessageType.ASSEMBLE_CANDIDATES);
+            outgoingMsg.setSeed(seed);
             sendMsg(msg.getSourceVertexId(), outgoingMsg);
             LOG.info("ready to score kmer " + outgoingMsg.getToScoreKmer() + " of candidate-length: "
                     + outgoingMsg.getToScoreKmer().getKmerLetterLength() + " for candidate "

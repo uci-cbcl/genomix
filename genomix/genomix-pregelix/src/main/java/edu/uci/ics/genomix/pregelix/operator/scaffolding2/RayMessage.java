@@ -193,8 +193,8 @@ public class RayMessage extends MessageWritable {
         }
         candidatePathIds.readFields(in);
         
-        if ((messageFields & FIELDS.SEED) != 0) {
-            seed.readFields(in);
+        if ((remainingFields & FIELDS.SEED) != 0) {
+            getSeed().readFields(in);
         }
     }
 
@@ -275,7 +275,7 @@ public class RayMessage extends MessageWritable {
         if (pairedEndScores != null && pairedEndScores.size() > 0) {
             fields |= FIELDS.SCORE_PAIRED_END;
         }
-        if (seed != null){
+        if (seed != null && seed.getLength() > 0){
         	fields |= FIELDS.SEED;
         }
         return fields;
@@ -308,7 +308,7 @@ public class RayMessage extends MessageWritable {
         public static final byte EDGETYPE_BACK_TO_PREV = 1 << 1;
         public static final byte NUMBER_OF_FORKS = 1 << 2;
         public static final byte PATH_INDEX = 1 << 3;
-        public static final byte SEED = 1 << 4;
+        public static final int SEED = 1 << 7;
     }
 
     public RayMessageType getMessageType() {
