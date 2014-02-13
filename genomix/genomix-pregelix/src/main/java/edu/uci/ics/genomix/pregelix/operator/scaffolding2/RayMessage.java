@@ -192,9 +192,9 @@ public class RayMessage extends MessageWritable {
             pathIndex = in.readInt();
         }
         candidatePathIds.readFields(in);
-        
+       
         if ((remainingFields & FIELDS.SEED) != 0) {
-            getSeed().readFields(in);
+            seed.readFields(in);
         }
     }
 
@@ -231,7 +231,7 @@ public class RayMessage extends MessageWritable {
             }
         }
 
-        byte remainingFields = (byte) ((candidateFlipped != null ? FIELDS.CANDIDATE_FLIPPED : 0)
+        byte remainingFields = (byte) ((seed != null ? FIELDS.SEED : 0)|(candidateFlipped != null ? FIELDS.CANDIDATE_FLIPPED : 0)
                 | (edgeTypeBackToPrev != null ? FIELDS.EDGETYPE_BACK_TO_PREV : 0)
                 | (numberOfForks != null ? FIELDS.NUMBER_OF_FORKS : 0) | (pathIndex != null ? FIELDS.PATH_INDEX : 0));
         out.writeByte(remainingFields);
@@ -248,6 +248,7 @@ public class RayMessage extends MessageWritable {
             out.writeInt(pathIndex);
         }
         candidatePathIds.write(out);
+
         if (seed != null) {
             seed.write(out);
         }
@@ -307,8 +308,8 @@ public class RayMessage extends MessageWritable {
         public static final byte CANDIDATE_FLIPPED = 1 << 0;
         public static final byte EDGETYPE_BACK_TO_PREV = 1 << 1;
         public static final byte NUMBER_OF_FORKS = 1 << 2;
-        public static final byte PATH_INDEX = 1 << 3;
-        public static final int SEED = 1 << 7;
+        public static final byte PATH_INDEX = 1 << 3;  
+        public static final byte SEED = 1 << 4;
     }
 
     public RayMessageType getMessageType() {
