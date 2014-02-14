@@ -4,6 +4,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.AbstractMap.SimpleEntry;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
@@ -75,14 +76,36 @@ public class RayScores implements Writable {
         }
     }
     
-    public SimpleEntry<EDGETYPE, VKmer> getSingleKey() {
-        if (scores.size() != 1) {
-            throw new IllegalStateException("requested single key but this score has " + scores.size() + " entries! " + scores);
-        }
+    public SimpleEntry<EDGETYPE, VKmer> getSingleKey(VKmer id) {
+       // if (scores.size() != 1) {
+       //     throw new IllegalStateException("requested single key but this score has " + scores.size() + " entries! " + scores);
+       // }
+       
         for (SimpleEntry<EDGETYPE,VKmer> e : scores.keySet()) {
-            return e;
+        	if ((e.getValue().toString().substring(0, 20).equals(id.toString().substring(1, 21))) ||
+        		(e.getValue().reverse().toString().substring(0, 20).equals(id.toString().substring(1, 21)))||
+        		(e.getValue().toString().substring(0, 20).equals(id.reverse().toString().substring(1, 21)))||
+        		(e.getValue().reverse().toString().substring(0, 20).equals(id.reverse().toString().substring(1, 21)))){
+        		return e;
+        	} else if(scores.size() == 1){
+        		return null;
+        	}
+            
         }
+
         throw new IllegalStateException("requested single key but this score has " + scores.size() + " entries! " + scores);
+    }
+    
+    
+    public VKmer getVkmer(){
+    	if (scores.size() != 1) {
+    	    throw new IllegalStateException("requested single key but this score has " + scores.size() + " entries! " + scores);
+    	}
+    	
+    	for (SimpleEntry<EDGETYPE,VKmer> e : scores.keySet()) {
+    		return e.getValue();
+    	}
+    	throw new IllegalStateException("requested single kmer to add but this score has " + scores.size() + " entries! " + scores);
     }
 
     /**
