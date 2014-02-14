@@ -272,6 +272,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
                 && vertex.getCandidateMsgs().size() > 0) {
             sendCandidateKmersToWalkNodes(vertex.getCandidateMsgs());
             vertex.getCandidateMsgs().clear();
+            vertex.pendingCandidateBranches =vertex.pendingCandidateBranchesCopy;
         }
     }
 
@@ -382,6 +383,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
 
             // remember how many total candidate branches to expect
             vertex.pendingCandidateBranches = vertex.degree(nextDir);
+            vertex.pendingCandidateBranchesCopy = vertex.degree(nextDir);
         }
     }
 

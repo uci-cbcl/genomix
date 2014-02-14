@@ -19,7 +19,8 @@ public class RayValue extends VertexValueWritable {
     List<VKmer> visitedList;
     boolean intersection = false;
     boolean stopSearch = false;
-
+    
+    Integer pendingCandidateBranchesCopy = null;
     Integer pendingCandidateBranches = null;
     ArrayList<RayMessage> candidateMsgs = null;
 
@@ -59,6 +60,7 @@ public class RayValue extends VertexValueWritable {
         
         if ((state & FIELDS.PENDING_CANDIDATE_BRANCHES) != 0) {
             pendingCandidateBranches = in.readInt();
+            pendingCandidateBranchesCopy = in.readInt();
         }
         if ((state & FIELDS.CANDIDATE_MSGS) != 0) {
             getCandidateMsgs().clear();
@@ -105,6 +107,7 @@ public class RayValue extends VertexValueWritable {
         
         if (pendingCandidateBranches != null) {
             out.writeInt(pendingCandidateBranches);
+            out.writeInt(pendingCandidateBranchesCopy);
         }
         if (candidateMsgs != null && candidateMsgs.size() > 0) {
             out.writeInt(candidateMsgs.size());
@@ -122,6 +125,7 @@ public class RayValue extends VertexValueWritable {
         stopSearch = false;
         visitedList = null;
         pendingCandidateBranches = null;
+        pendingCandidateBranchesCopy = null;
         candidateMsgs = null;
     }
 
