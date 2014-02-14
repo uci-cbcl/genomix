@@ -127,7 +127,8 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
     @Override
     public void compute(Iterator<RayMessage> msgIterator) throws Exception {
         if (getSuperstep() == 1) {
-            if (isStartSeed()) {
+            //if (isStartSeed()) {
+        	if (getVertexId().toString().equals("GATAAGACGCGCCAGCGTCGC") || getVertexId().toString().equals("ATAAGACGCGCCAGCGTCGCA") ){
                 msgIterator = getStartMessage();
                 LOG.info("starting seed in " + INITIAL_DIRECTION + ": " + getVertexId() + ", length: "
                         + getVertexValue().getKmerLength() + ", coverge: " + getVertexValue().getAverageCoverage()
@@ -210,9 +211,18 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
                     sendCandidatesToFrontier(msg);
                     break;
                 case ASSEMBLE_CANDIDATES:
-                    vertex.getCandidateMsgs().add(new RayMessage(msg));
-                    vertex.pendingCandidateBranches--;
-                    LOG.info("recieved complete candidate. total pending searches:" + vertex.pendingCandidateBranches);
+                	boolean repeat = false;
+                	for (RayMessage rmsg : vertex.getCandidateMsgs()){
+                		if (rmsg.getToScoreId().equals(msg.getToScoreId()) && rmsg.getSeed().equals(msg.getSeed())){
+                			repeat = true;
+                			break;
+                		}
+                	}
+                	if (!repeat){
+                		vertex.getCandidateMsgs().add(new RayMessage(msg));
+                		vertex.pendingCandidateBranches--;
+                		LOG.info("recieved complete candidate. total pending searches:" + vertex.pendingCandidateBranches);
+                	}
                     break;
                 case REQUEST_SCORE:
                     // batch-process these (have to truncate to min length)
@@ -992,6 +1002,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
             walkOffsets.add(msg.getWalkOffsets().get(0));
             accumulatedWalk = msg.getAccumulatedWalkKmer();
         }
+        }
         LOG.info("in prune for " + id + " scores are singleend: " + singleEndScores + " pairedend: " + pairedEndScores);
 
         // we need to agree about the total number of paths we're considering...
@@ -1149,7 +1160,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
                     + "\n" + msgs.get(0).getAccumulatedWalkKmer());
         }
         }
-        }
+        
     }
 
 	public void storeWalk(VKmerList walk, VKmer accumulatedWalk, VKmer seed) throws FileNotFoundException,
