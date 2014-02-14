@@ -291,12 +291,20 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         RayValue vertex = getVertexValue();
         VKmer seed = new VKmer();
         VKmer realSeed = new VKmer();
+        
+        if (msg.getSeed().toString().length() > 0){
+        	realSeed= msg.getSeed();
+        } else {
+        	realSeed = getVertexId();
+        } 
+        
         // must explicitly check if this node was visited already (would have happened in 
         // this iteration as a previously processed msg!)
         if(msg.getWalkLength() > 0){
-        	seed.setAsCopy(msg.getAccumulatedWalkKmer().toString().substring(0, kmerSize));
-        	if ((vertex.getVisitedList().contains(seed)) || (vertex.getVisitedList().contains(seed.reverse()))) {
-        		storeWalk(msg.getWalkIds(),msg.getAccumulatedWalkKmer());
+        	//seed.setAsCopy(msg.getAccumulatedWalkKmer().toString().substring(0, kmerSize));
+        	//if ((vertex.getVisitedList().contains(id)) || (vertex.getVisitedList().contains(id.reverse()))) {
+        	if(seed.equals(id)){
+        		storeWalk(msg.getWalkIds(),msg.getAccumulatedWalkKmer(), realSeed);
         		vertex.intersection = true;
            		vertex.stopSearch = true;
            		LOG.info("start branch comparison had to stop at " + id + " with total length: " + msg.getWalkLength()
@@ -304,22 +312,18 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
            		return;
         	}
         	List <VKmer> tmp = vertex.getVisitedList();
-        	tmp.add(seed);
+        	tmp.add(realSeed);
         	vertex.setVisitedList(tmp);
         } 
         
         if (msg.getWalkLength() == 0){
         	List <VKmer> visit = vertex.getVisitedList();
-        	visit.add(id);
+        	visit.add(realSeed);
         	vertex.setVisitedList(visit);
         	//vertex.visitedList.add(id);
         }
         
-        if (msg.getSeed() != null){
-        	realSeed= msg.getSeed();
-        } else {
-        	realSeed = getVertexId();
-        }
+        
         
         // I am the new frontier but this message is coming from the previous frontier; I was the "candidate"
         vertex.flippedFromInitialDirection = msg.getCandidateFlipped();
@@ -333,11 +337,11 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
 
         if (vertex.degree(nextDir) == 0) {
             // this walk has reached a dead end!  nothing to do in this case.
-        	storeWalk(msg.getWalkIds(),msg.getAccumulatedWalkKmer());
+        	storeWalk(msg.getWalkIds(),msg.getAccumulatedWalkKmer(), realSeed);
             LOG.info("reached dead end at " + id + " with total length: " + msg.getWalkLength() + "\n>id " + id + "\n"
                     + msg.getAccumulatedWalkKmer());
             //WriteToLog("startBranchComparison0", "", getVertexId().toString());
-            vertex.stopSearch = true;
+            //vertex.stopSearch = true;
             return;
         } else if (vertex.degree(nextDir) == 1) {
             // one neighbor -> just send him a continue msg w/ me added to the list
@@ -421,11 +425,12 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         VKmer seed = new VKmer();
         DIR nextDir = msg.getEdgeTypeBackToPrev().mirror().neighborDir();
         // already visited -> the frontier must stop!
-        seed.setAsCopy(msg.getAccumulatedWalkKmer().toString().substring(0, kmerSize));
+        //seed.setAsCopy(msg.getAccumulatedWalkKmer().toString().substring(0, kmerSize));
+        seed = msg.getSeed();
         if ((vertex.getVisitedList().contains(seed)) || (vertex.getVisitedList().contains(seed.reverse()))) {
-        	storeWalk(msg.getWalkIds(),msg.getAccumulatedWalkKmer());
+        	storeWalk(msg.getWalkIds(),msg.getAccumulatedWalkKmer(), seed);
             vertex.intersection = true;
-            vertex.stopSearch = true;
+            //vertex.stopSearch = true;
             outgoingMsg.reset();
             outgoingMsg.setMessageType(RayMessageType.STOP);
             sendMsg(msg.getSourceVertexId(), outgoingMsg);
@@ -915,6 +920,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         VKmer id = getVertexId();
         RayValue vertex = getVertexValue();
         ArrayList<VKmer> seeds = new ArrayList<VKmer>();
+        int walkLength = 0;
         for (RayMessage msg : msgs){
         	if(!seeds.contains((msg.getSeed()))){
         		seeds.add(msg.getSeed());
@@ -927,7 +933,13 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         pairedEndScores.clear();
         walkIds.clear();
         walkOffsets.clear();
-        int walkLength = msgs.get(0).getWalkLength();
+        for (RayMessage msg : msgs){
+        	if (msg.getSeed().equals(seed)){
+        		walkLength = msg.getWalkLength();
+        		break;
+        	}
+        }
+        //int walkLength = msgs.get(0).getWalkLength();
         for (RayMessage msg : msgs) {
         	if (msg.getSeed().equals(seed)){
             if (walkLength != msg.getWalkLength()) {
@@ -986,11 +998,11 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         int numSingleEndPaths = singleEndScores.size() > 0 ? singleEndScores.size() : -1;
         int numPairedEndPaths = pairedEndScores.size() > 0 ? pairedEndScores.get(0).size() : -1;
         if (numSingleEndPaths == -1 && numPairedEndPaths == -1) {
-        	storeWalk(walkIds, accumulatedWalk);
+        	storeWalk(walkIds, accumulatedWalk, seed);
             LOG.info("failed to find a dominant edge (no scores available!). Started at "
                     + msgs.get(0).getSourceVertexId() + " and will stop at " + id + " with total length: "
                     + msgs.get(0).getWalkLength() + "\n>id " + id + "\n" + msgs.get(0).getAccumulatedWalkKmer());
-            vertex.stopSearch = true;
+            //vertex.stopSearch = true;
             return;
         } else if (numSingleEndPaths != -1 && numPairedEndPaths != -1 && numSingleEndPaths != numPairedEndPaths) {
             throw new IllegalStateException(
@@ -1130,8 +1142,8 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
            // WriteToLog("dominantedgefound" ,msgs.get(0).getAccumulatedWalkKmer().toString() , getVertexId().toString());
             LOG.info("dominant edge found: " + dominantEdgeType + ":" + dominantKmer);
         } else {
-        	storeWalk(walkIds, msgs.get(0).getAccumulatedWalkKmer());
-        	vertex.stopSearch = true;
+        	storeWalk(walkIds, msgs.get(0).getAccumulatedWalkKmer(), seed);
+        	//vertex.stopSearch = true;
             LOG.info("failed to find a dominant edge. Started at " + msgs.get(0).getSourceVertexId()
                     + " and will stop at " + id + " with total length: " + msgs.get(0).getWalkLength() + "\n>id " + id
                     + "\n" + msgs.get(0).getAccumulatedWalkKmer());
@@ -1140,10 +1152,11 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         }
     }
 
-	public void storeWalk(VKmerList walk, VKmer accumulatedWalk) throws FileNotFoundException,
+	public void storeWalk(VKmerList walk, VKmer accumulatedWalk, VKmer seed) throws FileNotFoundException,
 			UnsupportedEncodingException {
 		VKmer firstKmer = new VKmer();
 		//VKmer firstKmerReverse = new VKmer();
+		/**
 		firstKmer.setAsCopy(accumulatedWalk.toString().substring(0, kmerSize));
 		if (walk.contains(firstKmer)){
 			writeOnFile(firstKmer.toString());
@@ -1151,6 +1164,8 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
 			firstKmer.reverse();
 			writeOnFile(firstKmer.toString());
 		}
+		**/
+		writeOnFile(seed.toString());
 		writer.print("\n");
 		writer.print(">");
 		writer.print(walk.toString());
