@@ -4,6 +4,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import edu.uci.ics.genomix.data.types.Kmer;
@@ -20,6 +21,7 @@ public class RayValue extends VertexValueWritable {
     boolean intersection = false;
     boolean stopSearch = false;
     
+    HashMap<VKmer, Integer> pendingCandidateBranchesMap = null;
     Integer pendingCandidateBranchesCopy = null;
     Integer pendingCandidateBranches = null;
     ArrayList<RayMessage> candidateMsgs = null;

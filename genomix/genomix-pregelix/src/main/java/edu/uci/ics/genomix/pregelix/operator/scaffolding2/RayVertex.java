@@ -127,8 +127,8 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
     @Override
     public void compute(Iterator<RayMessage> msgIterator) throws Exception {
         if (getSuperstep() == 1) {
-            //if (isStartSeed()) {
-        	if (getVertexId().toString().equals("GATAAGACGCGCCAGCGTCGC") || getVertexId().toString().equals("ATAAGACGCGCCAGCGTCGCA") ){
+            if (isStartSeed()) {
+        	//if (getVertexId().toString().equals("GATAAGACGCGCCAGCGTCGC") || getVertexId().toString().equals("ATAAGACGCGCCAGCGTCGCA") ){
                 msgIterator = getStartMessage();
                 LOG.info("starting seed in " + INITIAL_DIRECTION + ": " + getVertexId() + ", length: "
                         + getVertexValue().getKmerLength() + ", coverge: " + getVertexValue().getAverageCoverage()
@@ -137,6 +137,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         }
         scaffold(msgIterator);
         voteToHalt();
+        
     }
 
     /**
@@ -273,6 +274,24 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
             sendCandidateKmersToWalkNodes(vertex.getCandidateMsgs());
             vertex.getCandidateMsgs().clear();
             vertex.pendingCandidateBranches =vertex.pendingCandidateBranchesCopy;
+        }
+        
+        if (vertex.pendingCandidateBranches!= null && vertex.pendingCandidateBranches < 0){
+        	HashMap <VKmer,ArrayList<RayMessage>> candidateMap = new HashMap <>();
+        	for (RayMessage msg: vertex.getCandidateMsgs()){
+        		if (candidateMap.containsKey(msg.getSeed())){
+        			candidateMap.get(msg.getSeed()).add(msg);	
+        		}else{
+        			ArrayList <RayMessage> temp = new ArrayList<>();
+        			temp.add(msg);
+        			candidateMap.put(msg.getSeed(),temp);
+        		}
+        	}
+        	
+        	for (Entry<VKmer,ArrayList<RayMessage>> entry : candidateMap.entrySet()){
+        		sendCandidateKmersToWalkNodes(entry.getValue());
+        	}
+        	vertex.getCandidateMsgs().clear();	
         }
     }
 
