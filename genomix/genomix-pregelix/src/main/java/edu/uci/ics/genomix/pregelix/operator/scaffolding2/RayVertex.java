@@ -221,6 +221,10 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
                 	}
                 	if (!repeat){
                 		vertex.getCandidateMsgs().add(new RayMessage(msg));
+                		int temp = vertex.getPendingCandiateBranchesMap().get(msg.getSeed());
+                		HashMap <VKmer, Integer> tempMap = vertex.getPendingCandiateBranchesMap();
+                		tempMap.put(msg.getSeed(), temp - 1);
+                		vertex.setPendingCandidateBranchesMap(tempMap);
                 		vertex.pendingCandidateBranches--;
                 		LOG.info("recieved complete candidate. total pending searches:" + vertex.pendingCandidateBranches);
                 	}
@@ -280,6 +284,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
             vertex.pendingCandidateBranches =vertex.pendingCandidateBranchesCopy;
         }
         **/
+        /**
         if (vertex.pendingCandidateBranches!= null && vertex.pendingCandidateBranches <= 0 && vertex.getCandidateMsgs().size() > 0){
         	HashMap <VKmer,ArrayList<RayMessage>> candidateMap = new HashMap <>();
         	for (RayMessage msg: vertex.getCandidateMsgs()){
@@ -302,6 +307,39 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         	}
         	vertex.getCandidateMsgs().clear();	
         	vertex.pendingCandidateBranches =vertex.pendingCandidateBranchesCopy;
+        }
+        **/
+        
+        if (vertex.pendingCandidateBranches!= null && vertex.pendingCandidateBranches <= 0 && vertex.getCandidateMsgs().size() > 0){
+        	HashMap <VKmer,ArrayList<RayMessage>> candidateMap = new HashMap <>();
+        	ArrayList<VKmer> visited = new ArrayList<>();
+        	for (Entry <VKmer, Integer> entry : vertex.getPendingCandiateBranchesMap().entrySet()){
+        		if (entry.getValue() == 0){
+        			for (RayMessage msg: vertex.getCandidateMsgs()){
+                		if ((candidateMap.containsKey(msg.getSeed())) && (msg.getSeed().equals(entry.getKey()))){
+                			candidateMap.get(msg.getSeed()).add(msg);	
+                		}else{ 
+                			if ((msg.getSeed().equals(entry.getKey()))){
+                			ArrayList <RayMessage> temp = new ArrayList<>();
+                			temp.add(msg);
+                			candidateMap.put(msg.getSeed(),temp);
+                		}
+                		}
+                	}
+        				
+            			sendCandidateKmersToWalkNodes(candidateMap.get(entry.getKey()));
+            			visited.add(entry.getKey());
+            			//HashMap <VKmer, Integer> tempMap = vertex.getPendingCandiateBranchesMap();
+                		//tempMap.remove(entry.getKey());
+                		//vertex.setPendingCandidateBranchesMap(tempMap);
+        		}
+        	}
+        	for (VKmer seed : visited){
+        		vertex.getPendingCandiateBranchesMap().remove(seed);
+        	}
+        	if (vertex.getPendingCandiateBranchesMap().size() == 0) {
+        		vertex.getCandidateMsgs().clear();
+        	}
         }
     }
 
@@ -343,7 +381,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         if(msg.getWalkLength() > 0){
         	//seed.setAsCopy(msg.getAccumulatedWalkKmer().toString().substring(0, kmerSize));
         	//if ((vertex.getVisitedList().contains(id)) || (vertex.getVisitedList().contains(id.reverse()))) {
-        	if(seed.equals(id)){
+        	if(realSeed.equals(id)){
         		storeWalk(msg.getWalkIds(),msg.getAccumulatedWalkKmer(), realSeed);
         		vertex.intersection = true;
            		vertex.stopSearch = true;
@@ -412,7 +450,13 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
 
             // remember how many total candidate branches to expect
             vertex.pendingCandidateBranches = vertex.degree(nextDir);
+            
+            HashMap<VKmer, Integer> tempCandidateBranchesMap = vertex.getPendingCandiateBranchesMap();
+            tempCandidateBranchesMap.put(realSeed,vertex.degree(nextDir));
+            vertex.setPendingCandidateBranchesMap(tempCandidateBranchesMap);
             vertex.pendingCandidateBranchesCopy = vertex.degree(nextDir);
+           // vertex.getPendingCandiateBranchesMap()
+         
         }
     }
 

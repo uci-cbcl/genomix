@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map.Entry;
 
 import edu.uci.ics.genomix.data.types.Kmer;
 import edu.uci.ics.genomix.data.types.ReadHeadInfo;
@@ -63,6 +64,15 @@ public class RayValue extends VertexValueWritable {
         if ((state & FIELDS.PENDING_CANDIDATE_BRANCHES) != 0) {
             pendingCandidateBranches = in.readInt();
             pendingCandidateBranchesCopy = in.readInt();
+            getPendingCandiateBranchesMap().clear();
+            int count = in.readInt();
+            for (int i = 0; i < count; i++){
+            	VKmer key = new VKmer();
+            	key.readFields(in);
+            	int value = in.readInt();
+            	pendingCandidateBranchesMap.put(key, value);
+            	
+            }
             
         }
         if ((state & FIELDS.CANDIDATE_MSGS) != 0) {
@@ -111,6 +121,11 @@ public class RayValue extends VertexValueWritable {
         if (pendingCandidateBranches != null) {
             out.writeInt(pendingCandidateBranches);
             out.writeInt(pendingCandidateBranchesCopy);
+            out.writeInt(pendingCandidateBranchesMap.size());
+            for (Entry<VKmer, Integer> entry : pendingCandidateBranchesMap.entrySet()){
+    			entry.getKey().write(out);
+    			out.writeInt(entry.getValue());
+    		}
         }
         if (candidateMsgs != null && candidateMsgs.size() > 0) {
             out.writeInt(candidateMsgs.size());
@@ -129,6 +144,7 @@ public class RayValue extends VertexValueWritable {
         visitedList = null;
         pendingCandidateBranches = null;
         pendingCandidateBranchesCopy = null;
+        pendingCandidateBranchesMap = null;
         candidateMsgs = null;
     }
 
@@ -180,4 +196,13 @@ public class RayValue extends VertexValueWritable {
         this.visitedList = visitedList;
     }
     
+    public HashMap<VKmer,Integer> getPendingCandiateBranchesMap(){
+    	if (pendingCandidateBranchesMap == null){
+    		pendingCandidateBranchesMap = new HashMap<VKmer, Integer>();
+    	}
+    	return pendingCandidateBranchesMap;
+    }
+    public void setPendingCandidateBranchesMap(HashMap<VKmer, Integer> pendingCandidateBranchesMap){
+    	this.pendingCandidateBranchesMap = pendingCandidateBranchesMap;
+    }
 }
