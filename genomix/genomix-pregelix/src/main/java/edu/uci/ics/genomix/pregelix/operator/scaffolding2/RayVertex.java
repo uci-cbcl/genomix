@@ -224,6 +224,9 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
                 		vertex.pendingCandidateBranches--;
                 		LOG.info("recieved complete candidate. total pending searches:" + vertex.pendingCandidateBranches);
                 	}
+                	//for (RayMessage rmsg : vertex.getCandidateMsgs()){
+                	//	
+                	//}
                     break;
                 case REQUEST_SCORE:
                     // batch-process these (have to truncate to min length)
@@ -269,14 +272,15 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         if (aggregateScoreMsgs.size() > 0) {
             compareScoresAndPrune(aggregateScoreMsgs);
         }
+        /**
         if (vertex.pendingCandidateBranches != null && vertex.pendingCandidateBranches == 0
                 && vertex.getCandidateMsgs().size() > 0) {
             sendCandidateKmersToWalkNodes(vertex.getCandidateMsgs());
             vertex.getCandidateMsgs().clear();
             vertex.pendingCandidateBranches =vertex.pendingCandidateBranchesCopy;
         }
-        
-        if (vertex.pendingCandidateBranches!= null && vertex.pendingCandidateBranches < 0){
+        **/
+        if (vertex.pendingCandidateBranches!= null && vertex.pendingCandidateBranches <= 0 && vertex.getCandidateMsgs().size() > 0){
         	HashMap <VKmer,ArrayList<RayMessage>> candidateMap = new HashMap <>();
         	for (RayMessage msg: vertex.getCandidateMsgs()){
         		if (candidateMap.containsKey(msg.getSeed())){
@@ -287,11 +291,17 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         			candidateMap.put(msg.getSeed(),temp);
         		}
         	}
-        	
-        	for (Entry<VKmer,ArrayList<RayMessage>> entry : candidateMap.entrySet()){
-        		sendCandidateKmersToWalkNodes(entry.getValue());
+        	if  ((candidateMap.size() > 1) && (vertex.getCandidateMsgs().size() < (vertex.pendingCandidateBranchesCopy * candidateMap.size()))){
+        		vertex.pendingCandidateBranches = vertex.pendingCandidateBranchesCopy * candidateMap.size() - vertex.getCandidateMsgs().size();
+        		return;
+        	}
+        	else{
+        		for (Entry<VKmer,ArrayList<RayMessage>> entry : candidateMap.entrySet()){
+        			sendCandidateKmersToWalkNodes(entry.getValue());
+        		}
         	}
         	vertex.getCandidateMsgs().clear();	
+        	vertex.pendingCandidateBranches =vertex.pendingCandidateBranchesCopy;
         }
     }
 

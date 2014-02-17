@@ -63,6 +63,7 @@ public class RayValue extends VertexValueWritable {
         if ((state & FIELDS.PENDING_CANDIDATE_BRANCHES) != 0) {
             pendingCandidateBranches = in.readInt();
             pendingCandidateBranchesCopy = in.readInt();
+            
         }
         if ((state & FIELDS.CANDIDATE_MSGS) != 0) {
             getCandidateMsgs().clear();
