@@ -58,7 +58,7 @@ public class RayScores implements Writable {
     }
 
     public void addRuleCounts(EDGETYPE et, VKmer kmer, int ruleA, int ruleB, int ruleC) {
-        SimpleEntry<EDGETYPE, VKmer> key = new SimpleEntry<>(et, kmer);
+        SimpleEntry<EDGETYPE, VKmer> key = new SimpleEntry<>(et, new VKmer(kmer));
         if (scores.containsKey(key)) {
             Rules r = scores.get(key);
             r.ruleA += ruleA;
@@ -115,8 +115,9 @@ public class RayScores implements Writable {
     public boolean dominates(EDGETYPE queryET, VKmer queryKmer, EDGETYPE targetET, VKmer targetKmer,
             float frontierCoverage) {
         double factor = getMFactor(frontierCoverage);
-        SimpleEntry<EDGETYPE, VKmer> queryKey = new SimpleEntry<>(queryET, queryKmer);
-        SimpleEntry<EDGETYPE, VKmer> targetKey = new SimpleEntry<>(targetET, targetKmer);
+        // TODO(jakebiesinger): I don't think we need to make a copy here
+        SimpleEntry<EDGETYPE, VKmer> queryKey = new SimpleEntry<>(queryET, new VKmer(queryKmer));
+        SimpleEntry<EDGETYPE, VKmer> targetKey = new SimpleEntry<>(targetET, new VKmer(targetKmer));
         if (!scores.containsKey(queryKey)) {
             return false;
         } else if (!scores.containsKey(targetKey)) {
