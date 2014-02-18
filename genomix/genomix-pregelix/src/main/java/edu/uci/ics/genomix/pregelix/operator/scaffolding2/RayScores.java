@@ -85,7 +85,7 @@ public class RayScores implements Writable {
         	if ((e.getValue().toString().substring(0, 20).equals(id.toString().substring(1, 21))) ||
         		(e.getValue().reverse().toString().substring(0, 20).equals(id.toString().substring(1, 21)))||
         		(e.getValue().toString().substring(0, 20).equals(id.reverse().toString().substring(1, 21)))||
-        		(e.getValue().reverse().toString().substring(0, 20).equals(id.reverse().toString().substring(1, 21)))){
+        		(e.getValue().reverse().toString().substring(0, 20).equals(id.reverse( ).toString().substring(1, 21)))){
         		return e;
         	} else if(scores.size() == 1){
         		return null;

@@ -284,31 +284,6 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
             vertex.pendingCandidateBranches =vertex.pendingCandidateBranchesCopy;
         }
         **/
-        /**
-        if (vertex.pendingCandidateBranches!= null && vertex.pendingCandidateBranches <= 0 && vertex.getCandidateMsgs().size() > 0){
-        	HashMap <VKmer,ArrayList<RayMessage>> candidateMap = new HashMap <>();
-        	for (RayMessage msg: vertex.getCandidateMsgs()){
-        		if (candidateMap.containsKey(msg.getSeed())){
-        			candidateMap.get(msg.getSeed()).add(msg);	
-        		}else{
-        			ArrayList <RayMessage> temp = new ArrayList<>();
-        			temp.add(msg);
-        			candidateMap.put(msg.getSeed(),temp);
-        		}
-        	}
-        	if  ((candidateMap.size() > 1) && (vertex.getCandidateMsgs().size() < (vertex.pendingCandidateBranchesCopy * candidateMap.size()))){
-        		vertex.pendingCandidateBranches = vertex.pendingCandidateBranchesCopy * candidateMap.size() - vertex.getCandidateMsgs().size();
-        		return;
-        	}
-        	else{
-        		for (Entry<VKmer,ArrayList<RayMessage>> entry : candidateMap.entrySet()){
-        			sendCandidateKmersToWalkNodes(entry.getValue());
-        		}
-        	}
-        	vertex.getCandidateMsgs().clear();	
-        	vertex.pendingCandidateBranches =vertex.pendingCandidateBranchesCopy;
-        }
-        **/
         
         if (vertex.pendingCandidateBranches!= null && vertex.pendingCandidateBranches <= 0 && vertex.getCandidateMsgs().size() > 0){
         	HashMap <VKmer,ArrayList<RayMessage>> candidateMap = new HashMap <>();
@@ -329,9 +304,6 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         				
             			sendCandidateKmersToWalkNodes(candidateMap.get(entry.getKey()));
             			visited.add(entry.getKey());
-            			//HashMap <VKmer, Integer> tempMap = vertex.getPendingCandiateBranchesMap();
-                		//tempMap.remove(entry.getKey());
-                		//vertex.setPendingCandidateBranchesMap(tempMap);
         		}
         	}
         	for (VKmer seed : visited){

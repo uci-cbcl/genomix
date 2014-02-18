@@ -256,6 +256,7 @@ public class GenomixDriver {
                     TreeMap<Integer, ArrayList<String>> nodeLengths = getNodeLengths(conf, prevOutput);
 
                     int jobNumber = 0;
+                    /**
                     for (Entry<Integer, ArrayList<String>> lengthEntry : nodeLengths.descendingMap().entrySet()) {
                         if (lengthEntry.getKey() > minLength) {
                             for (String seedId : lengthEntry.getValue()) {
@@ -274,7 +275,26 @@ public class GenomixDriver {
                             }
                         }
                     }
-                } else {
+                } 
+                **/
+                    jobNumber++;
+                    //FileInputFormat.setInputPaths(conf, new Path(prevOutput));
+                    //FileOutputFormat.setOutputPath(conf, new Path(curOutput));
+                    conf.set(GenomixJobConf.SCAFFOLD_SEED_ID,"GATAAGACGCGCCAGCGTCGC");
+                    pregelixJobs.add(RayVertex.getConfiguredJob(conf, RayVertex.class));
+                    jobNumber++;
+                    conf.set(GenomixJobConf.SCAFFOLD_SEED_ID, "CGACGCTGGCGCGTCTTATCA");
+                    pregelixJobs.add(RayVertex.getConfiguredJob(conf, RayVertex.class));
+                    jobNumber++;
+                    conf.set(GenomixJobConf.SCAFFOLD_SEED_ID, "ATGCGACGCTGGCGCGTCTTA");
+                    pregelixJobs.add(RayVertex.getConfiguredJob(conf, RayVertex.class));
+                    jobNumber++;
+                    conf.set(GenomixJobConf.SCAFFOLD_SEED_ID, "CGCGTCTTATCAGGCCTACAA");
+                    pregelixJobs.add(RayVertex.getConfiguredJob(conf, RayVertex.class));
+                    
+                    
+                }
+                    else {
 
                     Float scorePercentile = conf.getFloat(GenomixJobConf.SCAFFOLD_SEED_SCORE_PERCENTILE, -1);
                     Float lengthPercentile = conf.getFloat(GenomixJobConf.SCAFFOLD_SEED_LENGTH_PERCENTILE, -1);
