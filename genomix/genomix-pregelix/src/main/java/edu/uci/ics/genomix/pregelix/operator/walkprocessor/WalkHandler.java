@@ -33,7 +33,7 @@ public class WalkHandler {
 	 * @return
 	 * @throws IOException
 	 */
-	public HashMap <VKmer, VKmerList> loadWalkMap(final File directory) throws IOException{
+	public HashMap <VKmer, VKmerList> loadWalkMap(final File directory , String Id) throws IOException{
 		VKmerList walk = new VKmerList();
 		VKmer node = new VKmer();
 		VKmer vkmer = new VKmer();
@@ -66,6 +66,10 @@ public class WalkHandler {
 	 */
 	public VKmerList loadWalk(VKmer id){
 		return walkIdMap.get(id);
+	}
+	
+	public VKmer loadAccWalk(VKmer id){
+		return walkKmerMap.get(id);
 	}
 	
 	/**

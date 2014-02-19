@@ -256,7 +256,7 @@ public class GenomixDriver {
                     TreeMap<Integer, ArrayList<String>> nodeLengths = getNodeLengths(conf, prevOutput);
 
                     int jobNumber = 0;
-                    /**
+                    
                     for (Entry<Integer, ArrayList<String>> lengthEntry : nodeLengths.descendingMap().entrySet()) {
                         if (lengthEntry.getKey() > minLength) {
                             for (String seedId : lengthEntry.getValue()) {
@@ -276,7 +276,7 @@ public class GenomixDriver {
                         }
                     }
                 } 
-                **/
+                /**
                     jobNumber++;
                     //FileInputFormat.setInputPaths(conf, new Path(prevOutput));
                     //FileOutputFormat.setOutputPath(conf, new Path(curOutput));
@@ -293,7 +293,7 @@ public class GenomixDriver {
                     pregelixJobs.add(RayVertex.getConfiguredJob(conf, RayVertex.class));
                     
                     
-                }
+                }**/
                     else {
 
                     Float scorePercentile = conf.getFloat(GenomixJobConf.SCAFFOLD_SEED_SCORE_PERCENTILE, -1);
@@ -569,7 +569,7 @@ public class GenomixDriver {
                 allPatterns.add(i, Patterns.RAY_SCAFFOLD_FORWARD);
                 //allPatterns.add(i + 1, Patterns.MERGE);
                 //allPatterns.add(i + 1, Patterns.STATS);
-                //allPatterns.add(i + 1, Patterns.RAY_SCAFFOLD_REVERSE);
+                //allPatterns.add(i, Patterns.RAY_SCAFFOLD_REVERSE);
             }
         }
 
