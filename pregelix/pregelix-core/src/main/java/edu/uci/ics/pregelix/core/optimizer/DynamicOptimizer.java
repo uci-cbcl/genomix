@@ -50,7 +50,9 @@ public class DynamicOptimizer implements IOptimizer {
     @Override
     public JobGen optimize(JobGen jobGen, int iteration) {
         try {
-            initializeLoadPerMachine();
+            if (iteration == 0) {
+                initializeLoadPerMachine();
+            }
             if (iteration >= 0) {
                 setupGroupingConfiguration(jobGen.getPregelixJob());
             }
