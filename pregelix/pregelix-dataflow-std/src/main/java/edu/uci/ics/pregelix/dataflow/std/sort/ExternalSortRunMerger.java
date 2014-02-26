@@ -59,7 +59,8 @@ public class ExternalSortRunMerger {
     private final IHyracksTaskContext ctx;
     private final List<IFrameReader> runs;
     private final int[] sortFields;
-    private final RecordDescriptor recordDesc;
+    private final RecordDescriptor inRecordDesc;
+    private final RecordDescriptor outRecordDesc;
     private final int framesLimit;
     private final IFrameWriter writer;
     private List<ByteBuffer> inFrames;
@@ -76,14 +77,16 @@ public class ExternalSortRunMerger {
 
     // Constructor for external sort, no replacement selection
     public ExternalSortRunMerger(IHyracksTaskContext ctx, IFrameSorter frameSorter, List<IFrameReader> runs,
-            int[] sortFields, RecordDescriptor recordDesc, int framesLimit, IFrameWriter writer, int[] groupFields,
-            IBinaryComparator[] comparators, IClusteredAggregatorDescriptorFactory aggregatorFactory,
+            int[] sortFields, RecordDescriptor inRecordDesc, RecordDescriptor outRecordDesc, int framesLimit,
+            IFrameWriter writer, int[] groupFields, IBinaryComparator[] comparators,
+            IClusteredAggregatorDescriptorFactory aggregatorFactory,
             IClusteredAggregatorDescriptorFactory partialAggregatorFactory) {
         this.ctx = ctx;
         this.frameSorter = frameSorter;
         this.runs = new LinkedList<IFrameReader>(runs);
         this.sortFields = sortFields;
-        this.recordDesc = recordDesc;
+        this.inRecordDesc = inRecordDesc;
+        this.outRecordDesc = outRecordDesc;
         this.framesLimit = framesLimit;
         this.writer = writer;
 
@@ -93,21 +96,9 @@ public class ExternalSortRunMerger {
         this.partialAggregatorFactory = partialAggregatorFactory;
     }
 
-    // Constructor for external sort with replacement selection
-    public ExternalSortRunMerger(IHyracksTaskContext ctx, int outputLimit, List<IFrameReader> runs, int[] sortFields,
-            RecordDescriptor recordDesc, int framesLimit, IFrameWriter writer) {
-        this.ctx = ctx;
-        this.runs = new LinkedList<IFrameReader>(runs);
-        this.sortFields = sortFields;
-        this.recordDesc = recordDesc;
-        this.framesLimit = framesLimit;
-        this.writer = writer;
-        this.frameSorter = null;
-    }
-
     public void process() throws HyracksDataException {
         ClusteredGroupWriter pgw = new ClusteredGroupWriter(ctx, groupFields, comparators, aggregatorFactory,
-                recordDesc, recordDesc, writer);
+                inRecordDesc, outRecordDesc, writer);
         try {
             if (runs.size() <= 0) {
                 pgw.open();
@@ -137,7 +128,7 @@ public class ExternalSortRunMerger {
                                 .getSimpleName());
                         IFrameWriter mergeResultWriter = new RunFileWriter(newRun, ctx.getIOManager());
                         pgw = new ClusteredGroupWriter(ctx, groupFields, comparators, partialAggregatorFactory,
-                                recordDesc, recordDesc, mergeResultWriter);
+                                inRecordDesc, inRecordDesc, mergeResultWriter);
                         pgw.open();
                         IFrameReader[] runCursors = new RunFileReader[mergeWidth];
                         for (int i = 0; i < mergeWidth; i++) {
@@ -149,8 +140,8 @@ public class ExternalSortRunMerger {
                     }
                 }
                 if (!runs.isEmpty()) {
-                    pgw = new ClusteredGroupWriter(ctx, groupFields, comparators, partialAggregatorFactory, recordDesc,
-                            recordDesc, writer);
+                    pgw = new ClusteredGroupWriter(ctx, groupFields, comparators, partialAggregatorFactory,
+                            inRecordDesc, inRecordDesc, writer);
                     pgw.open();
                     IFrameReader[] runCursors = new RunFileReader[runs.size()];
                     for (int i = 0; i < runCursors.length; i++) {
@@ -168,7 +159,7 @@ public class ExternalSortRunMerger {
     }
 
     private void merge(IFrameWriter mergeResultWriter, IFrameReader[] runCursors) throws HyracksDataException {
-        RunMergingFrameReader merger = new RunMergingFrameReader(ctx, runCursors, inFrames, sortFields, recordDesc);
+        RunMergingFrameReader merger = new RunMergingFrameReader(ctx, runCursors, inFrames, sortFields, inRecordDesc);
         merger.open();
         try {
             while (merger.nextFrame(outFrame)) {
