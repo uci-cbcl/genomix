@@ -950,7 +950,7 @@ public abstract class JobGen implements IJobGen {
                     .getAccumulatingAggregatorFactory(conf, false, true);
             IOperatorDescriptor localGby = new FastSortOperatorDescriptor(spec, maxFrameNumber, keyFields,
                     rdUnnestedMessage, keyFields, localAggregatorFactory, partialAggregatorFactory, rdCombinedMessage,
-                    rdCombinedMessage);
+                    rdCombinedMessage, true);
             setLocationConstraint(spec, localGby);
 
             /**
@@ -970,7 +970,7 @@ public abstract class JobGen implements IJobGen {
             } else {
                 IOperatorDescriptor globalGby = new FastSortOperatorDescriptor(spec, maxFrameNumber, keyFields,
                         rdCombinedMessage, keyFields, partialAggregatorFactory, finalAggregatorFactory,
-                        rdCombinedMessage, rdFinal);
+                        rdCombinedMessage, rdFinal, false);
                 setLocationConstraint(spec, globalGby);
                 spec.connect(new MToNPartitioningConnectorDescriptor(spec, partionFactory), localGby, 0, globalGby, 0);
                 return Pair.of(localGby, globalGby);

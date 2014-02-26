@@ -70,17 +70,18 @@ public class ExternalSortRunMerger {
     private IFrameSorter frameSorter; // Used in External sort, no replacement
                                       // selection
 
-    private int[] groupFields;
-    private IBinaryComparator[] comparators;
-    private IClusteredAggregatorDescriptorFactory aggregatorFactory;
-    private IClusteredAggregatorDescriptorFactory partialAggregatorFactory;
+    private final int[] groupFields;
+    private final IBinaryComparator[] comparators;
+    private final IClusteredAggregatorDescriptorFactory aggregatorFactory;
+    private final IClusteredAggregatorDescriptorFactory partialAggregatorFactory;
+    private final boolean localSide;
 
     // Constructor for external sort, no replacement selection
     public ExternalSortRunMerger(IHyracksTaskContext ctx, IFrameSorter frameSorter, List<IFrameReader> runs,
             int[] sortFields, RecordDescriptor inRecordDesc, RecordDescriptor outRecordDesc, int framesLimit,
             IFrameWriter writer, int[] groupFields, IBinaryComparator[] comparators,
-            IClusteredAggregatorDescriptorFactory aggregatorFactory,
-            IClusteredAggregatorDescriptorFactory partialAggregatorFactory) {
+            IClusteredAggregatorDescriptorFactory partialAggregatorFactory,
+            IClusteredAggregatorDescriptorFactory aggregatorFactory, boolean localSide) {
         this.ctx = ctx;
         this.frameSorter = frameSorter;
         this.runs = new LinkedList<IFrameReader>(runs);
@@ -94,11 +95,12 @@ public class ExternalSortRunMerger {
         this.comparators = comparators;
         this.aggregatorFactory = aggregatorFactory;
         this.partialAggregatorFactory = partialAggregatorFactory;
+        this.localSide = localSide;
     }
 
     public void process() throws HyracksDataException {
-        ClusteredGroupWriter pgw = new ClusteredGroupWriter(ctx, groupFields, comparators, aggregatorFactory,
-                inRecordDesc, outRecordDesc, writer);
+        ClusteredGroupWriter pgw = new ClusteredGroupWriter(ctx, groupFields, comparators,
+                localSide ? partialAggregatorFactory : aggregatorFactory, inRecordDesc, outRecordDesc, writer);
         try {
             if (runs.size() <= 0) {
                 pgw.open();
@@ -140,8 +142,8 @@ public class ExternalSortRunMerger {
                     }
                 }
                 if (!runs.isEmpty()) {
-                    pgw = new ClusteredGroupWriter(ctx, groupFields, comparators, partialAggregatorFactory,
-                            inRecordDesc, inRecordDesc, writer);
+                    pgw = new ClusteredGroupWriter(ctx, groupFields, comparators, aggregatorFactory, inRecordDesc,
+                            inRecordDesc, writer);
                     pgw.open();
                     IFrameReader[] runCursors = new RunFileReader[runs.size()];
                     for (int i = 0; i < runCursors.length; i++) {

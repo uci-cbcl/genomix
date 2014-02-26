@@ -27,8 +27,6 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.pregelix.api.graph.Edge;
 import edu.uci.ics.pregelix.api.graph.GlobalAggregator;
-import edu.uci.ics.pregelix.api.graph.MessageCombiner;
-import edu.uci.ics.pregelix.api.graph.MsgList;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.io.VertexWriter;
 import edu.uci.ics.pregelix.api.io.text.TextVertexOutputFormat;
@@ -44,51 +42,7 @@ import edu.uci.ics.pregelix.example.io.BooleanWritable;
 import edu.uci.ics.pregelix.example.io.NullWritable;
 import edu.uci.ics.pregelix.example.io.VLongWritable;
 
-public class GraphSampleVertex extends Vertex<VLongWritable, BooleanWritable, BooleanWritable, BooleanWritable> {
-
-    public static class SimpleSampleCombiner extends MessageCombiner<VLongWritable, BooleanWritable, BooleanWritable> {
-        private BooleanWritable agg = new BooleanWritable();
-        private MsgList<BooleanWritable> msgList;
-
-        @Override
-        public void stepPartial(VLongWritable vertexIndex, BooleanWritable msg) throws HyracksDataException {
-            agg.set(msg.get());
-        }
-
-        @SuppressWarnings({ "rawtypes", "unchecked" })
-        @Override
-        public void init(MsgList msgList) {
-            this.msgList = msgList;
-        }
-
-        @Override
-        public void stepFinal(VLongWritable vertexIndex, BooleanWritable partialAggregate) throws HyracksDataException {
-            agg.set(partialAggregate.get());
-        }
-
-        @Override
-        public BooleanWritable finishPartial() {
-            return agg;
-        }
-
-        @Override
-        public MsgList<BooleanWritable> finishFinal() {
-            msgList.clear();
-            msgList.add(agg);
-            return msgList;
-        }
-
-        @Override
-        public void stepPartial2(VLongWritable vertexIndex, BooleanWritable partialAggregate)
-                throws HyracksDataException {
-            agg.set(partialAggregate.get());
-        }
-
-        @Override
-        public BooleanWritable finishPartial2() {
-            return agg;
-        }
-    }
+public class GraphSampleUndirectedVertex extends Vertex<VLongWritable, BooleanWritable, BooleanWritable, VLongWritable> {
 
     public static class GlobalSamplingAggregator
             extends
@@ -153,19 +107,33 @@ public class GraphSampleVertex extends Vertex<VLongWritable, BooleanWritable, Bo
     }
 
     @Override
-    public void compute(Iterator<BooleanWritable> msgIterator) throws Exception {
+    public void compute(Iterator<VLongWritable> msgIterator) throws Exception {
         if (getSuperstep() == 1) {
             initSeeds();
         } else {
             if (fillingRate >= globalRate) {
                 if (msgIterator.hasNext()) {
                     setVertexValue(selectedFlag);
+                    
+                    //keep the giraph undirected
+                    while (msgIterator.hasNext()) {
+                        //mark the reverse edge
+                        VLongWritable dest = msgIterator.next();
+                        markEdge(dest);
+                    }
                 }
                 voteToHalt();
             } else {
                 initSeeds();
                 if (msgIterator.hasNext()) {
                     markAsSelected();
+                }
+                
+                //keep the graph undirected
+                while (msgIterator.hasNext()) {
+                    //mark the reverse edge
+                    VLongWritable dest = msgIterator.next();
+                    markEdge(dest);
                 }
             }
         }
@@ -185,7 +153,17 @@ public class GraphSampleVertex extends Vertex<VLongWritable, BooleanWritable, Bo
             if (randVal == 0) {
                 if (edge.getEdgeValue().get() == false) {
                     edge.getEdgeValue().set(true);
-                    sendMsg(edge.getDestVertexId(), selectedFlag);
+                    sendMsg(edge.getDestVertexId(), getVertexId());
+                }
+            }
+        }
+    }
+
+    private void markEdge(VLongWritable destId) {
+        for (Edge<VLongWritable, BooleanWritable> edge : getEdges()) {
+            if (edge.getDestVertexId().equals(destId)) {
+                if (edge.getEdgeValue().get() == false) {
+                    edge.getEdgeValue().set(true);
                 }
             }
         }
@@ -206,12 +184,11 @@ public class GraphSampleVertex extends Vertex<VLongWritable, BooleanWritable, Bo
     }
 
     public static void main(String[] args) throws Exception {
-        PregelixJob job = new PregelixJob(GraphSampleVertex.class.getSimpleName());
-        job.setVertexClass(GraphSampleVertex.class);
+        PregelixJob job = new PregelixJob(GraphSampleUndirectedVertex.class.getSimpleName());
+        job.setVertexClass(GraphSampleUndirectedVertex.class);
         job.setVertexInputFormatClass(TextGraphSampleVertexInputFormat.class);
         job.setVertexOutputFormatClass(GraphSampleVertexOutputFormat.class);
-        job.setMessageCombinerClass(GraphSampleVertex.SimpleSampleCombiner.class);
-        job.addGlobalAggregatorClass(GraphSampleVertex.GlobalSamplingAggregator.class);
+        job.addGlobalAggregatorClass(GraphSampleUndirectedVertex.GlobalSamplingAggregator.class);
         job.setNoramlizedKeyComputerClass(VLongNormalizedKeyComputer.class);
         job.setFixedVertexValueSize(true);
         job.setSkipCombinerKey(true);
