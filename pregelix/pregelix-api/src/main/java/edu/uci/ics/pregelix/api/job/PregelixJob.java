@@ -109,6 +109,8 @@ public class PregelixJob extends Job {
     public static final String SKIP_COMBINER_KEY = "pregelix.skipCombinerKey";
     /** the merge connector */
     public static final String MERGE_CONNECTOR = "pregelix.merge";
+    /** the maximum allowed iteration */
+    public static final String MAX_ITERATION="pregelix.maxiteration";
 
     /**
      * Construct a Pregelix job from an existing configuration
@@ -374,6 +376,15 @@ public class PregelixJob extends Job {
      */
     final public void setMergeConnector(boolean merge){
         getConfiguration().setBoolean(MERGE_CONNECTOR, merge);
+    }
+    
+    /***
+     * Set the maximum allowed iteration
+     * 
+     * @param iteration
+     */
+    final public void setMaxIteration(int iteration){
+        getConfiguration().setInt(MAX_ITERATION, iteration);
     }
 
     @Override

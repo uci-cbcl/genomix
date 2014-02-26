@@ -317,16 +317,17 @@ public class Driver implements IDriver {
                 counterBuffer.append("\t"
                         + "total vertice: "
                         + IterationUtils.readGlobalAggregateValue(job.getConfiguration(),
-                                BspUtils.getJobId(job.getConfiguration()),
-                                GlobalVertexCountAggregator.class.getName()) + "\n");
+                                BspUtils.getJobId(job.getConfiguration()), GlobalVertexCountAggregator.class.getName())
+                        + "\n");
                 counterBuffer.append("\t"
                         + "total edges: "
                         + IterationUtils.readGlobalAggregateValue(job.getConfiguration(),
-                                BspUtils.getJobId(job.getConfiguration()),
-                                GlobalEdgeCountAggregator.class.getName()) + "\n");
+                                BspUtils.getJobId(job.getConfiguration()), GlobalEdgeCountAggregator.class.getName())
+                        + "\n");
             }
             terminate = IterationUtils.readTerminationState(job.getConfiguration(), jobGen.getJobId())
-                    || IterationUtils.readForceTerminationState(job.getConfiguration(), jobGen.getJobId());
+                    || IterationUtils.readForceTerminationState(job.getConfiguration(), jobGen.getJobId())
+                    || i >= BspUtils.getMaxIteration(job.getConfiguration());
             if (ckpHook.checkpoint(i) || (ckpInterval > 0 && i % ckpInterval == 0)) {
                 runCheckpoint(deploymentId, jobGen, i);
                 snapshotJobIndex.set(currentJobIndex);

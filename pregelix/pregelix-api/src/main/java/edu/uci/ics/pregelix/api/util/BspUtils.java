@@ -807,6 +807,16 @@ public class BspUtils {
         return conf.getBoolean(PregelixJob.MERGE_CONNECTOR, true);
     }
 
+    /**
+     * return the maximum iteration number
+     * 
+     * @param conf
+     * @return the maximum iteration number
+     */
+    public static int getMaxIteration(Configuration conf) {
+        return conf.getInt(PregelixJob.MAX_ITERATION, Integer.MAX_VALUE);
+    }
+
     public static Writable readGlobalAggregateValue(Configuration conf, String jobId, String aggClassName)
             throws HyracksDataException {
         try {
