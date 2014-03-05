@@ -39,7 +39,7 @@ public class TextConnectedComponentsInputFormat extends
     @Override
     public VertexReader<VLongWritable, VLongWritable, FloatWritable, VLongWritable> createVertexReader(
             InputSplit split, TaskAttemptContext context) throws IOException {
-        return new TextReachibilityGraphReader(textInputFormat.createRecordReader(split, context));
+        return new TextConnectedComponentsGraphReader(textInputFormat.createRecordReader(split, context));
     }
 }
 
@@ -94,6 +94,11 @@ class TextConnectedComponentsGraphReader extends
                 destId.set(dest);
                 vertex.addEdge(destId, null);
             }
+            
+            /**
+             * set the vertex value
+             */
+            vertex.setVertexValue(vertexId);
         }
         // vertex.sortEdges();
         return vertex;

@@ -110,8 +110,22 @@ public class TupleDeserializer {
         }
     }
 
-    public Object[] deserializeRecord(ArrayTupleBuilder tb, ITupleReference right) throws HyracksDataException {
+    public Object[] deserializeRecord(ArrayTupleBuilder tb, ITupleReference right, boolean nullLeft)
+            throws HyracksDataException {
         try {
+            if (nullLeft) {
+                byte[] rightData = right.getFieldData(1);
+                int rightFieldOffset = right.getFieldStart(1);
+                int rightLen = right.getFieldLength(1);
+                /** skip a halted and no message vertex without deserializing it */
+                if (rightData[rightFieldOffset + rightLen - 1] == 1) {
+                    // halt flag is the last byte of any vertex
+                    record[0] = null;
+                    record[1] = null;
+                    return record;
+                }
+            }
+
             byte[] data = tb.getByteArray();
             int[] offset = tb.getFieldEndOffsets();
             int start = 0;

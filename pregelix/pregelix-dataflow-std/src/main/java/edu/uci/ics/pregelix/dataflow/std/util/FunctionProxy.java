@@ -110,8 +110,12 @@ public class FunctionProxy {
      * @throws HyracksDataException
      */
     public void functionCall(ArrayTupleBuilder tb, ITupleReference inPlaceUpdateRef, ArrayTupleBuilder cloneUpdateTb,
-            IIndexCursor cursor) throws HyracksDataException {
-        Object[] tuple = tupleDe.deserializeRecord(tb, inPlaceUpdateRef);
+            IIndexCursor cursor, boolean nullLeft) throws HyracksDataException {
+        Object[] tuple = tupleDe.deserializeRecord(tb, inPlaceUpdateRef, nullLeft);
+        if (tuple[1] == null) {
+            /** skip vertice that should not be invoked */
+            return;
+        }
         function.process(tuple);
         function.update(inPlaceUpdateRef, cloneUpdateTb, cursor);
     }

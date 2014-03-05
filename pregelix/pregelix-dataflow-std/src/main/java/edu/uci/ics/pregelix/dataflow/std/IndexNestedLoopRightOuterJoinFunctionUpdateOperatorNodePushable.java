@@ -318,7 +318,7 @@ public class IndexNestedLoopRightOuterJoinFunctionUpdateOperatorNodePushable ext
         /**
          * function call
          */
-        functionProxy.functionCall(nullTupleBuilder, frameTuple, cloneUpdateTb, cursor);
+        functionProxy.functionCall(nullTupleBuilder, frameTuple, cloneUpdateTb, cursor, true);
 
         //doing clone update
         CopyUpdateUtil.copyUpdate(tempTupleReference, frameTuple, updateBuffer, cloneUpdateTb, indexAccessor, cursor,
