@@ -754,7 +754,12 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
             return false;
         if (kmer2.getKmerLetterLength() < offset2 + length)
             return false;
-
+        //ELMIRA
+        /**
+        if (offset1 < 0){
+        	return false;
+        }
+        **/
         // check each letter
         for (int i = 0; i < length; i++) {
             if (kmer1.getGeneCodeAtPosition(offset1 + i) != kmer2.getGeneCodeAtPosition(offset2 + i)) {

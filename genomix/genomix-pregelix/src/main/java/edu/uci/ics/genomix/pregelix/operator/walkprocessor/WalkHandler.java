@@ -1,7 +1,9 @@
 package edu.uci.ics.genomix.pregelix.operator.walkprocessor;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
@@ -16,7 +18,7 @@ import edu.uci.ics.genomix.data.types.VKmer;
 import edu.uci.ics.genomix.data.types.VKmerList;
 
 public class WalkHandler {
-	private static final int MIN_OVERLAPSIZE = 4;
+	private static final int MIN_OVERLAPSIZE = 20;
 	private static final int kmerSize = 21;
 	private static HashMap <VKmer, VKmerList> walkIdMap = new HashMap<VKmer, VKmerList>();
 	private static HashMap <VKmer, VKmer> walkKmerMap = new HashMap<VKmer, VKmer>();
@@ -24,7 +26,7 @@ public class WalkHandler {
 	static PrintWriter writer;
 	
     public static void writeOnFile() throws FileNotFoundException, UnsupportedEncodingException {
-        String s = "/home/elmira/WORK/RESULTS/result.txt";
+        String s = "/home/elmira/WORK/RESULTS/walks.txt";
         writer = new PrintWriter(s, "UTF-8");
     }
 	/**
@@ -56,6 +58,20 @@ public class WalkHandler {
 	    }
 		
 		return walkIdMap;
+		
+	}
+	
+	public static void loadWalks(String directory) throws IOException{
+		BufferedReader br = new BufferedReader(new FileReader(directory));
+		String line;
+		int count = 0;
+		while ((line = br.readLine()) != null) {
+			if (count%2 ==1){
+				walkList.add(line.toString());
+			}
+			count++;
+		}
+		br.close();
 		
 	}
 	/**
@@ -266,13 +282,14 @@ public class WalkHandler {
 		}
 		writer.close();
 	}
-	public static void main(String[] args) throws FileNotFoundException, UnsupportedEncodingException{
+	public static void main(String[] args) throws IOException{
 		
-		System.out.println(longestSubstring("ACGTTTCT" , "GTATTTCT"));
-		System.out.println(alignWalk("ATTTC" , "GTATTTCT").toString());
-		walkList.add("ACGTTTCT");
-		walkList.add("GTATTTCT");
-		walkList.add("ATTTC");
+		//System.out.println(longestSubstring("ACGTTTCT" , "GTATTTCT"));
+		//System.out.println(alignWalk("ATTTC" , "GTATTTCT").toString());
+		//walkList.add("ACGTTTCT");
+		//walkList.add("GTATTTCT");
+		//walkList.add("ATTTC");
+		loadWalks("/home/elmira/Documents/test.fasta");
 		processWalks();
 		printWalks();
 		

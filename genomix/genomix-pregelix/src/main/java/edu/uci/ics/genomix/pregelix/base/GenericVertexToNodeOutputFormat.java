@@ -41,12 +41,14 @@ public abstract class GenericVertexToNodeOutputFormat<V extends Node> extends
             // keep only the values relevant to NodeToGenericVertexInputFormat
             node.setAsReference(vertex.getVertexValue());
 
+            System.err.println("asdf: writevertex: "+  vertex.getVertexId());
             // HACK
             // if the kmer hasn't changed in length, it's equivalent to the vertexId and we don't need to write it
             if (node.getInternalKmer().getKmerLetterLength() == Kmer.getKmerLength()) {
                 node.setInternalKmer(null);
             }
             getRecordWriter().write(vertex.getVertexId(), node);
+
         }
     }
 }
