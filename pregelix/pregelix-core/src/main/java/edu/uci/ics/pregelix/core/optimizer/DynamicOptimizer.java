@@ -16,9 +16,9 @@
 package edu.uci.ics.pregelix.core.optimizer;
 
 import java.io.File;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.TreeMap;
 
 import org.apache.hadoop.io.IntWritable;
 
@@ -40,7 +40,7 @@ import edu.uci.ics.pregelix.dataflow.util.IterationUtils;
 public class DynamicOptimizer implements IOptimizer {
 
     private IClusterCounterContext counterContext;
-    private Map<String, IntWritable> machineToDegreeOfParallelism = new HashMap<String, IntWritable>();
+    private Map<String, IntWritable> machineToDegreeOfParallelism = new TreeMap<String, IntWritable>();
     private int dop = 0;
 
     public DynamicOptimizer(IClusterCounterContext counterContext) {
@@ -69,7 +69,7 @@ public class DynamicOptimizer implements IOptimizer {
             int index = 0;
             for (Entry<String, IntWritable> entry : machineToDegreeOfParallelism.entrySet()) {
                 String loc = entry.getKey();
-                IntWritable count = machineToDegreeOfParallelism.get(loc);
+                IntWritable count = entry.getValue();
                 for (int j = 0; j < count.get(); j++) {
                     constraints[index++] = loc;
                 }
@@ -87,7 +87,7 @@ public class DynamicOptimizer implements IOptimizer {
         int splitIndex = 0;
         for (Entry<String, IntWritable> entry : machineToDegreeOfParallelism.entrySet()) {
             String ncName = entry.getKey();
-            IntWritable count = machineToDegreeOfParallelism.get(ncName);
+            IntWritable count = entry.getValue();
             for (int j = 0; j < count.get(); j++) {
                 //cycles stores, each machine has the number of stores = the number of cores
                 int storeCursor = j % stores.length;

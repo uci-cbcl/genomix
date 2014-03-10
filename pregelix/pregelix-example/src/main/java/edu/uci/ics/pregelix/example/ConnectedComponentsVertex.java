@@ -66,8 +66,9 @@ public class ConnectedComponentsVertex extends Vertex<VLongWritable, VLongWritab
 
         @Override
         public void stepFinal(VLongWritable vertexIndex, VLongWritable partialAggregate) throws HyracksDataException {
-            if (min > partialAggregate.get()) {
-                min = partialAggregate.get();
+            long value = partialAggregate.get();
+            if (min > value) {
+                min = value;
             }
         }
 
