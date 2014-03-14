@@ -67,7 +67,7 @@ public class FailureRecoveryConnectedComponentsTest {
                 public void run() {
                     try {
                         synchronized (this) {
-                            while (Vertex.getSuperstep() <= 5) {
+                            while (Vertex.getSuperstep() <= 2) {
                                 this.wait(200);
                             }
                             PregelixHyracksIntegrationUtil.shutdownNC1();
