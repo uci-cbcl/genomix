@@ -15,6 +15,7 @@
 package edu.uci.ics.hyracks.client.stats.impl;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -227,7 +228,7 @@ public class ClientCounterContext implements IClusterCounterContext {
             in.close();
             return response.toString();
         } catch (Exception e) {
-            if (!(e instanceof java.net.ConnectException)) {
+            if (!(e instanceof java.net.ConnectException|| e instanceof IOException)) {
                 throw new IllegalStateException(e);
             } else {
                 return "";
