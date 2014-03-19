@@ -170,6 +170,7 @@ public class RayValue extends VertexValueWritable {
             }
             //FIXME
             return getFlippedReadIds().getOffSetRange(0, Math.max(0, getKmerLength() - numBasesToSkip)).isEmpty();
+            
             //return getFlippedReadIds().getOffSetRange(0, myLength - numBasesToSkip).isEmpty();
         }
     }

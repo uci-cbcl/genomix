@@ -76,24 +76,10 @@ public class RayScores implements Writable {
         }
     }
     
-    public SimpleEntry<EDGETYPE, VKmer> getSingleKey(VKmer id) {
+    public SimpleEntry<EDGETYPE, VKmer> getSingleKey() {
         if (scores.size() != 1) {
             throw new IllegalStateException("requested single key but this score has " + scores.size() + " entries! " + scores);
         }
-    	/**
-       int l = id.toString().length();
-        for (SimpleEntry<EDGETYPE,VKmer> e : scores.keySet()) {
-        	if ((e.getValue().toString().substring(0, 20).equals(id.toString().substring(l-21, l-1))) ||
-        		(e.getValue().reverse().toString().substring(0, 20).equals(id.toString().substring(l-21, l-1)))||
-        		(e.getValue().toString().substring(0, 20).equals(id.reverse().toString().substring(l-21, l-1)))||
-        		(e.getValue().reverse().toString().substring(0, 20).equals(id.reverse( ).toString().substring(l-21, l-1)))){
-        		return e;
-        	} else if(scores.size() == 1){
-        		return null;
-        	}
-            
-        }
-        **/
         if(scores.size() == 1){
         	for (SimpleEntry<EDGETYPE,VKmer> e : scores.keySet()){
         		return e;
