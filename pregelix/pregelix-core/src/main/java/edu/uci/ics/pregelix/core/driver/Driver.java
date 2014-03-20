@@ -169,14 +169,19 @@ public class Driver implements IDriver {
                         jobGen = dynamicOptimizer.optimize(jobGen, i);
                         runLoopBody(deploymentId, currentJob, jobGen, i, lastSnapshotJobIndex, lastSnapshotSuperstep,
                                 ckpHook, failed);
-                        runClearState(deploymentId, jobGen);
                         failed = false;
                     }
 
                     /** finish the jobs */
                     finishJobs(jobGen, deploymentId);
+
                     /** clear checkpoints if any */
                     jobGen.clearCheckpoints();
+
+                    /** clear state */
+                    runClearState(deploymentId, jobGen, true);
+
+                    /** undeploy the binary */
                     hcc.unDeployBinary(deploymentId);
                 } catch (Exception e1) {
                     Set<String> blackListNodes = new HashSet<String>();
@@ -293,10 +298,9 @@ public class Driver implements IDriver {
         if (doRecovery) {
             /** reload the checkpoint */
             if (snapshotSuperstep.get() > 0) {
-                runClearState(deploymentId, jobGen);
                 runLoadCheckpoint(deploymentId, jobGen, snapshotSuperstep.get());
             } else {
-                runClearState(deploymentId, jobGen);
+                runClearState(deploymentId, jobGen, true);
                 loadData(job, jobGen, deploymentId);
             }
         }
@@ -402,9 +406,9 @@ public class Driver implements IDriver {
         }
     }
 
-    private void runClearState(DeploymentId deploymentId, JobGen jobGen) throws Exception {
+    private void runClearState(DeploymentId deploymentId, JobGen jobGen, boolean allStates) throws Exception {
         try {
-            JobSpecification clear = jobGen.generateClearState();
+            JobSpecification clear = jobGen.generateClearState(allStates);
             execute(deploymentId, clear);
         } catch (Exception e) {
             throw e;

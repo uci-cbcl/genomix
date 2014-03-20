@@ -136,11 +136,7 @@ public class ClientCounterContext implements IClusterCounterContext {
                 }
             }
         } catch (Exception e) {
-            if (e instanceof java.net.ConnectException) {
-                //ignore
-            } else {
-                throw new IllegalStateException(e);
-            }
+            //ignore
         }
     }
 
@@ -228,7 +224,7 @@ public class ClientCounterContext implements IClusterCounterContext {
             in.close();
             return response.toString();
         } catch (Exception e) {
-            if (!(e instanceof java.net.ConnectException|| e instanceof IOException)) {
+            if (!(e instanceof java.net.ConnectException || e instanceof IOException)) {
                 throw new IllegalStateException(e);
             } else {
                 return "";

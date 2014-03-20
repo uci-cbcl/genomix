@@ -29,7 +29,6 @@ import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.mapreduce.Counters;
-import org.apache.hadoop.util.ReflectionUtils;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.pregelix.api.graph.GlobalAggregator;
@@ -80,8 +79,12 @@ public class BspUtils {
     public static <I extends WritableComparable, V extends Writable, E extends Writable, M extends WritableSizable> VertexInputFormat<I, V, E, M> createVertexInputFormat(
             Configuration conf) {
         Class<? extends VertexInputFormat<I, V, E, M>> vertexInputFormatClass = getVertexInputFormatClass(conf);
-        VertexInputFormat<I, V, E, M> inputFormat = ReflectionUtils.newInstance(vertexInputFormatClass, conf);
-        return inputFormat;
+        try {
+            VertexInputFormat<I, V, E, M> inputFormat = vertexInputFormatClass.newInstance();
+            return inputFormat;
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     /**
@@ -109,7 +112,11 @@ public class BspUtils {
     public static <I extends WritableComparable, V extends Writable, E extends Writable> VertexOutputFormat<I, V, E> createVertexOutputFormat(
             Configuration conf) {
         Class<? extends VertexOutputFormat<I, V, E>> vertexOutputFormatClass = getVertexOutputFormatClass(conf);
-        return ReflectionUtils.newInstance(vertexOutputFormatClass, conf);
+        try {
+            return vertexOutputFormatClass.newInstance();
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     /**
@@ -172,7 +179,11 @@ public class BspUtils {
     public static <I extends WritableComparable, M extends WritableSizable, P extends Writable> MessageCombiner<I, M, P> createMessageCombiner(
             Configuration conf) {
         Class<? extends MessageCombiner<I, M, P>> vertexCombinerClass = getMessageCombinerClass(conf);
-        return ReflectionUtils.newInstance(vertexCombinerClass, conf);
+        try {
+            return vertexCombinerClass.newInstance();
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     /**
@@ -184,7 +195,11 @@ public class BspUtils {
      */
     public static NormalizedKeyComputer createNormalizedKeyComputer(Configuration conf) {
         Class<? extends NormalizedKeyComputer> nmkClass = getNormalizedKeyComputerClass(conf);
-        return ReflectionUtils.newInstance(nmkClass, conf);
+        try {
+            return nmkClass.newInstance();
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     /**
@@ -199,10 +214,14 @@ public class BspUtils {
             Configuration conf) {
         List<Class<? extends GlobalAggregator<I, V, E, M, P, F>>> globalAggregatorClasses = getGlobalAggregatorClasses(conf);
         List<GlobalAggregator> aggs = new ArrayList<GlobalAggregator>();
-        for (Class<? extends GlobalAggregator<I, V, E, M, P, F>> globalAggClass : globalAggregatorClasses) {
-            aggs.add(ReflectionUtils.newInstance(globalAggClass, conf));
+        try {
+            for (Class<? extends GlobalAggregator<I, V, E, M, P, F>> globalAggClass : globalAggregatorClasses) {
+                aggs.add(globalAggClass.newInstance());
+            }
+            return aggs;
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
         }
-        return aggs;
     }
 
     /**
@@ -267,8 +286,13 @@ public class BspUtils {
     public static <I extends WritableComparable, V extends Writable, E extends Writable, M extends WritableSizable> Vertex<I, V, E, M> createVertex(
             Configuration conf) {
         Class<? extends Vertex<I, V, E, M>> vertexClass = getVertexClass(conf);
-        Vertex<I, V, E, M> vertex = ReflectionUtils.newInstance(vertexClass, conf);
-        return vertex;
+        try {
+            Vertex<I, V, E, M> vertex = vertexClass.newInstance();
+            return vertex;
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+
     }
 
     /**

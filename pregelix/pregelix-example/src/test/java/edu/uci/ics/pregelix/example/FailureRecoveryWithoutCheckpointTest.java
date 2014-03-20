@@ -21,7 +21,6 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.junit.Test;
 
-import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.core.driver.Driver;
 import edu.uci.ics.pregelix.core.util.PregelixHyracksIntegrationUtil;
@@ -63,9 +62,7 @@ public class FailureRecoveryWithoutCheckpointTest {
                 public void run() {
                     try {
                         synchronized (this) {
-                            while (Vertex.getSuperstep() <= 5) {
-                                this.wait(200);
-                            }
+                            this.wait(3000);
                             PregelixHyracksIntegrationUtil.shutdownNC1();
                         }
                     } catch (Exception e) {

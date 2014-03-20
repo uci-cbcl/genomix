@@ -66,7 +66,7 @@ public class DataflowUtils {
             int i = 0;
             for (String className : classNames)
                 serdes[i++] = DatatypeHelper.createSerializerDeserializer(
-                        (Class<? extends Writable>) loader.loadClass(className), conf);
+                        (Class<? extends Writable>) loader.loadClass(className), conf, null);
         } catch (ClassNotFoundException cnfe) {
             throw new HyracksException(cnfe);
         }
@@ -120,7 +120,7 @@ public class DataflowUtils {
             int i = 0;
             for (String className : classNames) {
                 Class<? extends Writable> c = (Class<? extends Writable>) ctx.getJobletContext().loadClass(className);
-                serdes[i++] = DatatypeHelper.createSerializerDeserializer(c, conf);
+                serdes[i++] = DatatypeHelper.createSerializerDeserializer(c, conf, ctx);
                 //System.out.println("thread " + Thread.currentThread().getId() + " after creating serde " + c.getClassLoader());
             }
         } catch (Exception cnfe) {

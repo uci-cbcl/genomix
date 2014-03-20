@@ -470,9 +470,9 @@ public abstract class JobGen implements IJobGen {
     /***
      * generate a "clear state" job
      */
-    public JobSpecification generateClearState() throws HyracksException {
+    public JobSpecification generateClearState(boolean allStates) throws HyracksException {
         JobSpecification spec = new JobSpecification();
-        ClearStateOperatorDescriptor clearState = new ClearStateOperatorDescriptor(spec, jobId);
+        ClearStateOperatorDescriptor clearState = new ClearStateOperatorDescriptor(spec, jobId, allStates);
         setLocationConstraint(spec, clearState);
         spec.addRoot(clearState);
         return spec;

@@ -31,11 +31,8 @@ import edu.uci.ics.hyracks.client.stats.IClusterCounterContext;
 import edu.uci.ics.hyracks.dataflow.std.file.ConstantFileSplitProvider;
 import edu.uci.ics.hyracks.dataflow.std.file.FileSplit;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
-import edu.uci.ics.pregelix.api.job.PregelixJob;
-import edu.uci.ics.pregelix.api.util.BspUtils;
 import edu.uci.ics.pregelix.core.jobgen.JobGen;
 import edu.uci.ics.pregelix.core.jobgen.clusterconfig.ClusterConfig;
-import edu.uci.ics.pregelix.dataflow.util.IterationUtils;
 
 public class DynamicOptimizer implements IOptimizer {
 
@@ -52,9 +49,6 @@ public class DynamicOptimizer implements IOptimizer {
         try {
             if (iteration == 0) {
                 initializeLoadPerMachine();
-            }
-            if (iteration >= 0) {
-                setupGroupingConfiguration(jobGen.getPregelixJob());
             }
             return jobGen;
         } catch (Exception e) {
@@ -123,67 +117,6 @@ public class DynamicOptimizer implements IOptimizer {
             dop += load;
         }
         return dop;
-    }
-
-    /**
-     * set up the group-by algorithm and memory
-     * 
-     * @param job
-     */
-    private void setupGroupingConfiguration(PregelixJob job) {
-        String[] slaves = ClusterConfig.getNCNames();
-
-        /**
-         * retrieve the max allowed memory size (use the min over all the slaves)
-         */
-        long memorySize = Integer.MAX_VALUE;
-        for (String slave : slaves) {
-            long maxHeapSize = counterContext.getCounter(slave, Counters.MEMORY_MAX, false).get();
-            if (maxHeapSize < memorySize) {
-                memorySize = maxHeapSize;
-            }
-        }
-
-        /**
-         * retrieve the used memory size (use the max over all the slaves)
-         */
-        long memoryUsed = Integer.MIN_VALUE;
-        for (String slave : slaves) {
-            long usedHeapSize = counterContext.getCounter(slave, Counters.MEMORY_MAX, false).get();
-            if (usedHeapSize > memoryUsed) {
-                memorySize = usedHeapSize;
-            }
-        }
-
-        /**
-         * get the max parallelism per machine
-         */
-        int maxParallelismPerMachine = 0;
-        for (String slave : slaves) {
-            int parallelism = machineToDegreeOfParallelism.get(slave).get();
-            if (parallelism > maxParallelismPerMachine) {
-                maxParallelismPerMachine = parallelism;
-            }
-        }
-
-        /**
-         * retrieve the data set size and estimated message byte size
-         */
-        long inputByteSize = IterationUtils.getInputFileSize(job);
-        long messageByteSize = inputByteSize * 6;
-
-        // the frame size
-        int frameSize = ClusterConfig.getFrameSize();
-        // the size of the shared buffer cache for all jobs (buffer cache +LSM in memory component)
-        long bufferCache = 3 / 8 * memorySize;
-        // the dedicated network send/receive buffer memory for this job
-        long networkMem = 2 * dop * frameSize;
-        // the available memory for each grouping operator instance's working space
-        long memoryLimit = (memorySize - Math.max(bufferCache, memoryUsed) - networkMem)
-                / (2 * maxParallelismPerMachine);
-        if (memoryLimit < messageByteSize && BspUtils.getGroupingAlgorithm(job.getConfiguration()) == false) {
-            job.setGroupByMemoryLimit((int) (memoryLimit / frameSize));
-        }
     }
 
 }
