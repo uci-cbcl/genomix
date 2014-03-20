@@ -16,20 +16,15 @@ import edu.uci.ics.genomix.pregelix.base.VertexValueWritable;
 public class RayValue extends VertexValueWritable {
     private static final long serialVersionUID = 1L;
 
-    Boolean flippedFromInitialDirection = null;
-    //boolean visited = false;
+    HashMap<VKmer, Boolean> flippedFromInitialDirection = null;
     List<VKmer> visitedList;
-    boolean intersection = false;
-    boolean stopSearch = false;
-    
+    HashMap<VKmer,Boolean> intersection = null;
+    HashMap<VKmer, Boolean> stopSearch = null;
     HashMap<VKmer, Integer> pendingCandidateBranchesMap = null;
-    Integer pendingCandidateBranchesCopy = null;
-    Integer pendingCandidateBranches = null;
     ArrayList<RayMessage> candidateMsgs = null;
 
     protected static class FIELDS {
-        public static final byte DIR_FLIPPED_VS_INITIAL = 0b01;
-        public static final byte DIR_SAME_VS_INITIAL = 0b10;
+        public static final byte DIR_VS_INITIAL = 0b1 << 1;
         public static final byte VISITED_LIST = 0b1 << 2;
         public static final byte INTERSECTION = 0b1 << 3;
         public static final byte STOP_SEARCH = 0b1 << 4;
@@ -40,16 +35,40 @@ public class RayValue extends VertexValueWritable {
     @Override
     public void readFields(DataInput in) throws IOException {
         super.readFields(in);
-        if (((state) & FIELDS.DIR_FLIPPED_VS_INITIAL) != 0) {
-            flippedFromInitialDirection = true;
-        } else if (((state) & FIELDS.DIR_SAME_VS_INITIAL) != 0) {
-            flippedFromInitialDirection = false;
-        } else {
-            flippedFromInitialDirection = null;
+        if ((state & FIELDS.DIR_VS_INITIAL) != 0) {
+            getIntersection().clear();
+            int count = in.readInt();
+            for (int i = 0; i < count; i++){
+            	VKmer key = new VKmer();
+            	key.readFields(in);
+            	boolean value = in.readBoolean();
+            	flippedFromInitialDirection.put(key, value);
+            	
+            }   
         }
-        //visited = ((state & FIELDS.VISITED) != 0);        
-        intersection = ((state & FIELDS.INTERSECTION) != 0);
-        stopSearch = ((state & FIELDS.STOP_SEARCH) != 0);
+        //visited = ((state & FIELDS.VISITED) != 0);      
+        if ((state & FIELDS.INTERSECTION) != 0) {
+            getIntersection().clear();
+            int count = in.readInt();
+            for (int i = 0; i < count; i++){
+            	VKmer key = new VKmer();
+            	key.readFields(in);
+            	boolean value = in.readBoolean();
+            	intersection.put(key, value);
+            	
+            }    
+        }
+        if ((state & FIELDS.STOP_SEARCH) != 0) {
+            getStopSearch().clear();
+            int count = in.readInt();
+            for (int i = 0; i < count; i++){
+            	VKmer key = new VKmer();
+            	key.readFields(in);
+            	boolean value = in.readBoolean();
+            	stopSearch.put(key, value);
+            	
+            }  
+        }
         
         if ((state & FIELDS.VISITED_LIST) != 0) {
             getVisitedList().clear();
@@ -62,8 +81,6 @@ public class RayValue extends VertexValueWritable {
         }
         
         if ((state & FIELDS.PENDING_CANDIDATE_BRANCHES) != 0) {
-            pendingCandidateBranches = in.readInt();
-            pendingCandidateBranchesCopy = in.readInt();
             getPendingCandiateBranchesMap().clear();
             int count = in.readInt();
             for (int i = 0; i < count; i++){
@@ -72,9 +89,9 @@ public class RayValue extends VertexValueWritable {
             	int value = in.readInt();
             	pendingCandidateBranchesMap.put(key, value);
             	
-            }
-            
+            }   
         }
+        
         if ((state & FIELDS.CANDIDATE_MSGS) != 0) {
             getCandidateMsgs().clear();
             int count = in.readInt();
@@ -90,12 +107,12 @@ public class RayValue extends VertexValueWritable {
     public void write(DataOutput out) throws IOException {
         state = 0;
         if (flippedFromInitialDirection != null) {
-            state |= flippedFromInitialDirection ? FIELDS.DIR_FLIPPED_VS_INITIAL : FIELDS.DIR_SAME_VS_INITIAL;
+            state |=  FIELDS.DIR_VS_INITIAL;
         }
-        if (intersection) {
+        if (intersection != null) {
             state |= FIELDS.INTERSECTION;
         }
-        if (stopSearch) {
+        if (stopSearch != null) {
             state |= FIELDS.STOP_SEARCH;
         }
         
@@ -103,7 +120,7 @@ public class RayValue extends VertexValueWritable {
             state |= FIELDS.VISITED_LIST;
         } 
         
-        if (pendingCandidateBranches != null) {
+        if (pendingCandidateBranchesMap != null) {
             state |= FIELDS.PENDING_CANDIDATE_BRANCHES;
         }
         if (candidateMsgs != null && candidateMsgs.size() > 0) {
@@ -111,16 +128,34 @@ public class RayValue extends VertexValueWritable {
         }
         super.write(out);
         
+        if (flippedFromInitialDirection != null) {
+            out.writeInt(flippedFromInitialDirection.size());
+            for (Entry<VKmer, Boolean> entry : flippedFromInitialDirection.entrySet()){
+    			entry.getKey().write(out);
+    			out.writeBoolean(entry.getValue());
+    		}
+        } 
+        if (intersection != null) {
+            out.writeInt(intersection.size());
+            for (Entry<VKmer, Boolean> entry : intersection.entrySet()){
+    			entry.getKey().write(out);
+    			out.writeBoolean(entry.getValue());
+    		}
+        } 
+        if (stopSearch != null) {
+            out.writeInt(stopSearch.size());
+            for (Entry<VKmer, Boolean> entry : stopSearch.entrySet()){
+    			entry.getKey().write(out);
+    			out.writeBoolean(entry.getValue());
+    		}
+        }
         if (visitedList != null && visitedList.size() > 0) {
             out.writeInt(visitedList.size());
             for (VKmer m : visitedList) {
                 m.write(out);
             }
         }
-        
-        if (pendingCandidateBranches != null) {
-            out.writeInt(pendingCandidateBranches);
-            out.writeInt(pendingCandidateBranchesCopy);
+        if (pendingCandidateBranchesMap != null) {
             out.writeInt(pendingCandidateBranchesMap.size());
             for (Entry<VKmer, Integer> entry : pendingCandidateBranchesMap.entrySet()){
     			entry.getKey().write(out);
@@ -139,11 +174,9 @@ public class RayValue extends VertexValueWritable {
     public void reset() {
         super.reset();
         flippedFromInitialDirection = null;
-        intersection = false;
-        stopSearch = false;
+        intersection = null;
+        stopSearch = null;
         visitedList = null;
-        pendingCandidateBranches = null;
-        pendingCandidateBranchesCopy = null;
         pendingCandidateBranchesMap = null;
         candidateMsgs = null;
     }
@@ -151,10 +184,10 @@ public class RayValue extends VertexValueWritable {
     /**
      * @return whether or not I have any readids that **could** contribute to the current walk
      */
-    public boolean isOutOfRange(int myOffset, int walkLength, int maxDist) {
+    public boolean isOutOfRange(int myOffset, int walkLength, int maxDist, VKmer seed) {
         int numBasesToSkip = Math.max(0, walkLength - maxDist - myOffset);
         int myLength = getKmerLength() - Kmer.getKmerLength() + 1;
-        if (!flippedFromInitialDirection) {
+        if (!flippedFromInitialDirection.get(seed)) {
             // TODO fix max offset to be distance
             // cut off the beginning
             if (numBasesToSkip > myLength) {
@@ -205,5 +238,35 @@ public class RayValue extends VertexValueWritable {
     }
     public void setPendingCandidateBranchesMap(HashMap<VKmer, Integer> pendingCandidateBranchesMap){
     	this.pendingCandidateBranchesMap = pendingCandidateBranchesMap;
+    }
+    
+    public HashMap<VKmer, Boolean> getIntersection(){
+    	if (intersection == null){
+    		intersection = new HashMap<VKmer, Boolean>();
+    	}
+    	return intersection;
+    }
+    public void setIntersection(HashMap<VKmer, Boolean> intersection){
+    	this.intersection = intersection;
+    }
+    
+    public HashMap<VKmer, Boolean> getStopSearch(){
+    	if (stopSearch == null){
+    		stopSearch = new HashMap<VKmer, Boolean>();
+    	}
+    	return stopSearch;
+    }
+    public void setStopSearch(HashMap<VKmer, Boolean> stopSearch){
+    	this.stopSearch= stopSearch;
+    }
+    
+    public HashMap<VKmer, Boolean> getFlippedFromInitDir(){
+    	if (flippedFromInitialDirection == null){
+    		flippedFromInitialDirection = new HashMap<VKmer, Boolean>();
+    	}
+    	return flippedFromInitialDirection;
+    }
+    public void setFlippedFromInitDir(HashMap<VKmer, Boolean> flippedFromInitialDirection){
+    	this.flippedFromInitialDirection= flippedFromInitialDirection;
     }
 }

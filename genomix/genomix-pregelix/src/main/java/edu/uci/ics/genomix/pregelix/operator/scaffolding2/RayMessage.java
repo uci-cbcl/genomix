@@ -79,7 +79,7 @@ public class RayMessage extends MessageWritable {
      * @param vertex
      * @param accumulatedKmerDir
      */
-    public void visitNode(VKmer id, RayValue vertex, DIR accumulatedKmerDir) {
+    public void visitNode(VKmer id, RayValue vertex, DIR accumulatedKmerDir, VKmer seed) {
         getWalkIds().append(id);
         getWalkOffsets().add(getWalkLength());
         setWalkLength(getWalkLength() + vertex.getKmerLength() - Kmer.getKmerLength() + 1);
@@ -89,7 +89,7 @@ public class RayMessage extends MessageWritable {
             setAccumulatedWalkKmer(accumulatedKmerDir == DIR.FORWARD ? vertex.getInternalKmer() : vertex
                     .getInternalKmer().reverse());
         } else {
-            EDGETYPE accumulatedToVertexET = !vertex.flippedFromInitialDirection ? EDGETYPE.FF : EDGETYPE.FR;
+            EDGETYPE accumulatedToVertexET = !vertex.getFlippedFromInitDir().get(seed) ? EDGETYPE.FF : EDGETYPE.FR;
             getAccumulatedWalkKmer().mergeWithKmerInDir(accumulatedToVertexET, Kmer.getKmerLength(),
                     vertex.getInternalKmer());
         }

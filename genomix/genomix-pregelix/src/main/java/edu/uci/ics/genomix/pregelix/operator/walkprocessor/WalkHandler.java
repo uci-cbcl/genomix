@@ -289,7 +289,7 @@ public class WalkHandler {
 		//walkList.add("ACGTTTCT");
 		//walkList.add("GTATTTCT");
 		//walkList.add("ATTTC");
-		loadWalks("/home/elmira/Documents/test.fasta");
+		loadWalks("/home/elmira/Documents/march19-1.txt");
 		processWalks();
 		printWalks();
 		
