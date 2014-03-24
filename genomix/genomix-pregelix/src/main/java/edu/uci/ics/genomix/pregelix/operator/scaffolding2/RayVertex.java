@@ -166,6 +166,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         RayMessage initialMsg = new RayMessage();
         initialMsg.setMessageType(RayMessageType.CONTINUE_WALK);
         initialMsg.setWalkLength(0);
+        initialMsg.setSeed(getVertexId());
         if (INITIAL_DIRECTION == DIR.FORWARD) {
             initialMsg.setFrontierFlipped(false);
             initialMsg.setEdgeTypeBackToFrontier(EDGETYPE.RR);
@@ -248,7 +249,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
                     }
                     //vertex.visited = false;
                     List<VKmer> tmp = vertex.getVisitedList();
-                    tmp.remove(msg.getWalkIds().getPosition(0));
+                    tmp.remove(msg.getSeed());
                     vertex.setVisitedList(new ArrayList(tmp));
                     break;
                 case STOP:
@@ -453,7 +454,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         DIR nextDir = msg.getEdgeTypeBackToPrev().mirror().neighborDir();
         // already visited -> the frontier must stop!
         seed = msg.getSeed();
-        if ((vertex.getVisitedList()!=null) && ((vertex.getVisitedList().contains(seed)) || (vertex.getVisitedList().contains(seed.reverse())))) {
+        if ((vertex.getVisitedList()!=null) && ((vertex.getVisitedList().contains(seed)))) {
         	storeWalk(msg.getWalkIds(),msg.getAccumulatedWalkKmer(), seed);
             vertex.getIntersection().put(seed, true);
             //vertex.stopSearch = true;

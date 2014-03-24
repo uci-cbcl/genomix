@@ -42,7 +42,7 @@ public class RayValue extends VertexValueWritable {
             	VKmer key = new VKmer();
             	key.readFields(in);
             	boolean value = in.readBoolean();
-            	flippedFromInitialDirection.put(key, value);
+            	getFlippedFromInitDir().put(key, value);
             	
             }   
         }
@@ -54,7 +54,7 @@ public class RayValue extends VertexValueWritable {
             	VKmer key = new VKmer();
             	key.readFields(in);
             	boolean value = in.readBoolean();
-            	intersection.put(key, value);
+            	getIntersection().put(key, value);
             	
             }    
         }
@@ -65,7 +65,7 @@ public class RayValue extends VertexValueWritable {
             	VKmer key = new VKmer();
             	key.readFields(in);
             	boolean value = in.readBoolean();
-            	stopSearch.put(key, value);
+            	getStopSearch().put(key, value);
             	
             }  
         }
@@ -76,7 +76,7 @@ public class RayValue extends VertexValueWritable {
             for (int i = 0; i < count; i++) {
                 VKmer m = new VKmer();
                 m.readFields(in);
-                visitedList.add(m);
+                getVisitedList().add(m);
             }
         }
         
