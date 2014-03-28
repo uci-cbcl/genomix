@@ -30,7 +30,6 @@ import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
 import edu.uci.ics.genomix.data.types.ExternalableTreeSet;
-import edu.uci.ics.genomix.data.types.FileManager;
 import edu.uci.ics.genomix.data.types.Kmer;
 import edu.uci.ics.genomix.data.types.VKmer;
 import edu.uci.ics.genomix.data.utils.GenerateGraphViz.GRAPH_TYPE;
@@ -636,8 +635,7 @@ public class GenomixJobConf extends JobConf {
     public static void setGlobalStaticConstants(Configuration conf) throws IOException {
         Kmer.setGlobalKmerLength(Integer.parseInt(conf.get(KMER_LENGTH)));
         //        ExternalableTreeSet.setupManager(conf, new Path(conf.get("hadoop.tmp.dir", "/tmp")));
-        //        ExternalableTreeSet.setupManager(conf, new Path("tmp"));
-        FileManager.getManager().initialize(conf, new Path("tmp"));
+        ExternalableTreeSet.setupManager(conf, new Path("tmp"));
         ExternalableTreeSet.setCountLimit(1000);
 
         if (conf.get(READ_LENGTHS) != null) {
