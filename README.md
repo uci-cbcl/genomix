@@ -1,7 +1,7 @@
 genomix
 =======
 
-Parallel genome assembly using Hyracks
+Parallel genome assembly using Hyracks and Pregelix
 
 
 [![Build Status](https://travis-ci.org/uci-cbcl/genomix.png?branch=genomix/fullstack_genomix)](https://travis-ci.org/uci-cbcl/genomix)
