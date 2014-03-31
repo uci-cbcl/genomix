@@ -3,16 +3,14 @@ Genomix
 
 What is Genomix?
 -------
-Genomix is a parallel genome assembly system. 
-It can assembly the large amount of gene fastq data in a short time.
-Genomix using the [De Bruijin Graph](http://en.wikipedia.org/wiki/De_Bruijn_graph) to represent the connection between the K-mers.  
-Genomix employ the [Pregelix](http://hyracks.org/projects/pregelix/) system to deal with the message based graph computations, 
-include path merge, graph cleaning and scaffolding.
+Genomix is a parallel genome assembly system built from the ground up with scalability in mind.
+It can assemble large and high-coverage genomes from fastq files in a short time and produces assemblies similar to [Velvet](https://www.ebi.ac.uk/~zerbino/velvet/) or [Ray](http://denovoassembler.sourceforge.net/) in quality.
+Genomix uses the [De Bruijin Graph](http://en.wikipedia.org/wiki/De_Bruijn_graph) to represent the assembly and cleans, prunes, and walks the graph completely in parallel.  
 
-Pregelix is an open-source implementation of the bulk-synchronous vertex-oriented programming model for large-scale graph analytics, 
-which scales to very large clusters and very large graphs. 
-Pregelix have been designed to make efficient use of available main memory to produce results quickly.
-It enable the Genomix system can scale to a large, cheap cluster and also run 100x faster than the Hadoop based solutions.
+
+Under the hood, Genomix employs [Pregelix](http://hyracks.org/projects/pregelix/), a graph-based, bulk-synchronous parallel message-passing framework.  We currently handle graph compression, cleaning and scaffolding. Pregelix is an open-source implementation of Google's Pregel system, the bulk-synchronous parallel vertex-oriented programming model for large-scale graph analytics, allowing Genomix to scale to very large clusters and very large graphs. 
+Pregelix uses main memory as far as it's available, and seemlessly and efficiently spills to disk.  This allows us to to produce results quickly but also allows us to scale the process to arbitrarily-sized graphs.
+Genomix can run on a single machine or scale to large, cheap clusters and in our benchmarks, can run 100x faster than Hadoop-based solutions.
 
 Usage
 ------
@@ -20,16 +18,20 @@ Currently Genomix code is injecting into the Pregelix codebase directly.
 All genomix code is under the /genomix folder. 
 /genomix-data       here is the basic data structures, like the Node, Kmer, etc.
 /genomix-driver     here is the driver to connect the whole pipeline. 
-/genomix-hadoop     here is the first trying of compare the result with using hadoop, ( obsolete)
+/genomix-hadoop     here is the first trying of compare the result with using hadoop, (now obsolete)
 /genomix-hyracks    here is the graph building step
 /genomix-pregelix   here is the graph cleaning and scaffolding step.
 
 
 To build Genomix:
 ```
-cd /codebase_root
-mvn package -am -pl genomix/genomix-driver -DskipTests 
-cd /genomix/genomix*/target/appassembler/
+git clone https://github.com/uci-cbcl/genomix.git
+cd genomix
+mvn package -am -pl genomix/genomix-driver -DskipTests
+# Wait a few minutes...
+
+# At this point, the complete genomix package has been packaged under:
+cd genomix/genomix-driver/target/genomix-driver-0.2.10-SNAPSHOT/
 ```
 
 The command line usage:
