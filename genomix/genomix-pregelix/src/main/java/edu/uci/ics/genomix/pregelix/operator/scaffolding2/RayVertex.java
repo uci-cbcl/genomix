@@ -54,7 +54,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
     private static int MIN_OUTER_DISTANCE;
     private static int MAX_DISTANCE; // the max(readlengths, outerdistances)
 
-    public static final boolean REMOVE_OTHER_OUTGOING = true; // whether to remove other outgoing branches when a dominant edge is chosen
+    public static final boolean REMOVE_OTHER_OUTGOING = false; // whether to remove other outgoing branches when a dominant edge is chosen
     public static final boolean REMOVE_OTHER_INCOMING = false; // whether to remove other incoming branches when a dominant edge is chosen
     public static final boolean CANDIDATES_SCORE_WALK = false; // whether to have the candidates score the walk
     private static final boolean EXPAND_CANDIDATE_BRANCHES = false; // whether to get kmer from all possible candidate branches
@@ -214,7 +214,21 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
                     sendCandidatesToFrontier(msg);
                     break;
                 case ASSEMBLE_CANDIDATES:
-                	boolean repeat = false;
+                	//boolean repeat = false;
+                	if(vertex.getCandidateMsgsMap().containsKey(msg.getSeed())){
+                		vertex.getCandidateMsgsMap().get(msg.getSeed()).add(msg);
+                		
+                	}else{
+                		ArrayList<RayMessage> msgs = new ArrayList<>();
+                		msgs.add(msg);
+                		vertex.getCandidateMsgsMap().put(msg.getSeed(), msgs);
+                	}
+                	int temp = vertex.getPendingCandiateBranchesMap().get(msg.getSeed());
+            		HashMap <VKmer, Integer> tempMap = vertex.getPendingCandiateBranchesMap();
+            		tempMap.put(new VKmer(msg.getSeed()), temp - 1);
+            		vertex.setPendingCandidateBranchesMap(new HashMap(tempMap));
+            		LOG.info("recieved complete candidate. total pending searches:" + vertex.pendingCandidateBranchesMap.size());
+                	/**
                 	for (RayMessage rmsg : vertex.getCandidateMsgs()){
                 		if (rmsg.getToScoreId().equals(msg.getToScoreId()) && rmsg.getSeed().equals(msg.getSeed())){
                 			repeat = true;
@@ -229,6 +243,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
                 		vertex.setPendingCandidateBranchesMap(new HashMap(tempMap));
                 		LOG.info("recieved complete candidate. total pending searches:" + vertex.pendingCandidateBranchesMap.size());
                 	}
+                	**/
                     break;
                 case REQUEST_SCORE:
                     // batch-process these (have to truncate to min length)
@@ -280,32 +295,20 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         }
         **/
         //not a good condition
-        if (vertex.getCandidateMsgs().size() > 0){
-        	HashMap <VKmer,ArrayList<RayMessage>> candidateMap = new HashMap <>();
+        if (vertex.getCandidateMsgsMap().size() > 0){
         	ArrayList<VKmer> visited = new ArrayList<>();
         	for (Entry <VKmer, Integer> entry : vertex.getPendingCandiateBranchesMap().entrySet()){
-        		if (entry.getValue() == 0){
-        			for (RayMessage msg: vertex.getCandidateMsgs()){
-                		if ((candidateMap.containsKey(msg.getSeed())) && (msg.getSeed().equals(entry.getKey()))){
-                			candidateMap.get(msg.getSeed()).add(msg);	
-                		}else{ 
-                			if ((msg.getSeed().equals(entry.getKey()))){
-                			ArrayList <RayMessage> temp = new ArrayList<>();
-                			temp.add(new RayMessage(msg));
-                			candidateMap.put(new VKmer(msg.getSeed()),temp);
-                		}
-                		}
-                	}
-        				
-            			sendCandidateKmersToWalkNodes(candidateMap.get(entry.getKey()));
-            			visited.add(entry.getKey());
+        		if (entry.getValue() == 0){       				
+            		sendCandidateKmersToWalkNodes(vertex.getCandidateMsgsMap().get(entry.getKey()));
+            		visited.add(entry.getKey());
         		}
         	}
+        	
         	for (VKmer seed : visited){
         		vertex.getPendingCandiateBranchesMap().remove(seed);
         	}
         	if (vertex.getPendingCandiateBranchesMap().size() == 0) {
-        		vertex.getCandidateMsgs().clear();
+        		vertex.getCandidateMsgsMap().clear();
         	}
         }
         
@@ -981,7 +984,8 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         						//FIXME
         						//ELMIRA
         						for (int j = 0; j < msg.getSingleEndScores().size() ; j++){
-        							if (singleEndScores.get(i).getVkmer().equals(msg.getSingleEndScores().get(j).getVkmer())){
+        							if (singleEndScores.get(i).getVkmer().equals(msg.getSingleEndScores().get(j).getVkmer()) &&
+        									singleEndScores.get(i).getEdge() == msg.getSingleEndScores().get(j).getEdge()){
         								singleEndScores.get(i).addAll(new RayScores(msg.getSingleEndScores().get(j)));
         							}
         						}

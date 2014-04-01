@@ -21,7 +21,8 @@ public class RayValue extends VertexValueWritable {
     HashMap<VKmer,Boolean> intersection = null;
     HashMap<VKmer, Boolean> stopSearch = null;
     HashMap<VKmer, Integer> pendingCandidateBranchesMap = null;
-    ArrayList<RayMessage> candidateMsgs = null;
+    HashMap<VKmer, ArrayList<RayMessage>> candidateMsgsMap =  null;
+    //ArrayList<RayMessage> candidateMsgs = null;
 
     protected static class FIELDS {
         public static final byte DIR_VS_INITIAL = 0b1 << 1;
@@ -29,7 +30,7 @@ public class RayValue extends VertexValueWritable {
         public static final byte INTERSECTION = 0b1 << 3;
         public static final byte STOP_SEARCH = 0b1 << 4;
         public static final byte PENDING_CANDIDATE_BRANCHES = 1 << 5;
-        public static final byte CANDIDATE_MSGS = 1 << 6;
+        public static final byte CANDIDATE_MSGS_MAP = 1 << 6;
     }
 
     @Override
@@ -91,7 +92,7 @@ public class RayValue extends VertexValueWritable {
             	
             }   
         }
-        
+        /**
         if ((state & FIELDS.CANDIDATE_MSGS) != 0) {
             getCandidateMsgs().clear();
             int count = in.readInt();
@@ -99,6 +100,23 @@ public class RayValue extends VertexValueWritable {
                 RayMessage m = new RayMessage();
                 m.readFields(in);
                 candidateMsgs.add(m);
+            }
+        }
+        **/
+        if ((state & FIELDS.CANDIDATE_MSGS_MAP) != 0) {
+            getCandidateMsgsMap().clear();
+            int count = in.readInt();
+            for (int i = 0; i < count; i++) {
+            	VKmer key = new VKmer();
+            	key.readFields(in);
+            	int aCount = in.readInt();
+            	ArrayList<RayMessage> msgs = new ArrayList<>();
+            	for (int j = 0; j < aCount; j++) {
+                    RayMessage m = new RayMessage();
+                    m.readFields(in);
+                    msgs.add(m);
+                }
+            	candidateMsgsMap.put(key, msgs);
             }
         }
     }
@@ -123,8 +141,8 @@ public class RayValue extends VertexValueWritable {
         if (pendingCandidateBranchesMap != null) {
             state |= FIELDS.PENDING_CANDIDATE_BRANCHES;
         }
-        if (candidateMsgs != null && candidateMsgs.size() > 0) {
-            state |= FIELDS.CANDIDATE_MSGS;
+        if (candidateMsgsMap != null && candidateMsgsMap.size() > 0) {
+            state |= FIELDS.CANDIDATE_MSGS_MAP;
         }
         super.write(out);
         
@@ -162,11 +180,23 @@ public class RayValue extends VertexValueWritable {
     			out.writeInt(entry.getValue());
     		}
         }
+        /**
         if (candidateMsgs != null && candidateMsgs.size() > 0) {
             out.writeInt(candidateMsgs.size());
             for (RayMessage m : candidateMsgs) {
                 m.write(out);
             }
+        }
+        **/
+        if (candidateMsgsMap != null && candidateMsgsMap.size() > 0) {
+            out.writeInt(candidateMsgsMap.size());
+            for (Entry<VKmer, ArrayList<RayMessage>> entry : candidateMsgsMap.entrySet()){
+    			entry.getKey().write(out);
+    			out.writeInt(entry.getValue().size());
+    			for (RayMessage m : entry.getValue()) {
+                    m.write(out);
+                }
+    		}
         }
     }
 
@@ -178,7 +208,7 @@ public class RayValue extends VertexValueWritable {
         stopSearch = null;
         visitedList = null;
         pendingCandidateBranchesMap = null;
-        candidateMsgs = null;
+        candidateMsgsMap = null;
     }
 
     /**
@@ -207,7 +237,7 @@ public class RayValue extends VertexValueWritable {
             //return getFlippedReadIds().getOffSetRange(0, myLength - numBasesToSkip).isEmpty();
         }
     }
-
+    /**
     public ArrayList<RayMessage> getCandidateMsgs() {
         if (candidateMsgs == null) {
             candidateMsgs = new ArrayList<>();
@@ -217,6 +247,19 @@ public class RayValue extends VertexValueWritable {
 
     public void setCandidateMsgs(ArrayList<RayMessage> candidateMsgs) {
         this.candidateMsgs = candidateMsgs;
+    }
+     * @return 
+    **/
+    
+    public HashMap<VKmer, ArrayList<RayMessage>> getCandidateMsgsMap(){
+    	if (candidateMsgsMap == null){
+    		candidateMsgsMap = new HashMap<VKmer, ArrayList<RayMessage>>();
+    	}
+    	return candidateMsgsMap;
+    }
+    
+    public void setCandidateMsgsMap(HashMap<VKmer, ArrayList<RayMessage>> candidateMsgs){
+    	this.candidateMsgsMap= candidateMsgs;
     }
     
     public List<VKmer> getVisitedList() {
@@ -269,4 +312,6 @@ public class RayValue extends VertexValueWritable {
     public void setFlippedFromInitDir(HashMap<VKmer, Boolean> flippedFromInitialDirection){
     	this.flippedFromInitialDirection= flippedFromInitialDirection;
     }
+    
+    
 }

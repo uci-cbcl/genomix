@@ -100,7 +100,17 @@ public class RayScores implements Writable {
     	}
     	throw new IllegalStateException("requested single kmer to add but this score has " + scores.size() + " entries! " + scores);
     }
-
+    
+    public EDGETYPE getEdge(){
+    	if (scores.size() != 1) {
+    	    throw new IllegalStateException("requested single key but this score has " + scores.size() + " entries! " + scores);
+    	}
+    	
+    	for (SimpleEntry<EDGETYPE,VKmer> e : scores.keySet()) {
+    		return e.getKey();
+    	}
+    	throw new IllegalStateException("requested single kmer to add but this score has " + scores.size() + " entries! " + scores);
+    }
     /**
      * Return true iff queryKmer is "better than" targetKmer according to my scores.
      * Specifically, each of the rule values must be "factor" times larger than the corresponding values for targetKmer
