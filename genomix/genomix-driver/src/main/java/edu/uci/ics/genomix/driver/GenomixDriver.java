@@ -569,7 +569,7 @@ public class GenomixDriver {
                 allPatterns.add(i, Patterns.RAY_SCAFFOLD_FORWARD);
                 //allPatterns.add(i + 1, Patterns.MERGE);
                 //allPatterns.add(i + 1, Patterns.STATS);
-                //allPatterns.add(i, Patterns.RAY_SCAFFOLD_REVERSE);
+               // allPatterns.add(i, Patterns.RAY_SCAFFOLD_REVERSE);
             }
         }
 
