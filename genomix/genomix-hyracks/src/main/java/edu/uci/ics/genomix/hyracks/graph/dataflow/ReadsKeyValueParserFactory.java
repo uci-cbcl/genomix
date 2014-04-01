@@ -122,7 +122,7 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                                     + " elements");
                 }
 
-                Pattern genePattern = Pattern.compile("[AGCT]+");
+                Pattern genePattern = Pattern.compile("[ACGTacgt]+");
                 if (mate0GeneLine != null) {
                     Matcher geneMatcher = genePattern.matcher(mate0GeneLine);
                     if (geneMatcher.matches()) {
