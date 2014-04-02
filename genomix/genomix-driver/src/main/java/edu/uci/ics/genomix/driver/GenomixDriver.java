@@ -70,6 +70,7 @@ import edu.uci.ics.genomix.pregelix.operator.extractsubgraph.ExtractSubgraphVert
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.P1ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.P4ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.removelowcoverage.RemoveLowCoverageVertex;
+import edu.uci.ics.genomix.pregelix.operator.scaffolding2.PruneVertex;
 //import edu.uci.ics.genomix.pregelix.operator.removelowcoverage.ShiftLowCoverageReadSetVertex;
 import edu.uci.ics.genomix.pregelix.operator.scaffolding2.RayVertex;
 import edu.uci.ics.genomix.pregelix.operator.simplebubblemerge.SimpleBubbleMergeVertex;
@@ -314,6 +315,9 @@ public class GenomixDriver {
                     pregelixJobs.add(RayVertex.getConfiguredJob(conf, RayVertex.class));
                 }
                 break;
+            case RAY_SCAFFOLD_PRUNE:
+            	pregelixJobs.add(PruneVertex.getConfiguredJob(conf, PruneVertex.class));
+            	break;
             case DUMP_FASTA:
                 flushPendingJobs(conf);
                 curOutput = prevOutput + "-DUMP_FASTA";
@@ -567,6 +571,7 @@ public class GenomixDriver {
                 }
                 // replace
                 allPatterns.add(i, Patterns.RAY_SCAFFOLD_FORWARD);
+                allPatterns.add(i, Patterns.RAY_SCAFFOLD_PRUNE);
                 //allPatterns.add(i + 1, Patterns.MERGE);
                 //allPatterns.add(i + 1, Patterns.STATS);
                // allPatterns.add(i, Patterns.RAY_SCAFFOLD_REVERSE);

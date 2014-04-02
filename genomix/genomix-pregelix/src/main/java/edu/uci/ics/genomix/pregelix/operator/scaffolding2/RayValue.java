@@ -24,8 +24,8 @@ public class RayValue extends VertexValueWritable {
     HashMap<VKmer, Boolean> stopSearch = null;
     HashMap<VKmer, Integer> pendingCandidateBranchesMap = null;
     HashMap<VKmer, ArrayList<RayMessage>> candidateMsgsMap =  null;
-    ArrayList<Entry<EDGETYPE, VKmer>> forwardEdgesToKeep  =  null;
-    ArrayList<Entry<EDGETYPE, VKmer>> reverseEdgesToKeep  =  null;
+    ArrayList<Entry<EDGETYPE, VKmer>> outgoingEdgesToKeep  =  null;
+    ArrayList<Entry<EDGETYPE, VKmer>> incomingEdgesToKeep  =  null;
     //ArrayList<RayMessage> candidateMsgs = null;
 
     protected static class FIELDS {
@@ -123,7 +123,7 @@ public class RayValue extends VertexValueWritable {
         		EDGETYPE et = EDGETYPE.fromByte(in.readByte());
         		VKmer kmer = new VKmer();
         		kmer.readFields(in);
-        		getForwardEdgesToKeep().add(new SimpleEntry<EDGETYPE, VKmer>(et, kmer));
+        		getOutgoingEdgesToKeep().add(new SimpleEntry<EDGETYPE, VKmer>(et, kmer));
         	}
         }
         if ((state & FIELDS.REVERSE_EDGES_TO_KEEP) != 0) {
@@ -132,7 +132,7 @@ public class RayValue extends VertexValueWritable {
         		EDGETYPE et = EDGETYPE.fromByte(in.readByte());
         		VKmer kmer = new VKmer();
         		kmer.readFields(in);
-        		getReverseEdgesToKeep().add(new SimpleEntry<EDGETYPE, VKmer>(et, kmer));
+        		getIncomingEdgesToKeep().add(new SimpleEntry<EDGETYPE, VKmer>(et, kmer));
         	}
         }
     }
@@ -160,10 +160,10 @@ public class RayValue extends VertexValueWritable {
         if (candidateMsgsMap != null && candidateMsgsMap.size() > 0) {
             state |= FIELDS.CANDIDATE_MSGS_MAP;
         }
-        if (forwardEdgesToKeep != null && forwardEdgesToKeep.size() > 0) {
+        if (outgoingEdgesToKeep != null && outgoingEdgesToKeep.size() > 0) {
             state |= FIELDS.FORWARD_EDGES_TO_KEEP;
         }
-        if (reverseEdgesToKeep != null && reverseEdgesToKeep.size() > 0) {
+        if (incomingEdgesToKeep != null && incomingEdgesToKeep.size() > 0) {
             state |= FIELDS.REVERSE_EDGES_TO_KEEP;
         }
         super.write(out);
@@ -220,16 +220,16 @@ public class RayValue extends VertexValueWritable {
                 }
     		}
         }
-        if (forwardEdgesToKeep != null && forwardEdgesToKeep.size() > 0) {
-            out.writeInt(forwardEdgesToKeep.size());
-            for (Entry<EDGETYPE, VKmer> entry : forwardEdgesToKeep){
+        if (outgoingEdgesToKeep != null && outgoingEdgesToKeep.size() > 0) {
+            out.writeInt(outgoingEdgesToKeep.size());
+            for (Entry<EDGETYPE, VKmer> entry : outgoingEdgesToKeep){
             	out.writeByte(entry.getKey().get());
             	entry.getValue().write(out);
     		}
         }
-        if (reverseEdgesToKeep != null && reverseEdgesToKeep.size() > 0) {
-            out.writeInt(reverseEdgesToKeep.size());
-            for (Entry<EDGETYPE, VKmer> entry : reverseEdgesToKeep){
+        if (incomingEdgesToKeep != null && incomingEdgesToKeep.size() > 0) {
+            out.writeInt(incomingEdgesToKeep.size());
+            for (Entry<EDGETYPE, VKmer> entry : incomingEdgesToKeep){
             	out.writeByte(entry.getKey().get());
             	entry.getValue().write(out);
     		}
@@ -245,8 +245,8 @@ public class RayValue extends VertexValueWritable {
         visitedList = null;
         pendingCandidateBranchesMap = null;
         candidateMsgsMap = null;
-        forwardEdgesToKeep = null;
-        reverseEdgesToKeep = null;
+        outgoingEdgesToKeep = null;
+        incomingEdgesToKeep = null;
     }
 
     /**
@@ -351,26 +351,26 @@ public class RayValue extends VertexValueWritable {
     	this.flippedFromInitialDirection= flippedFromInitialDirection;
     }
     
-    public ArrayList<Entry<EDGETYPE, VKmer>> getForwardEdgesToKeep() {
-    	if (forwardEdgesToKeep == null) {
-    		forwardEdgesToKeep = new ArrayList<>();
+    public ArrayList<Entry<EDGETYPE, VKmer>> getOutgoingEdgesToKeep() {
+    	if (outgoingEdgesToKeep == null) {
+    		outgoingEdgesToKeep = new ArrayList<>();
     	}
-		return forwardEdgesToKeep;
+		return outgoingEdgesToKeep;
 	}
     
-    public void setForwardEdgesToKeep(ArrayList<Entry<EDGETYPE, VKmer>> forwardEdgesToKeep) {
-    	this.forwardEdgesToKeep = forwardEdgesToKeep;
+    public void setForwardEdgesToKeep(ArrayList<Entry<EDGETYPE, VKmer>> outgoingEdgesToKeep) {
+    	this.outgoingEdgesToKeep = outgoingEdgesToKeep;
 	}
     
-    public ArrayList<Entry<EDGETYPE, VKmer>> getReverseEdgesToKeep() {
-    	if (reverseEdgesToKeep == null) {
-    		reverseEdgesToKeep = new ArrayList<>();
+    public ArrayList<Entry<EDGETYPE, VKmer>> getIncomingEdgesToKeep() {
+    	if (incomingEdgesToKeep == null) {
+    		incomingEdgesToKeep = new ArrayList<>();
     	}
-		return reverseEdgesToKeep;
+		return incomingEdgesToKeep;
 	}
     
-    public void setReverseEdgesToKeep(ArrayList<Entry<EDGETYPE, VKmer>> reverseEdgesToKeep) {
-    	this.reverseEdgesToKeep = reverseEdgesToKeep;
+    public void setIncomingEdgesToKeep(ArrayList<Entry<EDGETYPE, VKmer>> incomingEdgesToKeep) {
+    	this.incomingEdgesToKeep = incomingEdgesToKeep;
 	}
     
 }
