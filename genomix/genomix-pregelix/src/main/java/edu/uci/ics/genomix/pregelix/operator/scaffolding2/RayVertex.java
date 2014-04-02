@@ -136,9 +136,10 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
                         + ", score: " + getVertexValue().calculateSeedScore());
             }
         }
-        scaffold(msgIterator);
+        if (getSuperstep() < maxIteration) {
+        	scaffold(msgIterator);
+        }
         voteToHalt();
-        
     }
 
     /**
