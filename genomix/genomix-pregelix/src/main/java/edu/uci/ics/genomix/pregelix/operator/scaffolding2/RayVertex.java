@@ -53,11 +53,13 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
     private static int MAX_OUTER_DISTANCE;
     private static int MIN_OUTER_DISTANCE;
     private static int MAX_DISTANCE; // the max(readlengths, outerdistances)
-
-    public static final boolean REMOVE_OTHER_OUTGOING = true; // whether to remove other outgoing branches when a dominant edge is chosen
+    private static int OVERLAP_THRESHOLD = 500;
+    
+    public static final boolean REMOVE_OTHER_OUTGOING = false; // whether to remove other outgoing branches when a dominant edge is chosen
     public static final boolean REMOVE_OTHER_INCOMING = false; // whether to remove other incoming branches when a dominant edge is chosen
     public static final boolean CANDIDATES_SCORE_WALK = false; // whether to have the candidates score the walk
     private static final boolean EXPAND_CANDIDATE_BRANCHES = false; // whether to get kmer from all possible candidate branches
+    public static final boolean EARLY_STOP = true;
     PrintWriter writer;
     PrintWriter log;
     
@@ -363,7 +365,24 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
             return;
         }
 
+        for (VKmer visitedSeed: vertex.getVisitedList()){
+        	if (!msg.getVisitCounter().containsKey(visitedSeed)){
+        		msg.getVisitCounter().put(visitedSeed, getVertexValue().getKmerLength());
+        	}
+        	else{
+        		int overlapLength = msg.getVisitCounter().get(visitedSeed) + getVertexValue().getKmerLength();
+        		msg.getVisitCounter().put(visitedSeed, overlapLength);
+        	}
+        }
         
+        if(EARLY_STOP){
+        	for (Entry<VKmer, Integer> entry : msg.getVisitCounter().entrySet()){
+        		if (entry.getValue()> OVERLAP_THRESHOLD && !(entry.getKey().equals(realSeed))){
+        			storeWalk(msg.getWalkIds(),msg.getAccumulatedWalkKmer(), realSeed);
+        			return;
+        		}
+        	}
+        }
         
         // I am the new frontier but this message is coming from the previous frontier; I was the "candidate"
         vertex.getFlippedFromInitDir().put(realSeed, msg.getCandidateFlipped());
@@ -374,7 +393,8 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         }
 
         msg.visitNode(id, vertex, INITIAL_DIRECTION, realSeed);
-
+        
+        
         if (vertex.degree(nextDir) == 0) {
             // this walk has reached a dead end!  nothing to do in this case.
         	storeWalk(msg.getWalkIds(),msg.getAccumulatedWalkKmer(), realSeed);
@@ -516,6 +536,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         outgoingMsg.setAccumulatedWalkKmer(new VKmer(msg.getAccumulatedWalkKmer()));
         outgoingMsg.setWalkIds(new VKmerList(msg.getWalkIds()));
         outgoingMsg.setWalkOffsets(msg.getWalkOffsets());
+        outgoingMsg.setVisitCounter(new HashMap(msg.getVisitCounter()));
 
         // get kmer and id to score in walk nodes
         boolean readyToScore = false;
@@ -634,6 +655,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         	int walkLength = msgs.get(0).getWalkLength();
         	VKmer frontierNode = new VKmer(msgs.get(0).getSourceVertexId());
         	VKmer accumulatedWalk = new VKmer(msgs.get(0).getAccumulatedWalkKmer());
+        	HashMap<VKmer, Integer> visitCounter = msgs.get(0).getVisitCounter();
         	// if the search has progressed beyond the reads I contain, don't do any scoring and don't report back
         	// to the frontier node. This effectively prunes me from the walk (I won't be queried anymore)
         	if (vertex.isOutOfRange(myOffset, walkLength, MAX_DISTANCE, seed)) {
@@ -647,6 +669,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         			outgoingMsg.getWalkOffsets().add(myOffset);
         			outgoingMsg.getWalkIds().append(new VKmer(id));
         			outgoingMsg.setAccumulatedWalkKmer(new VKmer(accumulatedWalk));
+        			outgoingMsg.setVisitCounter(new HashMap(visitCounter));
         			// include scores from each candidate path
         			for (RayMessage msg : msgs) {
         				if (msg.getSingleEndScores().size() > 0) {
@@ -709,6 +732,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         		}
         	}
         	outgoingMsg.setAccumulatedWalkKmer(new VKmer(accumulatedWalk));
+        	outgoingMsg.setVisitCounter(new HashMap(visitCounter));
         	sendMsg(frontierNode, outgoingMsg);
         	LOG.info("sending to frontier node: minLength: " + minLength + ", s-e: " + singleEndScores + ", p-e: "
         			+ pairedEndScores);
@@ -1024,6 +1048,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         			accumulatedWalk = msg.getAccumulatedWalkKmer();
         		}
         	}
+        	HashMap <VKmer, Integer> visitCounter = msgs.get(0).getVisitCounter();
         	LOG.info("in prune for " + id + " scores are singleend: " + singleEndScores + " pairedend: " + pairedEndScores);
 
         	// we need to agree about the total number of paths we're considering...
@@ -1169,6 +1194,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         		outgoingMsg.setAccumulatedWalkKmer(new VKmer(msgs.get(0).getAccumulatedWalkKmer()));
         		outgoingMsg.setFrontierFlipped(vertex.getFlippedFromInitDir().get(seed)); // TODO make sure this is correct
         		outgoingMsg.setCandidateFlipped(vertex.getFlippedFromInitDir().get(seed) ^ dominantEdgeType.causesFlip());
+        		outgoingMsg.setVisitCounter(new HashMap(visitCounter));
         		sendMsg(dominantKmer, outgoingMsg);
         		// WriteToLog("dominantedgefound" ,msgs.get(0).getAccumulatedWalkKmer().toString() , getVertexId().toString());
         		LOG.info("dominant edge found: " + dominantEdgeType + ":" + dominantKmer);
