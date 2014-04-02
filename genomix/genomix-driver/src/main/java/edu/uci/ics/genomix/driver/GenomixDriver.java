@@ -503,14 +503,24 @@ public class GenomixDriver {
                     LOG.info("Starting job " + pregelixJobs.get(i).getJobName());
                     GenomixJobConf.tick("pregelix-job");
 
-                    pregelixDriver.runJob(pregelixJobs.get(i), masterIP, pregelixPort);
+                    if (i < pregelixJobs.size() - 1 && 
+                    		pregelixJobs.get(i).getJobName().equals(RayVertex.class.getSimpleName()) && 
+                    		pregelixJobs.get(i + 1).getJobName().equals(PruneVertex.class.getSimpleName())) {
+                    	// prune vertex cannot save to disk :(
+                    	pregelixDriver.runJobs(Arrays.asList(pregelixJobs.get(i), pregelixJobs.get(i + 1)), masterIP, pregelixPort);
+                    	LOG.info("Finished job " + pregelixJobs.get(i).getJobName() + " in "
+                                + GenomixJobConf.tock("pregelix-job") + "ms");
+                    	i++;
+                    } else {
+                    	pregelixDriver.runJob(pregelixJobs.get(i), masterIP, pregelixPort);
+                    }
 
                     LOG.info("Finished job " + pregelixJobs.get(i).getJobName() + " in "
                             + GenomixJobConf.tock("pregelix-job") + "ms");
                 }
                 LOG.info("Finished job series in " + GenomixJobConf.tock("pregelix-runJob-one-by-one"));
             } else {
-                LOG.info("Starting pregelix job series (not saving intermediate results...");
+                LOG.info("Starting pregelix job series (not saving intermediate results...)");
                 GenomixJobConf.tick("pregelix-runJobs");
 
                 pregelixDriver.runJobs(pregelixJobs, masterIP, pregelixPort);
