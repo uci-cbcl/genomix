@@ -741,11 +741,10 @@ public class GenomixDriver {
             }
         } catch (CmdLineException ex) {
             System.err.println("Usage: bin/genomix [options]\n");
-            ex.getParser().setUsageWidth(80);
+            ex.getParser().setUsageWidth(100);
             ex.getParser().printUsage(System.err);
             System.err.println("\nExample:");
-            System.err
-                    .println("\tbin/genomix -kmerLength 55 -pipelineOrder BUILD_HYRACKS,MERGE,TIP_REMOVE,MERGE,BUBBLE,MERGE -localInput /path/to/readfiledir/\n");
+            System.err.println("\tbin/genomix -kmerLength 55 -pipelineOrder BUILD_HYRACKS,MERGE,TIP_REMOVE,MERGE,BUBBLE,MERGE -localInput /path/to/readfiledir/\n");
             System.err.println(ex.getMessage());
 
             return;
@@ -763,5 +762,4 @@ public class GenomixDriver {
             }
         }
     }
-
 }
