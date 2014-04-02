@@ -61,7 +61,7 @@ public class PruneVertex extends DeBruijnGraphCleanVertex<RayValue, MessageWrita
 				neighborEdgesToKeep.add(new SimpleEntry<>(EDGETYPE.fromByte(msg.getFlag()), new VKmer(msg.getSourceVertexId())));
 			}
 			Set<Entry<EDGETYPE, VKmer>> prunedEdges = pruneUnsavedEdges(neighborEdgesToKeep);
-			if (prunedEdges.size() > 0) {
+			if (verbose && prunedEdges.size() > 0) {
 				LOG.info("Pruned " + prunedEdges);
 			}
 			for (Entry<EDGETYPE, VKmer> entry : prunedEdges) {
@@ -69,14 +69,18 @@ public class PruneVertex extends DeBruijnGraphCleanVertex<RayValue, MessageWrita
 				outgoingMsg.setSourceVertexId(getVertexId());
 				outgoingMsg.setFlag(entry.getKey().mirror().get());
 				sendMsg(entry.getValue(), outgoingMsg);
-				LOG.info("Telling " + entry.getValue() + " in my " + entry.getKey() + " to prune me (" + getVertexId() + ").");
+				if (verbose) {
+					LOG.info("Telling " + entry.getValue() + " in my " + entry.getKey() + " to prune me (" + getVertexId() + ").");	
+				}
 			}
 			voteToHalt();
 		} else {
 			// Respond to a prune edge request.
 			while (msgIterator.hasNext()) {
 				msg = msgIterator.next();
-				LOG.info("in " + getVertexId() + ", request to prune back edge: " + msg.getSourceVertexId() + " in my " + EDGETYPE.fromByte(msg.getFlag()));
+				if (verbose) {
+					LOG.info("in " + getVertexId() + ", request to prune back edge: " + msg.getSourceVertexId() + " in my " + EDGETYPE.fromByte(msg.getFlag()));
+				}
 				vertex.getEdges(EDGETYPE.fromByte(msg.getFlag())).remove(msg.getSourceVertexId(), true);
 			}
 			voteToHalt();
