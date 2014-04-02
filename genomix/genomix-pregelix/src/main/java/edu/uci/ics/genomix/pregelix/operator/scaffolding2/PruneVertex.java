@@ -18,10 +18,11 @@ import edu.uci.ics.genomix.pregelix.base.VertexValueWritable;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 
 public class PruneVertex extends DeBruijnGraphCleanVertex<RayValue, MessageWritable> {
-	
+
 	@Override
 	public void configure(Configuration conf) {
 		// Unlike every other job, we DON'T want to clear state from the previous job.
+		outgoingMsg = new MessageWritable();
 	}
 	
 	public static PregelixJob getConfiguredJob(
@@ -36,52 +37,77 @@ public class PruneVertex extends DeBruijnGraphCleanVertex<RayValue, MessageWrita
 	
 	@Override
 	public void compute(Iterator<MessageWritable> msgIterator) throws Exception {
-		// Nodes visited by a walk have some subset of their edges removed
+		MessageWritable msg;
+		RayValue vertex = getVertexValue();
 		if (getSuperstep() == 1) {
-			Set<Entry<EDGETYPE, VKmer>> prunedEdges = pruneUnsavedEdges();
-			for (Entry<EDGETYPE, VKmer> entry : prunedEdges) {
+			// notify neighbors about which edges I want to keep
+			for (Entry<EDGETYPE, VKmer> entry : vertex.getOutgoingEdgesToKeep()) {
 				outgoingMsg.reset();
 				outgoingMsg.setSourceVertexId(getVertexId());
 				outgoingMsg.setFlag(entry.getKey().mirror().get());
 				sendMsg(entry.getValue(), outgoingMsg);
 			}
+			for (Entry<EDGETYPE, VKmer> entry : vertex.getIncomingEdgesToKeep()) {
+				outgoingMsg.reset();
+				outgoingMsg.setSourceVertexId(getVertexId());
+				outgoingMsg.setFlag(entry.getKey().mirror().get());
+				sendMsg(entry.getValue(), outgoingMsg);
+			}
+		} else if (getSuperstep() == 2) {
+			// collect neighboring "keep" nodes and prune the rest.  Then tell neighbors to prune back edges
+			Set<Entry<EDGETYPE, VKmer>> neighborEdgesToKeep = new HashSet<>();
+			while(msgIterator.hasNext()) {
+				msg = msgIterator.next();
+				neighborEdgesToKeep.add(new SimpleEntry<>(EDGETYPE.fromByte(msg.getFlag()), new VKmer(msg.getSourceVertexId())));
+			}
+			Set<Entry<EDGETYPE, VKmer>> prunedEdges = pruneUnsavedEdges(neighborEdgesToKeep);
+			if (prunedEdges.size() > 0) {
+				LOG.info("Pruned " + prunedEdges);
+			}
+			for (Entry<EDGETYPE, VKmer> entry : prunedEdges) {
+				outgoingMsg.reset();
+				outgoingMsg.setSourceVertexId(getVertexId());
+				outgoingMsg.setFlag(entry.getKey().mirror().get());
+				sendMsg(entry.getValue(), outgoingMsg);
+				LOG.info("Telling " + entry.getValue() + " in my " + entry.getKey() + " to prune me (" + getVertexId() + ").");
+			}
+			voteToHalt();
 		} else {
 			// Respond to a prune edge request.
-			MessageWritable msg;
-			RayValue vertex = getVertexValue();
 			while (msgIterator.hasNext()) {
 				msg = msgIterator.next();
-				vertex.getEdges(EDGETYPE.fromByte(msg.getFlag())).remove(msg.getSourceVertexId());
+				LOG.info("in " + getVertexId() + ", request to prune back edge: " + msg.getSourceVertexId() + " in my " + EDGETYPE.fromByte(msg.getFlag()));
+				vertex.getEdges(EDGETYPE.fromByte(msg.getFlag())).remove(msg.getSourceVertexId(), true);
 			}
+			voteToHalt();
 		}
-		voteToHalt();
 	}
 
-	private Set<Entry<EDGETYPE, VKmer>> pruneUnsavedEdges() {
+	private Set<Entry<EDGETYPE, VKmer>> pruneUnsavedEdges(Set<Entry<EDGETYPE, VKmer>> neighborEdgesToKeep) {
 		RayValue vertex = getVertexValue();
 		VKmer kmer;
 		SimpleEntry<EDGETYPE, VKmer> entry;
 		HashSet<Entry<EDGETYPE, VKmer>> prunedEdges = new HashSet<>();
-		if (RayVertex.REMOVE_OTHER_OUTGOING) {
+		if (RayVertex.REMOVE_OTHER_OUTGOING && vertex.getOutgoingEdgesToKeep().size() > 0) {
 			for (EDGETYPE et : EDGETYPE.values) {
 				Iterator<VKmer> edges = vertex.getEdges(et).iterator();
 				while(edges.hasNext()) {
 					kmer = edges.next();
-					entry = new SimpleEntry<>(et, kmer);
-					if (!vertex.getOutgoingEdgesToKeep().contains(entry)) {
+					entry = new SimpleEntry<>(et, new VKmer(kmer));
+					if (!neighborEdgesToKeep.contains(entry) && !vertex.getOutgoingEdgesToKeep().contains(entry)) {
 						prunedEdges.add(entry);
 						edges.remove();
 					}
 				}
 			}
 		}
-		if (RayVertex.REMOVE_OTHER_INCOMING) {
+		if (RayVertex.REMOVE_OTHER_INCOMING && vertex.getIncomingEdgesToKeep().size() > 0) {
 			for (EDGETYPE et : EDGETYPE.values) {
 				Iterator<VKmer> edges = vertex.getEdges(et).iterator();
 				while(edges.hasNext()) {
 					kmer = edges.next();
-					entry = new SimpleEntry<>(et, kmer);
-					if (!vertex.getIncomingEdgesToKeep().contains(entry)) {
+					entry = new SimpleEntry<>(et, new VKmer(kmer));
+					if (!neighborEdgesToKeep.contains(entry) && !vertex.getIncomingEdgesToKeep().contains(entry)) {
 						prunedEdges.add(entry);
 						edges.remove();
 					}

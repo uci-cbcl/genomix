@@ -35,8 +35,8 @@ public class RayValue extends VertexValueWritable {
         public static final short STOP_SEARCH = 0b1 << 4;
         public static final short PENDING_CANDIDATE_BRANCHES = 1 << 5;
         public static final short  CANDIDATE_MSGS_MAP = 1 << 6;
-		public static final short FORWARD_EDGES_TO_KEEP = 1 << 7;
-		public static final short REVERSE_EDGES_TO_KEEP = 1 << 8;
+		public static final short OUTGOING_EDGES_TO_KEEP = 1 << 7;
+		public static final short INCOMING_EDGES_TO_KEEP = 1 << 8;
     }
 
     @Override
@@ -117,22 +117,22 @@ public class RayValue extends VertexValueWritable {
             }
         }
         
-        if ((state & FIELDS.FORWARD_EDGES_TO_KEEP) != 0) {
+        if ((state & FIELDS.OUTGOING_EDGES_TO_KEEP) != 0) {
         	int count = in.readInt();
         	for (int i = 0; i < count; i++) {
         		EDGETYPE et = EDGETYPE.fromByte(in.readByte());
         		VKmer kmer = new VKmer();
         		kmer.readFields(in);
-        		getOutgoingEdgesToKeep().add(new SimpleEntry<EDGETYPE, VKmer>(et, kmer));
+        		getOutgoingEdgesToKeep().add(new SimpleEntry<>(et, kmer));
         	}
         }
-        if ((state & FIELDS.REVERSE_EDGES_TO_KEEP) != 0) {
+        if ((state & FIELDS.INCOMING_EDGES_TO_KEEP) != 0) {
         	int count = in.readInt();
         	for (int i = 0; i < count; i++) {
         		EDGETYPE et = EDGETYPE.fromByte(in.readByte());
         		VKmer kmer = new VKmer();
         		kmer.readFields(in);
-        		getIncomingEdgesToKeep().add(new SimpleEntry<EDGETYPE, VKmer>(et, kmer));
+        		getIncomingEdgesToKeep().add(new SimpleEntry<>(et, kmer));
         	}
         }
     }
@@ -161,10 +161,10 @@ public class RayValue extends VertexValueWritable {
             state |= FIELDS.CANDIDATE_MSGS_MAP;
         }
         if (outgoingEdgesToKeep != null && outgoingEdgesToKeep.size() > 0) {
-            state |= FIELDS.FORWARD_EDGES_TO_KEEP;
+            state |= FIELDS.OUTGOING_EDGES_TO_KEEP;
         }
         if (incomingEdgesToKeep != null && incomingEdgesToKeep.size() > 0) {
-            state |= FIELDS.REVERSE_EDGES_TO_KEEP;
+            state |= FIELDS.INCOMING_EDGES_TO_KEEP;
         }
         super.write(out);
         
