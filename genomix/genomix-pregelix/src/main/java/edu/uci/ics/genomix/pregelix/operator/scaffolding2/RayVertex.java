@@ -372,19 +372,22 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
 
         for (VKmer visitedSeed: vertex.getVisitedList()){
         	if (!msg.getVisitCounter().containsKey(visitedSeed)){
-        		msg.getVisitCounter().put(visitedSeed, getVertexValue().getKmerLength());
+        		msg.getVisitCounter().put(visitedSeed, getVertexValue().getKmerLength() - kmerSize + 1);
         	}
         	else{
-        		int overlapLength = msg.getVisitCounter().get(visitedSeed) + getVertexValue().getKmerLength();
+        		int overlapLength = msg.getVisitCounter().get(visitedSeed) + getVertexValue().getKmerLength() - kmerSize + 1;
         		msg.getVisitCounter().put(visitedSeed, overlapLength);
         	}
         }
         
         if(EARLY_STOP){
+			LOG.info("overlap check for walk ending at" + id + " with total length: " + msg.getWalkLength());
         	for (Entry<VKmer, Integer> entry : msg.getVisitCounter().entrySet()){
         		if (entry.getValue()> OVERLAP_THRESHOLD && !(entry.getKey().equals(realSeed))){
+        			LOG.info("early stop for walk ending at" + id + "with total length: " + msg.getWalkLength() + "\n" + msg.getAccumulatedWalkKmer());
         			if (STORE_WALK){
         				storeWalk(msg.getWalkIds(),msg.getAccumulatedWalkKmer(), realSeed);
+
         			}
         			return;
         		}
