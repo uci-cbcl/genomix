@@ -215,6 +215,7 @@ public class GenomixJobConf extends JobConf {
         RAY_SCAFFOLD,
         RAY_SCAFFOLD_FORWARD,
         RAY_SCAFFOLD_REVERSE,
+        RAY_SCAFFOLD_PRUNE,
         SPLIT_REPEAT,
         DUMP_FASTA,
         CHECK_SYMMETRY,

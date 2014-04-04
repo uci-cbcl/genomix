@@ -55,10 +55,10 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
     private static int MAX_DISTANCE; // the max(readlengths, outerdistances)
 
     public static final boolean REMOVE_OTHER_OUTGOING = true; // whether to remove other outgoing branches when a dominant edge is chosen
-    public static final boolean REMOVE_OTHER_INCOMING = false; // whether to remove other incoming branches when a dominant edge is chosen
+    public static final boolean REMOVE_OTHER_INCOMING = true; // whether to remove other incoming branches when a dominant edge is chosen
     public static final boolean CANDIDATES_SCORE_WALK = false; // whether to have the candidates score the walk
-    private static final boolean EXPAND_CANDIDATE_BRANCHES = false; // whether to get kmer from all possible candidate branches
-    private static final boolean DELAY_PRUNE = true; // Whether we should perform the prune as a separate job, after all the walks have completed their march. 
+    public static final boolean EXPAND_CANDIDATE_BRANCHES = false; // whether to get kmer from all possible candidate branches
+    public static final boolean DELAY_PRUNE = true; // Whether we should perform the prune as a separate job, after all the walks have completed their march. 
     PrintWriter writer;
     PrintWriter log;
     
@@ -136,9 +136,10 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
                         + ", score: " + getVertexValue().calculateSeedScore());
             }
         }
-        scaffold(msgIterator);
+        if (getSuperstep() < maxIteration) {
+        	scaffold(msgIterator);
+        }
         voteToHalt();
-        
     }
 
     /**
@@ -429,11 +430,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         DIR prevDir = msg.getEdgeTypeBackToFrontier().dir();
 
         if (DELAY_PRUNE) {
-			if (prevDir == DIR.FORWARD) {
-				vertex.getForwardEdgesToKeep().add(new SimpleEntry<>(msg.getEdgeTypeBackToFrontier(), lastId));
-			} else {
-				vertex.getReverseEdgesToKeep().add(new SimpleEntry<>(msg.getEdgeTypeBackToFrontier(), lastId));
-			}
+			vertex.getIncomingEdgesToKeep().add(new SimpleEntry<>(msg.getEdgeTypeBackToFrontier(), lastId));
 		} else {
 	        for (EDGETYPE et : prevDir.edgeTypes()) {
 	            Iterator<VKmer> it = vertex.getEdges(et).iterator();
@@ -1152,11 +1149,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         	if (dominantEdgeFound) {
         		// if a dominant edge is found, all the others must be removed.
         		if (DELAY_PRUNE) {
-        			if (dominantEdgeType.dir() == DIR.FORWARD) {
-        				vertex.getForwardEdgesToKeep().add(new SimpleEntry<>(dominantEdgeType, dominantKmer));
-        			} else {
-        				vertex.getReverseEdgesToKeep().add(new SimpleEntry<>(dominantEdgeType, dominantKmer));
-        			}
+        			vertex.getOutgoingEdgesToKeep().add(new SimpleEntry<>(dominantEdgeType, dominantKmer));
         		} else if (REMOVE_OTHER_OUTGOING) {
         			for (EDGETYPE et : dominantEdgeType.dir().edgeTypes()) {
         				for (VKmer kmer : vertex.getEdges(et)) {
