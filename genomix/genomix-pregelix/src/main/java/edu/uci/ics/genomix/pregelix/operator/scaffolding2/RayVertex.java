@@ -148,6 +148,9 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
      * @return whether or not this node meets the "seed" criteria
      */
     private boolean isStartSeed() {
+    	if (getVertexValue().degree(INITIAL_DIRECTION) == 0) {
+    		return false;
+    	}
         if (SEED_ID != null) {
             return SEED_ID.equals(getVertexId().toString());
         } else {
