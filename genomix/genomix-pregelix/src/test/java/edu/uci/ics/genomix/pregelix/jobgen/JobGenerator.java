@@ -7,6 +7,7 @@ import java.io.IOException;
 import org.apache.commons.io.FileUtils;
 
 import edu.uci.ics.genomix.data.config.GenomixJobConf;
+import edu.uci.ics.genomix.data.types.DIR;
 import edu.uci.ics.genomix.data.types.EDGETYPE;
 import edu.uci.ics.genomix.data.types.Node;
 import edu.uci.ics.genomix.data.types.VKmer;
@@ -19,11 +20,13 @@ import edu.uci.ics.genomix.pregelix.operator.extractsubgraph.ExtractSubgraphVert
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.P1ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.P4ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.removelowcoverage.RemoveLowCoverageVertex;
+import edu.uci.ics.genomix.pregelix.operator.scaffolding2.RayVertex;
 import edu.uci.ics.genomix.pregelix.operator.simplebubblemerge.SimpleBubbleMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.symmetrychecker.SymmetryCheckerVertex;
 import edu.uci.ics.genomix.pregelix.operator.test.BridgeAddVertex;
 import edu.uci.ics.genomix.pregelix.operator.test.BubbleAddVertex;
 import edu.uci.ics.genomix.pregelix.operator.test.MapReduceVertex;
+//import edu.uci.ics.genomix.pregelix.operator.test.RayAddSimpleBranch;
 import edu.uci.ics.genomix.pregelix.operator.test.TipAddVertex;
 import edu.uci.ics.genomix.pregelix.operator.tipremove.SingleNodeTipRemoveVertex;
 import edu.uci.ics.genomix.pregelix.operator.unrolltandemrepeat.UnrollTandemRepeat;
@@ -89,7 +92,22 @@ public class JobGenerator {
     private static void genBubbleAddGraph() throws IOException {
         generateBubbleAddGraphJob("BubbleAddGraph", outputBase + "BUBBLE_ADD.xml");
     }
-
+    
+    private static void generateRayScaffoldGraphJob(String jobName, String outputPath) throws IOException {
+    	PregelixJob job = RayVertex.getConfiguredJob(new GenomixJobConf(7), RayVertex.class);
+    	job.getConfiguration().setFloat(GenomixJobConf.SCAFFOLD_SEED_SCORE_PERCENTILE, 1 );
+    	job.getConfiguration().setInt(GenomixJobConf.READ_LENGTHS, 9 );
+    	//job.getConfiguration().setInt(GenomixJobConf.KMER_LENGTH, 7 );
+    	//GenomixJobConf.SCAFFOLDING_INITIAL_DIRECTION
+    	job.getConfiguration().setBoolean(GenomixJobConf.SAVE_INTERMEDIATE_RESULTS, true);
+    	job.getConfiguration().set(GenomixJobConf.SCAFFOLDING_INITIAL_DIRECTION, DIR.FORWARD.toString());
+    	job.getConfiguration().setBoolean(GenomixJobConf.RUN_LOCAL, true );
+        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));    
+    }
+    // TODO
+    private static void genRayScaffold() throws IOException{
+    	generateRayScaffoldGraphJob("RayScaffold", outputBase + "RAY_SCAFFOLD.xml");
+    }
     private static void generateUnrollTandemRepeatGraphJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = UnrollTandemRepeat.getConfiguredJob(new GenomixJobConf(3), UnrollTandemRepeat.class);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
@@ -168,7 +186,7 @@ public class JobGenerator {
     private static void genTipRemoveGraph() throws IOException {
         generateTipRemoveGraphJob("TipRemoveGraph", outputBase + "TIP_REMOVE.xml");
     }
-
+    
     private static void generateBridgeRemoveGraphJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = BridgeRemoveVertex.getConfiguredJob(new GenomixJobConf(3), BridgeRemoveVertex.class);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
@@ -198,6 +216,8 @@ public class JobGenerator {
     private static void genBubbleMergeWithSearchGraph() throws IOException {
         generateBubbleMergeWithSearchGraphJob("BubbleMergeWithSearchGraph", outputBase + "BUBBLE_WITH_SEARCH.xml");
     }
+    
+
 
     public static void main(String[] args) throws IOException {
         FileUtils.forceMkdir(new File(outputBase));
@@ -216,6 +236,7 @@ public class JobGenerator {
         genTipRemoveGraph();
         genRemoveLowCoverageGraph();
         genP4ForMergeGraph();
+        genRayScaffold();
     }
 
 }

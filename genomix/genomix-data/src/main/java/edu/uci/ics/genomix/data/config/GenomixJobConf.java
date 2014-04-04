@@ -30,7 +30,6 @@ import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
 import edu.uci.ics.genomix.data.types.ExternalableTreeSet;
-import edu.uci.ics.genomix.data.types.FileManager;
 import edu.uci.ics.genomix.data.types.Kmer;
 import edu.uci.ics.genomix.data.types.VKmer;
 import edu.uci.ics.genomix.data.utils.GenerateGraphViz.GRAPH_TYPE;
@@ -156,6 +155,9 @@ public class GenomixJobConf extends JobConf {
 
         @Option(name = "-scaffold_seedLengthPercentile", usage = "Choose scaffolding seeds as the nodes with longest kmer length.  If this is 0 < percentile < 1, this value will be interpreted as a fraction of the graph (so .01 will mean 1% of the graph will be a seed).  For fraction >= 1, it will be interpreted as the (approximate) *number* of seeds to include. Mutually exclusive with -scaffold_seedScorePercentile.", required = false)
         private float scaffold_seedLengthPercentile = -1;
+        
+        @Option(name = "-scaffold_expandCandidateBranchMaxDistance", usage = "In scaffolding, candidate kmers are expanded by one node (of variable length).  This option causes the search to continue until this many bases are accumulated in the candidate kmers.", required = false)
+        private int scaffold_expandCandidateBranchMaxDistance = -1;
 
         // Hyracks/Pregelix Setup
         @Option(name = "-profile", usage = "Whether or not to do runtime profifling", required = false)
@@ -216,6 +218,7 @@ public class GenomixJobConf extends JobConf {
         RAY_SCAFFOLD,
         RAY_SCAFFOLD_FORWARD,
         RAY_SCAFFOLD_REVERSE,
+        RAY_SCAFFOLD_PRUNE,
         SPLIT_REPEAT,
         DUMP_FASTA,
         CHECK_SYMMETRY,
@@ -311,6 +314,7 @@ public class GenomixJobConf extends JobConf {
     public static final String SCAFFOLD_SEED_LENGTH_PERCENTILE = "genomix.scaffolding.seedLengthPercentile";
     public static final String SCAFFOLDING_SEED_SCORE_THRESHOLD = "genomix.scaffolding.seedScoreThreshold";
     public static final String SCAFFOLDING_SEED_LENGTH_THRESHOLD = "genomix.scaffolding.seedLengthThreshold";
+    public static final String SCAFFOLDING_EXPAND_CANDIDATE_BRANCHES_MAX_DISTANCE = "genomix.scaffolding.expandCandidateBranchesMaxDistance";
     public static final String PLOT_SUBGRAPH_START_SEEDS = "genomix.plotSubgraph.startSeeds";
     public static final String PLOT_SUBGRAPH_NUM_HOPS = "genomix.plotSubgraph.numHops";
     public static final String PLOT_SUBGRAPH_GRAPH_VERBOSITY = "genomix.plotSubgraph.graphVerbosity";
@@ -595,6 +599,9 @@ public class GenomixJobConf extends JobConf {
             // use a default score percentile of .01
             setFloat(SCAFFOLD_SEED_SCORE_PERCENTILE, .01f);
         }
+        if (opts.scaffold_expandCandidateBranchMaxDistance != -1) {
+        	setInt(SCAFFOLDING_EXPAND_CANDIDATE_BRANCHES_MAX_DISTANCE, opts.scaffold_expandCandidateBranchMaxDistance);
+        }
 
         setInt(STATS_EXPECTED_GENOMESIZE, opts.stats_expectedGenomeSize);
         setInt(STATS_MIN_CONTIGLENGTH, opts.stats_minContigLength);
@@ -636,8 +643,7 @@ public class GenomixJobConf extends JobConf {
     public static void setGlobalStaticConstants(Configuration conf) throws IOException {
         Kmer.setGlobalKmerLength(Integer.parseInt(conf.get(KMER_LENGTH)));
         //        ExternalableTreeSet.setupManager(conf, new Path(conf.get("hadoop.tmp.dir", "/tmp")));
-        //        ExternalableTreeSet.setupManager(conf, new Path("tmp"));
-        FileManager.getManager().initialize(conf, new Path("tmp"));
+        ExternalableTreeSet.setupManager(conf, new Path("tmp"));
         ExternalableTreeSet.setCountLimit(1000);
 
         if (conf.get(READ_LENGTHS) != null) {

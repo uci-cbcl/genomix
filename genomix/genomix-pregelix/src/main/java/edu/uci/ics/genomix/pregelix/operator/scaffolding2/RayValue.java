@@ -4,91 +4,235 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map.Entry;
+import java.util.AbstractMap.SimpleEntry;
 
+import edu.uci.ics.genomix.data.types.EDGETYPE;
 import edu.uci.ics.genomix.data.types.Kmer;
 import edu.uci.ics.genomix.data.types.ReadHeadInfo;
+import edu.uci.ics.genomix.data.types.VKmer;
 import edu.uci.ics.genomix.pregelix.base.VertexValueWritable;
 
 public class RayValue extends VertexValueWritable {
     private static final long serialVersionUID = 1L;
 
-    Boolean flippedFromInitialDirection = null;
-    boolean visited = false;
-    boolean intersection = false;
-    boolean stopSearch = false;
-
-    Integer pendingCandidateBranches = null;
-    ArrayList<RayMessage> candidateMsgs = null;
+    HashMap<VKmer, Boolean> flippedFromInitialDirection = null;
+    List<VKmer> visitedList;
+    HashMap<VKmer,Boolean> intersection = null;
+    HashMap<VKmer, Boolean> stopSearch = null;
+    HashMap<VKmer, Integer> pendingCandidateBranchesMap = null;
+    HashMap<VKmer, ArrayList<RayMessage>> candidateMsgsMap =  null;
+    ArrayList<Entry<EDGETYPE, VKmer>> outgoingEdgesToKeep  =  null;
+    ArrayList<Entry<EDGETYPE, VKmer>> incomingEdgesToKeep  =  null;
+    //ArrayList<RayMessage> candidateMsgs = null;
 
     protected static class FIELDS {
-        public static final byte DIR_FLIPPED_VS_INITIAL = 0b01;
-        public static final byte DIR_SAME_VS_INITIAL = 0b10;
-        public static final byte VISITED = 0b1 << 2;
-        public static final byte INTERSECTION = 0b1 << 3;
-        public static final byte STOP_SEARCH = 0b1 << 4;
-        public static final byte PENDING_CANDIDATE_BRANCHES = 1 << 5;
-        public static final byte CANDIDATE_MSGS = 1 << 6;
+        public static final short DIR_VS_INITIAL = 0b1 << 1;
+        public static final short VISITED_LIST = 0b1 << 2;
+        public static final short INTERSECTION = 0b1 << 3;
+        public static final short STOP_SEARCH = 0b1 << 4;
+        public static final short PENDING_CANDIDATE_BRANCHES = 1 << 5;
+        public static final short  CANDIDATE_MSGS_MAP = 1 << 6;
+		public static final short OUTGOING_EDGES_TO_KEEP = 1 << 7;
+		public static final short INCOMING_EDGES_TO_KEEP = 1 << 8;
     }
 
     @Override
     public void readFields(DataInput in) throws IOException {
         super.readFields(in);
-        if (((state) & FIELDS.DIR_FLIPPED_VS_INITIAL) != 0) {
-            flippedFromInitialDirection = true;
-        } else if (((state) & FIELDS.DIR_SAME_VS_INITIAL) != 0) {
-            flippedFromInitialDirection = false;
-        } else {
-            flippedFromInitialDirection = null;
+        if ((state & FIELDS.DIR_VS_INITIAL) != 0) {
+            int count = in.readInt();
+            for (int i = 0; i < count; i++) {
+            	VKmer key = new VKmer();
+            	key.readFields(in);
+            	boolean value = in.readBoolean();
+            	getFlippedFromInitDir().put(key, value);
+            }   
         }
-        visited = ((state & FIELDS.VISITED) != 0);
-        intersection = ((state & FIELDS.INTERSECTION) != 0);
-        stopSearch = ((state & FIELDS.STOP_SEARCH) != 0);
-
+        //visited = ((state & FIELDS.VISITED) != 0);
+        if ((state & FIELDS.INTERSECTION) != 0) {
+            int count = in.readInt();
+            for (int i = 0; i < count; i++){
+            	VKmer key = new VKmer();
+            	key.readFields(in);
+            	boolean value = in.readBoolean();
+            	getIntersection().put(key, value);
+            	
+            }    
+        }
+        if ((state & FIELDS.STOP_SEARCH) != 0) {
+            int count = in.readInt();
+            for (int i = 0; i < count; i++){
+            	VKmer key = new VKmer();
+            	key.readFields(in);
+            	boolean value = in.readBoolean();
+            	getStopSearch().put(key, value);
+            	
+            }  
+        }
+        if ((state & FIELDS.VISITED_LIST) != 0) {
+            int count = in.readInt();
+            for (int i = 0; i < count; i++) {
+                VKmer m = new VKmer();
+                m.readFields(in);
+                getVisitedList().add(m);
+            }
+        }
         if ((state & FIELDS.PENDING_CANDIDATE_BRANCHES) != 0) {
-            pendingCandidateBranches = in.readInt();
+            int count = in.readInt();
+            for (int i = 0; i < count; i++){
+            	VKmer key = new VKmer();
+            	key.readFields(in);
+            	int value = in.readInt();
+            	getPendingCandiateBranchesMap().put(key, value);
+            	
+            }   
         }
+        /*
+        getCandidateMsgs().clear();
         if ((state & FIELDS.CANDIDATE_MSGS) != 0) {
-            getCandidateMsgs().clear();
             int count = in.readInt();
             for (int i = 0; i < count; i++) {
                 RayMessage m = new RayMessage();
                 m.readFields(in);
-                candidateMsgs.add(m);
+                getCandidateMsgs.add(m);
             }
+        }
+        */
+        if ((state & FIELDS.CANDIDATE_MSGS_MAP) != 0) {
+            int count = in.readInt();
+            for (int i = 0; i < count; i++) {
+            	VKmer key = new VKmer();
+            	key.readFields(in);
+            	int aCount = in.readInt();
+            	ArrayList<RayMessage> msgs = new ArrayList<>();
+            	for (int j = 0; j < aCount; j++) {
+                    RayMessage m = new RayMessage();
+                    m.readFields(in);
+                    msgs.add(m);
+                }
+            	getCandidateMsgsMap().put(key, msgs);
+            }
+        }
+        
+        if ((state & FIELDS.OUTGOING_EDGES_TO_KEEP) != 0) {
+        	int count = in.readInt();
+        	for (int i = 0; i < count; i++) {
+        		EDGETYPE et = EDGETYPE.fromByte(in.readByte());
+        		VKmer kmer = new VKmer();
+        		kmer.readFields(in);
+        		getOutgoingEdgesToKeep().add(new SimpleEntry<>(et, kmer));
+        	}
+        }
+        if ((state & FIELDS.INCOMING_EDGES_TO_KEEP) != 0) {
+        	int count = in.readInt();
+        	for (int i = 0; i < count; i++) {
+        		EDGETYPE et = EDGETYPE.fromByte(in.readByte());
+        		VKmer kmer = new VKmer();
+        		kmer.readFields(in);
+        		getIncomingEdgesToKeep().add(new SimpleEntry<>(et, kmer));
+        	}
         }
     }
 
-    @Override
+	@Override
     public void write(DataOutput out) throws IOException {
         state = 0;
         if (flippedFromInitialDirection != null) {
-            state |= flippedFromInitialDirection ? FIELDS.DIR_FLIPPED_VS_INITIAL : FIELDS.DIR_SAME_VS_INITIAL;
+            state |=  FIELDS.DIR_VS_INITIAL;
         }
-        if (visited) {
-            state |= FIELDS.VISITED;
-        }
-        if (intersection) {
+        if (intersection != null) {
             state |= FIELDS.INTERSECTION;
         }
-        if (stopSearch) {
+        if (stopSearch != null) {
             state |= FIELDS.STOP_SEARCH;
         }
-        if (pendingCandidateBranches != null) {
+        
+        if (visitedList != null && visitedList.size() > 0) {
+            state |= FIELDS.VISITED_LIST;
+        } 
+        
+        if (pendingCandidateBranchesMap != null) {
             state |= FIELDS.PENDING_CANDIDATE_BRANCHES;
         }
-        if (candidateMsgs != null && candidateMsgs.size() > 0) {
-            state |= FIELDS.CANDIDATE_MSGS;
+        if (candidateMsgsMap != null && candidateMsgsMap.size() > 0) {
+            state |= FIELDS.CANDIDATE_MSGS_MAP;
+        }
+        if (outgoingEdgesToKeep != null && outgoingEdgesToKeep.size() > 0) {
+            state |= FIELDS.OUTGOING_EDGES_TO_KEEP;
+        }
+        if (incomingEdgesToKeep != null && incomingEdgesToKeep.size() > 0) {
+            state |= FIELDS.INCOMING_EDGES_TO_KEEP;
         }
         super.write(out);
-
-        if (pendingCandidateBranches != null) {
-            out.writeInt(pendingCandidateBranches);
+        
+        if (flippedFromInitialDirection != null) {
+            out.writeInt(flippedFromInitialDirection.size());
+            for (Entry<VKmer, Boolean> entry : flippedFromInitialDirection.entrySet()){
+    			entry.getKey().write(out);
+    			out.writeBoolean(entry.getValue());
+    		}
+        } 
+        if (intersection != null) {
+            out.writeInt(intersection.size());
+            for (Entry<VKmer, Boolean> entry : intersection.entrySet()){
+    			entry.getKey().write(out);
+    			out.writeBoolean(entry.getValue());
+    		}
+        } 
+        if (stopSearch != null) {
+            out.writeInt(stopSearch.size());
+            for (Entry<VKmer, Boolean> entry : stopSearch.entrySet()){
+    			entry.getKey().write(out);
+    			out.writeBoolean(entry.getValue());
+    		}
         }
+        if (visitedList != null && visitedList.size() > 0) {
+            out.writeInt(visitedList.size());
+            for (VKmer m : visitedList) {
+                m.write(out);
+            }
+        }
+        if (pendingCandidateBranchesMap != null) {
+            out.writeInt(pendingCandidateBranchesMap.size());
+            for (Entry<VKmer, Integer> entry : pendingCandidateBranchesMap.entrySet()){
+    			entry.getKey().write(out);
+    			out.writeInt(entry.getValue());
+    		}
+        }
+        /**
         if (candidateMsgs != null && candidateMsgs.size() > 0) {
             out.writeInt(candidateMsgs.size());
             for (RayMessage m : candidateMsgs) {
                 m.write(out);
             }
+        }
+        **/
+        if (candidateMsgsMap != null && candidateMsgsMap.size() > 0) {
+            out.writeInt(candidateMsgsMap.size());
+            for (Entry<VKmer, ArrayList<RayMessage>> entry : candidateMsgsMap.entrySet()){
+    			entry.getKey().write(out);
+    			out.writeInt(entry.getValue().size());
+    			for (RayMessage m : entry.getValue()) {
+                    m.write(out);
+                }
+    		}
+        }
+        if (outgoingEdgesToKeep != null && outgoingEdgesToKeep.size() > 0) {
+            out.writeInt(outgoingEdgesToKeep.size());
+            for (Entry<EDGETYPE, VKmer> entry : outgoingEdgesToKeep){
+            	out.writeByte(entry.getKey().get());
+            	entry.getValue().write(out);
+    		}
+        }
+        if (incomingEdgesToKeep != null && incomingEdgesToKeep.size() > 0) {
+            out.writeInt(incomingEdgesToKeep.size());
+            for (Entry<EDGETYPE, VKmer> entry : incomingEdgesToKeep){
+            	out.writeByte(entry.getKey().get());
+            	entry.getValue().write(out);
+    		}
         }
     }
 
@@ -96,20 +240,22 @@ public class RayValue extends VertexValueWritable {
     public void reset() {
         super.reset();
         flippedFromInitialDirection = null;
-        visited = false;
-        intersection = false;
-        stopSearch = false;
-        pendingCandidateBranches = null;
-        candidateMsgs = null;
+        intersection = null;
+        stopSearch = null;
+        visitedList = null;
+        pendingCandidateBranchesMap = null;
+        candidateMsgsMap = null;
+        outgoingEdgesToKeep = null;
+        incomingEdgesToKeep = null;
     }
 
     /**
      * @return whether or not I have any readids that **could** contribute to the current walk
      */
-    public boolean isOutOfRange(int myOffset, int walkLength, int maxDist) {
+    public boolean isOutOfRange(int myOffset, int walkLength, int maxDist, VKmer seed) {
         int numBasesToSkip = Math.max(0, walkLength - maxDist - myOffset);
         int myLength = getKmerLength() - Kmer.getKmerLength() + 1;
-        if (!flippedFromInitialDirection) {
+        if (!flippedFromInitialDirection.get(seed)) {
             // TODO fix max offset to be distance
             // cut off the beginning
             if (numBasesToSkip > myLength) {
@@ -123,10 +269,13 @@ public class RayValue extends VertexValueWritable {
                 // my max is negative-- no valid readids
                 return true;
             }
-            return getFlippedReadIds().getOffSetRange(0, myLength - numBasesToSkip).isEmpty();
+            //FIXME
+            return getFlippedReadIds().getOffSetRange(0, Math.max(0, getKmerLength() - numBasesToSkip)).isEmpty();
+            
+            //return getFlippedReadIds().getOffSetRange(0, myLength - numBasesToSkip).isEmpty();
         }
     }
-
+    /**
     public ArrayList<RayMessage> getCandidateMsgs() {
         if (candidateMsgs == null) {
             candidateMsgs = new ArrayList<>();
@@ -137,4 +286,91 @@ public class RayValue extends VertexValueWritable {
     public void setCandidateMsgs(ArrayList<RayMessage> candidateMsgs) {
         this.candidateMsgs = candidateMsgs;
     }
+     * @return 
+    **/
+    
+    public HashMap<VKmer, ArrayList<RayMessage>> getCandidateMsgsMap(){
+    	if (candidateMsgsMap == null){
+    		candidateMsgsMap = new HashMap<VKmer, ArrayList<RayMessage>>();
+    	}
+    	return candidateMsgsMap;
+    }
+    
+    public void setCandidateMsgsMap(HashMap<VKmer, ArrayList<RayMessage>> candidateMsgs){
+    	this.candidateMsgsMap= candidateMsgs;
+    }
+    
+    public List<VKmer> getVisitedList() {
+        if (visitedList == null) {
+            visitedList = new ArrayList<>();
+        }
+        return visitedList;
+    }
+
+    public void setVisitedList(List<VKmer> visitedList) {
+        this.visitedList = visitedList;
+    }
+    
+    public HashMap<VKmer,Integer> getPendingCandiateBranchesMap(){
+    	if (pendingCandidateBranchesMap == null){
+    		pendingCandidateBranchesMap = new HashMap<VKmer, Integer>();
+    	}
+    	return pendingCandidateBranchesMap;
+    }
+    public void setPendingCandidateBranchesMap(HashMap<VKmer, Integer> pendingCandidateBranchesMap){
+    	this.pendingCandidateBranchesMap = pendingCandidateBranchesMap;
+    }
+    
+    public HashMap<VKmer, Boolean> getIntersection(){
+    	if (intersection == null){
+    		intersection = new HashMap<VKmer, Boolean>();
+    	}
+    	return intersection;
+    }
+    public void setIntersection(HashMap<VKmer, Boolean> intersection){
+    	this.intersection = intersection;
+    }
+    
+    public HashMap<VKmer, Boolean> getStopSearch(){
+    	if (stopSearch == null){
+    		stopSearch = new HashMap<VKmer, Boolean>();
+    	}
+    	return stopSearch;
+    }
+    public void setStopSearch(HashMap<VKmer, Boolean> stopSearch){
+    	this.stopSearch= stopSearch;
+    }
+    
+    public HashMap<VKmer, Boolean> getFlippedFromInitDir(){
+    	if (flippedFromInitialDirection == null){
+    		flippedFromInitialDirection = new HashMap<VKmer, Boolean>();
+    	}
+    	return flippedFromInitialDirection;
+    }
+    public void setFlippedFromInitDir(HashMap<VKmer, Boolean> flippedFromInitialDirection){
+    	this.flippedFromInitialDirection= flippedFromInitialDirection;
+    }
+    
+    public ArrayList<Entry<EDGETYPE, VKmer>> getOutgoingEdgesToKeep() {
+    	if (outgoingEdgesToKeep == null) {
+    		outgoingEdgesToKeep = new ArrayList<>();
+    	}
+		return outgoingEdgesToKeep;
+	}
+    
+    public void setForwardEdgesToKeep(ArrayList<Entry<EDGETYPE, VKmer>> outgoingEdgesToKeep) {
+    	this.outgoingEdgesToKeep = outgoingEdgesToKeep;
+	}
+    
+    public ArrayList<Entry<EDGETYPE, VKmer>> getIncomingEdgesToKeep() {
+    	if (incomingEdgesToKeep == null) {
+    		incomingEdgesToKeep = new ArrayList<>();
+    	}
+		return incomingEdgesToKeep;
+	}
+    
+    public void setIncomingEdgesToKeep(ArrayList<Entry<EDGETYPE, VKmer>> incomingEdgesToKeep) {
+    	this.incomingEdgesToKeep = incomingEdgesToKeep;
+	}
+    
 }

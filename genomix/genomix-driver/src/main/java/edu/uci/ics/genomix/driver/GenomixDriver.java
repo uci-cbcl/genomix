@@ -70,7 +70,8 @@ import edu.uci.ics.genomix.pregelix.operator.extractsubgraph.ExtractSubgraphVert
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.P1ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.P4ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.removelowcoverage.RemoveLowCoverageVertex;
-import edu.uci.ics.genomix.pregelix.operator.removelowcoverage.ShiftLowCoverageReadSetVertex;
+import edu.uci.ics.genomix.pregelix.operator.scaffolding2.PruneVertex;
+//import edu.uci.ics.genomix.pregelix.operator.removelowcoverage.ShiftLowCoverageReadSetVertex;
 import edu.uci.ics.genomix.pregelix.operator.scaffolding2.RayVertex;
 import edu.uci.ics.genomix.pregelix.operator.simplebubblemerge.SimpleBubbleMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.symmetrychecker.SymmetryCheckerVertex;
@@ -219,14 +220,16 @@ public class GenomixDriver {
                 break;
             case TIP:
                 pregelixJobs.add(TipRemoveWithSearchVertex.getConfiguredJob(conf, TipRemoveWithSearchVertex.class));
-                break;
+                break; 
             case BUBBLE:
                 pregelixJobs.add(SimpleBubbleMergeVertex.getConfiguredJob(conf, SimpleBubbleMergeVertex.class));
                 break;
+            /**    
             case SHIFT_LOW_COVERAGE:
                 pregelixJobs.add(ShiftLowCoverageReadSetVertex.getConfiguredJob(conf,
                         ShiftLowCoverageReadSetVertex.class));
                 break;
+                **/
             case REMOVE_LOW_COVERAGE:
                 pregelixJobs.add(RemoveLowCoverageVertex.getConfiguredJob(conf, RemoveLowCoverageVertex.class));
                 break;
@@ -254,6 +257,7 @@ public class GenomixDriver {
                     TreeMap<Integer, ArrayList<String>> nodeLengths = getNodeLengths(conf, prevOutput);
 
                     int jobNumber = 0;
+                    
                     for (Entry<Integer, ArrayList<String>> lengthEntry : nodeLengths.descendingMap().entrySet()) {
                         if (lengthEntry.getKey() > minLength) {
                             for (String seedId : lengthEntry.getValue()) {
@@ -272,7 +276,26 @@ public class GenomixDriver {
                             }
                         }
                     }
-                } else {
+                } 
+                /**
+                    jobNumber++;
+                    //FileInputFormat.setInputPaths(conf, new Path(prevOutput));
+                    //FileOutputFormat.setOutputPath(conf, new Path(curOutput));
+                    conf.set(GenomixJobConf.SCAFFOLD_SEED_ID,"GATAAGACGCGCCAGCGTCGC");
+                    pregelixJobs.add(RayVertex.getConfiguredJob(conf, RayVertex.class));
+                    jobNumber++;
+                    conf.set(GenomixJobConf.SCAFFOLD_SEED_ID, "CGACGCTGGCGCGTCTTATCA");
+                    pregelixJobs.add(RayVertex.getConfiguredJob(conf, RayVertex.class));
+                    jobNumber++;
+                    conf.set(GenomixJobConf.SCAFFOLD_SEED_ID, "ATGCGACGCTGGCGCGTCTTA");
+                    pregelixJobs.add(RayVertex.getConfiguredJob(conf, RayVertex.class));
+                    jobNumber++;
+                    conf.set(GenomixJobConf.SCAFFOLD_SEED_ID, "CGCGTCTTATCAGGCCTACAA");
+                    pregelixJobs.add(RayVertex.getConfiguredJob(conf, RayVertex.class));
+                    
+                    
+                }**/
+                    else {
 
                     Float scorePercentile = conf.getFloat(GenomixJobConf.SCAFFOLD_SEED_SCORE_PERCENTILE, -1);
                     Float lengthPercentile = conf.getFloat(GenomixJobConf.SCAFFOLD_SEED_LENGTH_PERCENTILE, -1);
@@ -292,6 +315,9 @@ public class GenomixDriver {
                     pregelixJobs.add(RayVertex.getConfiguredJob(conf, RayVertex.class));
                 }
                 break;
+            case RAY_SCAFFOLD_PRUNE:
+            	pregelixJobs.add(PruneVertex.getConfiguredJob(conf, PruneVertex.class));
+            	break;
             case DUMP_FASTA:
                 flushPendingJobs(conf);
                 curOutput = prevOutput + "-DUMP_FASTA";
@@ -477,14 +503,24 @@ public class GenomixDriver {
                     LOG.info("Starting job " + pregelixJobs.get(i).getJobName());
                     GenomixJobConf.tick("pregelix-job");
 
-                    pregelixDriver.runJob(pregelixJobs.get(i), masterIP, pregelixPort);
+                    if (i < pregelixJobs.size() - 1 && 
+                    		pregelixJobs.get(i).getJobName().equals(RayVertex.class.getSimpleName()) && 
+                    		pregelixJobs.get(i + 1).getJobName().equals(PruneVertex.class.getSimpleName())) {
+                    	// prune vertex cannot save to disk :(
+                    	pregelixDriver.runJobs(Arrays.asList(pregelixJobs.get(i), pregelixJobs.get(i + 1)), masterIP, pregelixPort);
+                    	LOG.info("Finished job " + pregelixJobs.get(i).getJobName() + " in "
+                                + GenomixJobConf.tock("pregelix-job") + "ms");
+                    	i++;
+                    } else {
+                    	pregelixDriver.runJob(pregelixJobs.get(i), masterIP, pregelixPort);
+                    }
 
                     LOG.info("Finished job " + pregelixJobs.get(i).getJobName() + " in "
                             + GenomixJobConf.tock("pregelix-job") + "ms");
                 }
                 LOG.info("Finished job series in " + GenomixJobConf.tock("pregelix-runJob-one-by-one"));
             } else {
-                LOG.info("Starting pregelix job series (not saving intermediate results...");
+                LOG.info("Starting pregelix job series (not saving intermediate results...)");
                 GenomixJobConf.tick("pregelix-runJobs");
 
                 pregelixDriver.runJobs(pregelixJobs, masterIP, pregelixPort);
@@ -545,9 +581,12 @@ public class GenomixDriver {
                 }
                 // replace
                 allPatterns.add(i, Patterns.RAY_SCAFFOLD_FORWARD);
-                allPatterns.add(i + 1, Patterns.MERGE);
-                allPatterns.add(i + 2, Patterns.STATS);
-                allPatterns.add(i + 3, Patterns.RAY_SCAFFOLD_REVERSE);
+                if (RayVertex.DELAY_PRUNE) {
+                	allPatterns.add(i + 1, Patterns.RAY_SCAFFOLD_PRUNE);
+                }
+                //allPatterns.add(i + 1, Patterns.MERGE);
+                //allPatterns.add(i + 1, Patterns.STATS);
+               // allPatterns.add(i, Patterns.RAY_SCAFFOLD_REVERSE);
             }
         }
 
@@ -714,11 +753,10 @@ public class GenomixDriver {
             }
         } catch (CmdLineException ex) {
             System.err.println("Usage: bin/genomix [options]\n");
-            ex.getParser().setUsageWidth(80);
+            ex.getParser().setUsageWidth(100);
             ex.getParser().printUsage(System.err);
             System.err.println("\nExample:");
-            System.err
-                    .println("\tbin/genomix -kmerLength 55 -pipelineOrder BUILD_HYRACKS,MERGE,TIP_REMOVE,MERGE,BUBBLE,MERGE -localInput /path/to/readfiledir/\n");
+            System.err.println("\tbin/genomix -kmerLength 55 -pipelineOrder BUILD_HYRACKS,MERGE,TIP_REMOVE,MERGE,BUBBLE,MERGE -localInput /path/to/readfiledir/\n");
             System.err.println(ex.getMessage());
 
             return;
@@ -736,5 +774,4 @@ public class GenomixDriver {
             }
         }
     }
-
 }
