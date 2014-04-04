@@ -4,6 +4,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.AbstractMap.SimpleEntry;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
@@ -57,7 +58,7 @@ public class RayScores implements Writable {
     }
 
     public void addRuleCounts(EDGETYPE et, VKmer kmer, int ruleA, int ruleB, int ruleC) {
-        SimpleEntry<EDGETYPE, VKmer> key = new SimpleEntry<>(et, kmer);
+        SimpleEntry<EDGETYPE, VKmer> key = new SimpleEntry<>(et, new VKmer(kmer));
         if (scores.containsKey(key)) {
             Rules r = scores.get(key);
             r.ruleA += ruleA;
@@ -79,12 +80,37 @@ public class RayScores implements Writable {
         if (scores.size() != 1) {
             throw new IllegalStateException("requested single key but this score has " + scores.size() + " entries! " + scores);
         }
-        for (SimpleEntry<EDGETYPE,VKmer> e : scores.keySet()) {
-            return e;
-        }
+        if(scores.size() == 1){
+        	for (SimpleEntry<EDGETYPE,VKmer> e : scores.keySet()){
+        		return e;
+        	}
+    	}
+        
         throw new IllegalStateException("requested single key but this score has " + scores.size() + " entries! " + scores);
     }
-
+    
+    
+    public VKmer getVkmer(){
+    	if (scores.size() != 1) {
+    	    throw new IllegalStateException("requested single key but this score has " + scores.size() + " entries! " + scores);
+    	}
+    	
+    	for (SimpleEntry<EDGETYPE,VKmer> e : scores.keySet()) {
+    		return e.getValue();
+    	}
+    	throw new IllegalStateException("requested single kmer to add but this score has " + scores.size() + " entries! " + scores);
+    }
+    
+    public EDGETYPE getEdge(){
+    	if (scores.size() != 1) {
+    	    throw new IllegalStateException("requested single key but this score has " + scores.size() + " entries! " + scores);
+    	}
+    	
+    	for (SimpleEntry<EDGETYPE,VKmer> e : scores.keySet()) {
+    		return e.getKey();
+    	}
+    	throw new IllegalStateException("requested single kmer to add but this score has " + scores.size() + " entries! " + scores);
+    }
     /**
      * Return true iff queryKmer is "better than" targetKmer according to my scores.
      * Specifically, each of the rule values must be "factor" times larger than the corresponding values for targetKmer
@@ -92,8 +118,9 @@ public class RayScores implements Writable {
     public boolean dominates(EDGETYPE queryET, VKmer queryKmer, EDGETYPE targetET, VKmer targetKmer,
             float frontierCoverage) {
         double factor = getMFactor(frontierCoverage);
-        SimpleEntry<EDGETYPE, VKmer> queryKey = new SimpleEntry<>(queryET, queryKmer);
-        SimpleEntry<EDGETYPE, VKmer> targetKey = new SimpleEntry<>(targetET, targetKmer);
+        // TODO(jakebiesinger): I don't think we need to make a copy here
+        SimpleEntry<EDGETYPE, VKmer> queryKey = new SimpleEntry<>(queryET, new VKmer(queryKmer));
+        SimpleEntry<EDGETYPE, VKmer> targetKey = new SimpleEntry<>(targetET, new VKmer(targetKmer));
         if (!scores.containsKey(queryKey)) {
             return false;
         } else if (!scores.containsKey(targetKey)) {
@@ -111,9 +138,12 @@ public class RayScores implements Writable {
     private double getMFactor(float frontierCoverage) {
         if (frontierCoverage >= 2 && frontierCoverage <= 19) {
             return 3;
+        	//return 2.5;
         } else if (frontierCoverage >= 20 && frontierCoverage <= 24) {
+            //return 2;
             return 2;
         } else if (frontierCoverage >= 25) {
+            //return 1.3;
             return 1.3;
         } else {
             return 0;

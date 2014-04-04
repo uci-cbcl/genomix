@@ -100,6 +100,15 @@ public class VKmerList implements Writable, Iterable<VKmer>, Serializable {
             Marshal.putInt(valueCount, storage, offset);
         }
     }
+    
+    public VKmerList subList(int index0, int index1){
+    	VKmerList subList = new VKmerList();
+    	for(int i = index0; i < index1 + 1 ; i++){
+    		subList.append(this.getPosition(i));
+    	}
+    	
+    	return subList;
+    }
 
     /**
      * Save the union of my list and otherList. Uses a temporary HashSet for
