@@ -126,8 +126,11 @@ public class GenomixJobConf extends JobConf {
         @Option(name = "-pathMergeRandom_probBeingRandomHead", usage = "The probability of being selected as a random head in the random path-merge algorithm", required = false)
         private float pathMergeRandom_probBeingRandomHead = -1;
 
-        @Option(name = "-removeLowCoverage_maxCoverage", usage = "Nodes with coverage lower than this threshold will be removed from the graph", required = false)
-        private float removeLowCoverage_maxCoverage = -1;
+        @Option(name = "-removeBadCoverage_minCoverage", usage = "Nodes with coverage lower than this threshold will be removed from the graph", required = false)
+        private float removeBadCoverage_minCoverage = -1;
+        
+        @Option(name = "-removeBadCoverage_maxCoverage", usage = "Nodes with coverage higher than this threshold will be removed from the graph", required = false)
+        private float removeBadCoverage_maxCoverage = -1;
 
         @Option(name = "-tipRemove_maxLength", usage = "Tips (dead ends in the graph) whose length is less than this threshold are removed from the graph", required = false)
         private int tipRemove_maxLength = -1;
@@ -208,7 +211,7 @@ public class GenomixJobConf extends JobConf {
         BUBBLE,
         BUBBLE_COMPLEX,
         SHIFT_LOW_COVERAGE,
-        REMOVE_LOW_COVERAGE,
+        REMOVE_BAD_COVERAGE,
         TIP_SINGLE_NODE,
         TIP,
         SCAFFOLD,
@@ -300,7 +303,8 @@ public class GenomixJobConf extends JobConf {
     public static final String BUBBLE_MERGE_WITH_SEARCH_SEARCH_DIRECTION = "genomix.bubbleMergeWithSearch.searchDirection";
     public static final String GRAPH_CLEAN_MAX_ITERATIONS = "genomix.graphClean.maxIterations";
     public static final String PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD = "genomix.pathMerge.probBeingRandomHead";
-    public static final String REMOVE_LOW_COVERAGE_MAX_COVERAGE = "genomix.removeLowCoverage.maxCoverage";
+    public static final String REMOVE_BAD_COVERAGE_MIN_COVERAGE = "genomix.removeBadCoverage.minCoverage";
+    public static final String REMOVE_BAD_COVERAGE_MAX_COVERAGE = "genomix.removeBadCoverage.maxCoverage";
     public static final String TIP_REMOVE_MAX_LENGTH = "genomix.tipRemove.maxLength";
     public static final String MAX_READIDS_PER_EDGE = "genomix.maxReadidsPerEdge";
     public static final String SCAFFOLDING_INITIAL_DIRECTION = "genomix.scaffolding.initialDirection";
@@ -401,9 +405,13 @@ public class GenomixJobConf extends JobConf {
             throw new IllegalArgumentException("pathMergeRandom_probBeingRandomHead greater than 0.0!");
         if (Float.parseFloat(conf.get(PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD)) >= 1.0)
             throw new IllegalArgumentException("pathMergeRandom_probBeingRandomHead must be less than 1.0!");
-
-        if (Float.parseFloat(conf.get(REMOVE_LOW_COVERAGE_MAX_COVERAGE)) < 0)
+        
+        if (Float.parseFloat(conf.get(REMOVE_BAD_COVERAGE_MIN_COVERAGE)) < 0)
+            throw new IllegalArgumentException("removeLowCoverage_minCoverage cannot be negative!");
+        
+        if (Float.parseFloat(conf.get(REMOVE_BAD_COVERAGE_MAX_COVERAGE)) < 0)
             throw new IllegalArgumentException("removeLowCoverage_maxCoverage cannot be negative!");
+
 
         if (Integer.parseInt(conf.get(TIP_REMOVE_MAX_LENGTH)) < kmerLength)
             throw new IllegalArgumentException("tipRemove_maxLength must be at least as long as kmerLength!");
@@ -455,8 +463,11 @@ public class GenomixJobConf extends JobConf {
         if (getFloat(PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD, -1) == -1)
             setFloat(PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD, 0.5f);
 
-        if (getFloat(REMOVE_LOW_COVERAGE_MAX_COVERAGE, -1) == -1)
-            setFloat(REMOVE_LOW_COVERAGE_MAX_COVERAGE, 3.0f);
+        if (getFloat(REMOVE_BAD_COVERAGE_MIN_COVERAGE, -1) == -1)
+            setFloat(REMOVE_BAD_COVERAGE_MIN_COVERAGE, 3.0f);
+        
+        if (getFloat(REMOVE_BAD_COVERAGE_MAX_COVERAGE, -1) == -1)
+            setFloat(REMOVE_BAD_COVERAGE_MAX_COVERAGE, Float.POSITIVE_INFINITY);
 
         if (getInt(TIP_REMOVE_MAX_LENGTH, -1) == -1 && kmerLength != -1)
             setInt(TIP_REMOVE_MAX_LENGTH, kmerLength);
@@ -467,7 +478,7 @@ public class GenomixJobConf extends JobConf {
         if (get(PIPELINE_ORDER) == null) {
             set(PIPELINE_ORDER,
                     Patterns.stringFromArray(new Patterns[] { Patterns.BUILD, Patterns.MERGE,
-                            Patterns.REMOVE_LOW_COVERAGE, Patterns.MERGE, Patterns.TIP_SINGLE_NODE, Patterns.MERGE,
+                            Patterns.REMOVE_BAD_COVERAGE, Patterns.MERGE, Patterns.TIP_SINGLE_NODE, Patterns.MERGE,
                             Patterns.BUBBLE, Patterns.MERGE, Patterns.SPLIT_REPEAT, Patterns.MERGE, Patterns.SCAFFOLD,
                             Patterns.MERGE }));
         }
@@ -582,7 +593,8 @@ public class GenomixJobConf extends JobConf {
         setInt(GRAPH_CLEAN_MAX_ITERATIONS, opts.graphCleanMaxIterations);
         setLong(RANDOM_SEED, opts.randomSeed);
         setFloat(PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD, opts.pathMergeRandom_probBeingRandomHead);
-        setFloat(REMOVE_LOW_COVERAGE_MAX_COVERAGE, opts.removeLowCoverage_maxCoverage);
+        setFloat(REMOVE_BAD_COVERAGE_MIN_COVERAGE, opts.removeBadCoverage_minCoverage);
+        setFloat(REMOVE_BAD_COVERAGE_MAX_COVERAGE, opts.removeBadCoverage_maxCoverage);
         setInt(TIP_REMOVE_MAX_LENGTH, opts.tipRemove_maxLength);
         if (opts.scaffolding_serialRunMinLength != -1)
             setInt(SCAFFOLDING_SERIAL_RUN_MIN_LENGTH_THRESHOLD, opts.scaffolding_serialRunMinLength);

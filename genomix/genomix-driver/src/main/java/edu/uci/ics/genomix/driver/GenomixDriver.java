@@ -129,7 +129,7 @@ public class GenomixDriver {
 
         if (cutoffCoverage > 0) {
             LOG.info("Set the cutoffCoverage to " + cutoffCoverage);
-            conf.setFloat(GenomixJobConf.REMOVE_LOW_COVERAGE_MAX_COVERAGE, cutoffCoverage);
+            conf.setFloat(GenomixJobConf.REMOVE_BAD_COVERAGE_MIN_COVERAGE, cutoffCoverage);
         } else {
             LOG.info("The generated cutoffCoverage is " + cutoffCoverage + "! It's not set.");
         }
@@ -229,7 +229,7 @@ public class GenomixDriver {
                         ShiftLowCoverageReadSetVertex.class));
                 break;
                 **/
-            case REMOVE_LOW_COVERAGE:
+            case REMOVE_BAD_COVERAGE:
                 pregelixJobs.add(RemoveLowCoverageVertex.getConfiguredJob(conf, RemoveLowCoverageVertex.class));
                 break;
             case BRIDGE:

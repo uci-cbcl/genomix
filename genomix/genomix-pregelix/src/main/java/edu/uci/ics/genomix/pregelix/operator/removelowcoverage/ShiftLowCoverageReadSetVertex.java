@@ -23,7 +23,7 @@ public class ShiftLowCoverageReadSetVertex extends DeBruijnGraphCleanVertex<Vert
         super.initVertex();
         if (minAverageCoverage < 0)
             minAverageCoverage = Float.parseFloat(getContext().getConfiguration().get(
-                    GenomixJobConf.REMOVE_LOW_COVERAGE_MAX_COVERAGE));
+                    GenomixJobConf.REMOVE_BAD_COVERAGE_MIN_COVERAGE));
         if (outgoingMsg == null)
             outgoingMsg = new ShiftedReadSetMessage();
         ReadHeadSet.forceWriteEntireBody(true);

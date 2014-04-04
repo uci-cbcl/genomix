@@ -17,6 +17,7 @@ import edu.uci.ics.genomix.pregelix.base.VertexValueWritable.State;
  */
 public class RemoveLowCoverageVertex extends DeBruijnGraphCleanVertex<VertexValueWritable, MessageWritable> {
     protected static float minAverageCoverage = -1;
+    protected static float maxAverageCoverage = -1;
 
     /**
      * initiate kmerSize, length
@@ -26,14 +27,17 @@ public class RemoveLowCoverageVertex extends DeBruijnGraphCleanVertex<VertexValu
         super.initVertex();
         if (minAverageCoverage < 0)
             minAverageCoverage = Float.parseFloat(getContext().getConfiguration().get(
-                    GenomixJobConf.REMOVE_LOW_COVERAGE_MAX_COVERAGE));
+                    GenomixJobConf.REMOVE_BAD_COVERAGE_MIN_COVERAGE));
+        if(maxAverageCoverage < 0)
+        	maxAverageCoverage = Float.parseFloat(getContext().getConfiguration().get(
+                    GenomixJobConf.REMOVE_BAD_COVERAGE_MAX_COVERAGE));
         if (outgoingMsg == null)
             outgoingMsg = new MessageWritable();
     }
 
     public void detectLowCoverageVertex() {
         VertexValueWritable vertex = getVertexValue();
-        if (vertex.getAverageCoverage() <= minAverageCoverage) {
+        if (vertex.getAverageCoverage() <= minAverageCoverage || vertex.getAverageCoverage() >= maxAverageCoverage) {
             //broadcase kill self
             broadcastKillself();
             vertex.setState(State.DEAD_NODE);
