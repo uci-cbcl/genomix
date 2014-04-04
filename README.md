@@ -16,11 +16,13 @@ Usage
 ------
 Currently Genomix code is injecting into the Pregelix codebase directly.
 All genomix code is under the /genomix folder. 
+```
 /genomix-data       here is the basic data structures, like the Node, Kmer, etc.
 /genomix-driver     here is the driver to connect the whole pipeline. 
 /genomix-hadoop     here is the first trying of compare the result with using hadoop, (now obsolete)
 /genomix-hyracks    here is the graph building step
 /genomix-pregelix   here is the graph cleaning and scaffolding step.
+```
 
 
 To build Genomix:
