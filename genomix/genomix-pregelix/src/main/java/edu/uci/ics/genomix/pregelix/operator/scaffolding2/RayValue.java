@@ -7,7 +7,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.AbstractMap.SimpleEntry;
 
+import edu.uci.ics.genomix.data.types.EDGETYPE;
 import edu.uci.ics.genomix.data.types.Kmer;
 import edu.uci.ics.genomix.data.types.ReadHeadInfo;
 import edu.uci.ics.genomix.data.types.VKmer;
@@ -22,34 +24,35 @@ public class RayValue extends VertexValueWritable {
     HashMap<VKmer, Boolean> stopSearch = null;
     HashMap<VKmer, Integer> pendingCandidateBranchesMap = null;
     HashMap<VKmer, ArrayList<RayMessage>> candidateMsgsMap =  null;
+    ArrayList<Entry<EDGETYPE, VKmer>> outgoingEdgesToKeep  =  null;
+    ArrayList<Entry<EDGETYPE, VKmer>> incomingEdgesToKeep  =  null;
     //ArrayList<RayMessage> candidateMsgs = null;
 
     protected static class FIELDS {
-        public static final byte DIR_VS_INITIAL = 0b1 << 1;
-        public static final byte VISITED_LIST = 0b1 << 2;
-        public static final byte INTERSECTION = 0b1 << 3;
-        public static final byte STOP_SEARCH = 0b1 << 4;
-        public static final byte PENDING_CANDIDATE_BRANCHES = 1 << 5;
-        public static final byte CANDIDATE_MSGS_MAP = 1 << 6;
+        public static final short DIR_VS_INITIAL = 0b1 << 1;
+        public static final short VISITED_LIST = 0b1 << 2;
+        public static final short INTERSECTION = 0b1 << 3;
+        public static final short STOP_SEARCH = 0b1 << 4;
+        public static final short PENDING_CANDIDATE_BRANCHES = 1 << 5;
+        public static final short  CANDIDATE_MSGS_MAP = 1 << 6;
+		public static final short OUTGOING_EDGES_TO_KEEP = 1 << 7;
+		public static final short INCOMING_EDGES_TO_KEEP = 1 << 8;
     }
 
     @Override
     public void readFields(DataInput in) throws IOException {
         super.readFields(in);
         if ((state & FIELDS.DIR_VS_INITIAL) != 0) {
-            getIntersection().clear();
             int count = in.readInt();
-            for (int i = 0; i < count; i++){
+            for (int i = 0; i < count; i++) {
             	VKmer key = new VKmer();
             	key.readFields(in);
             	boolean value = in.readBoolean();
             	getFlippedFromInitDir().put(key, value);
-            	
             }   
         }
-        //visited = ((state & FIELDS.VISITED) != 0);      
+        //visited = ((state & FIELDS.VISITED) != 0);
         if ((state & FIELDS.INTERSECTION) != 0) {
-            getIntersection().clear();
             int count = in.readInt();
             for (int i = 0; i < count; i++){
             	VKmer key = new VKmer();
@@ -60,7 +63,6 @@ public class RayValue extends VertexValueWritable {
             }    
         }
         if ((state & FIELDS.STOP_SEARCH) != 0) {
-            getStopSearch().clear();
             int count = in.readInt();
             for (int i = 0; i < count; i++){
             	VKmer key = new VKmer();
@@ -70,9 +72,7 @@ public class RayValue extends VertexValueWritable {
             	
             }  
         }
-        
         if ((state & FIELDS.VISITED_LIST) != 0) {
-            getVisitedList().clear();
             int count = in.readInt();
             for (int i = 0; i < count; i++) {
                 VKmer m = new VKmer();
@@ -80,31 +80,28 @@ public class RayValue extends VertexValueWritable {
                 getVisitedList().add(m);
             }
         }
-        
         if ((state & FIELDS.PENDING_CANDIDATE_BRANCHES) != 0) {
-            getPendingCandiateBranchesMap().clear();
             int count = in.readInt();
             for (int i = 0; i < count; i++){
             	VKmer key = new VKmer();
             	key.readFields(in);
             	int value = in.readInt();
-            	pendingCandidateBranchesMap.put(key, value);
+            	getPendingCandiateBranchesMap().put(key, value);
             	
             }   
         }
-        /**
+        /*
+        getCandidateMsgs().clear();
         if ((state & FIELDS.CANDIDATE_MSGS) != 0) {
-            getCandidateMsgs().clear();
             int count = in.readInt();
             for (int i = 0; i < count; i++) {
                 RayMessage m = new RayMessage();
                 m.readFields(in);
-                candidateMsgs.add(m);
+                getCandidateMsgs.add(m);
             }
         }
-        **/
+        */
         if ((state & FIELDS.CANDIDATE_MSGS_MAP) != 0) {
-            getCandidateMsgsMap().clear();
             int count = in.readInt();
             for (int i = 0; i < count; i++) {
             	VKmer key = new VKmer();
@@ -116,12 +113,31 @@ public class RayValue extends VertexValueWritable {
                     m.readFields(in);
                     msgs.add(m);
                 }
-            	candidateMsgsMap.put(key, msgs);
+            	getCandidateMsgsMap().put(key, msgs);
             }
+        }
+        
+        if ((state & FIELDS.OUTGOING_EDGES_TO_KEEP) != 0) {
+        	int count = in.readInt();
+        	for (int i = 0; i < count; i++) {
+        		EDGETYPE et = EDGETYPE.fromByte(in.readByte());
+        		VKmer kmer = new VKmer();
+        		kmer.readFields(in);
+        		getOutgoingEdgesToKeep().add(new SimpleEntry<>(et, kmer));
+        	}
+        }
+        if ((state & FIELDS.INCOMING_EDGES_TO_KEEP) != 0) {
+        	int count = in.readInt();
+        	for (int i = 0; i < count; i++) {
+        		EDGETYPE et = EDGETYPE.fromByte(in.readByte());
+        		VKmer kmer = new VKmer();
+        		kmer.readFields(in);
+        		getIncomingEdgesToKeep().add(new SimpleEntry<>(et, kmer));
+        	}
         }
     }
 
-    @Override
+	@Override
     public void write(DataOutput out) throws IOException {
         state = 0;
         if (flippedFromInitialDirection != null) {
@@ -143,6 +159,12 @@ public class RayValue extends VertexValueWritable {
         }
         if (candidateMsgsMap != null && candidateMsgsMap.size() > 0) {
             state |= FIELDS.CANDIDATE_MSGS_MAP;
+        }
+        if (outgoingEdgesToKeep != null && outgoingEdgesToKeep.size() > 0) {
+            state |= FIELDS.OUTGOING_EDGES_TO_KEEP;
+        }
+        if (incomingEdgesToKeep != null && incomingEdgesToKeep.size() > 0) {
+            state |= FIELDS.INCOMING_EDGES_TO_KEEP;
         }
         super.write(out);
         
@@ -198,6 +220,20 @@ public class RayValue extends VertexValueWritable {
                 }
     		}
         }
+        if (outgoingEdgesToKeep != null && outgoingEdgesToKeep.size() > 0) {
+            out.writeInt(outgoingEdgesToKeep.size());
+            for (Entry<EDGETYPE, VKmer> entry : outgoingEdgesToKeep){
+            	out.writeByte(entry.getKey().get());
+            	entry.getValue().write(out);
+    		}
+        }
+        if (incomingEdgesToKeep != null && incomingEdgesToKeep.size() > 0) {
+            out.writeInt(incomingEdgesToKeep.size());
+            for (Entry<EDGETYPE, VKmer> entry : incomingEdgesToKeep){
+            	out.writeByte(entry.getKey().get());
+            	entry.getValue().write(out);
+    		}
+        }
     }
 
     @Override
@@ -209,6 +245,8 @@ public class RayValue extends VertexValueWritable {
         visitedList = null;
         pendingCandidateBranchesMap = null;
         candidateMsgsMap = null;
+        outgoingEdgesToKeep = null;
+        incomingEdgesToKeep = null;
     }
 
     /**
@@ -313,5 +351,26 @@ public class RayValue extends VertexValueWritable {
     	this.flippedFromInitialDirection= flippedFromInitialDirection;
     }
     
+    public ArrayList<Entry<EDGETYPE, VKmer>> getOutgoingEdgesToKeep() {
+    	if (outgoingEdgesToKeep == null) {
+    		outgoingEdgesToKeep = new ArrayList<>();
+    	}
+		return outgoingEdgesToKeep;
+	}
+    
+    public void setForwardEdgesToKeep(ArrayList<Entry<EDGETYPE, VKmer>> outgoingEdgesToKeep) {
+    	this.outgoingEdgesToKeep = outgoingEdgesToKeep;
+	}
+    
+    public ArrayList<Entry<EDGETYPE, VKmer>> getIncomingEdgesToKeep() {
+    	if (incomingEdgesToKeep == null) {
+    		incomingEdgesToKeep = new ArrayList<>();
+    	}
+		return incomingEdgesToKeep;
+	}
+    
+    public void setIncomingEdgesToKeep(ArrayList<Entry<EDGETYPE, VKmer>> incomingEdgesToKeep) {
+    	this.incomingEdgesToKeep = incomingEdgesToKeep;
+	}
     
 }
