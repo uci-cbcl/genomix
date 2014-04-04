@@ -10,10 +10,12 @@ import edu.uci.ics.genomix.pregelix.base.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.base.VertexValueWritable.State;
 
 /**
- * Graph clean pattern: Remove Lowcoverage
- * Detais: Chimeric reads and other sequencing artifacts create edges that are
- * only supported by a small number of reads. These edges are identified
- * and removed. This is then followed by recompressing the graph.
+ * Graph clean pattern: Remove Badcoverage
+ * Details: Chimeric reads and other sequencing artifacts create edges that are
+ * only supported by a small number of reads. Besides that, there are some nodes 
+ * with a very high coverage because of repeats. These edges/nodes are identified
+ * and removed. This is then followed by recompressing the graph. 
+ * 
  */
 public class RemoveBadCoverageVertex extends DeBruijnGraphCleanVertex<VertexValueWritable, MessageWritable> {
     protected static float minAverageCoverage = -1;
