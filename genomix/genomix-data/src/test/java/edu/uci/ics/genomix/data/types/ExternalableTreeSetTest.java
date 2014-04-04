@@ -165,7 +165,7 @@ public class ExternalableTreeSetTest implements Serializable {
         }
 
         try {
-            ExternalableTreeSet.removeAllExternalFiles();
+            FileManager.getManager().deleteAll();
         } catch (IOException e) {
             e.printStackTrace();
             Assert.fail(e.getMessage());
@@ -208,8 +208,7 @@ public class ExternalableTreeSetTest implements Serializable {
         }
 
         try {
-            ExternalableTreeSet.manager = null;
-            ExternalableTreeSet.setupManager(conf, tmpPath);
+            FileManager.getManager().initialize(conf, tmpPath);
         } catch (IOException e) {
             e.printStackTrace();
             Assert.fail(e.getLocalizedMessage());
@@ -228,8 +227,7 @@ public class ExternalableTreeSetTest implements Serializable {
         ExternalableTreeSet.setCountLimit(limit);
 
         try {
-            ExternalableTreeSet.manager = null;
-            ExternalableTreeSet.setupManager(conf, null);
+            FileManager.getManager().initialize(conf, null);
         } catch (IOException e) {
             e.printStackTrace();
             Assert.fail(e.getLocalizedMessage());
@@ -245,8 +243,7 @@ public class ExternalableTreeSetTest implements Serializable {
         ExternalableTreeSet.setCountLimit(limit);
 
         try {
-            ExternalableTreeSet.manager = null;
-            ExternalableTreeSet.setupManager(conf, null);
+            FileManager.getManager().initialize(conf, null);
         } catch (IOException e) {
             e.printStackTrace();
             Assert.fail(e.getLocalizedMessage());
@@ -301,7 +298,7 @@ public class ExternalableTreeSetTest implements Serializable {
         }
 
         try {
-            ExternalableTreeSet.removeAllExternalFiles();
+            FileManager.getManager().deleteAll();
         } catch (IOException e) {
             e.printStackTrace();
             Assert.fail(e.getMessage());
@@ -315,8 +312,7 @@ public class ExternalableTreeSetTest implements Serializable {
         ExternalableTreeSet.setCountLimit(limit);
 
         try {
-            ExternalableTreeSet.manager = null;
-            ExternalableTreeSet.setupManager(conf, null);
+            FileManager.getManager().initialize(conf, null);
         } catch (IOException e) {
             e.printStackTrace();
             Assert.fail(e.getLocalizedMessage());
@@ -387,7 +383,7 @@ public class ExternalableTreeSetTest implements Serializable {
         Assert.assertTrue(contains);
 
         try {
-            ExternalableTreeSet.removeAllExternalFiles();
+            FileManager.getManager().deleteAll();
         } catch (IOException e) {
             e.printStackTrace();
             Assert.fail(e.getMessage());
