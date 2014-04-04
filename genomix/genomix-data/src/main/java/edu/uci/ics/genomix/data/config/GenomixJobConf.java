@@ -407,10 +407,10 @@ public class GenomixJobConf extends JobConf {
             throw new IllegalArgumentException("pathMergeRandom_probBeingRandomHead must be less than 1.0!");
         
         if (Float.parseFloat(conf.get(REMOVE_BAD_COVERAGE_MIN_COVERAGE)) < 0)
-            throw new IllegalArgumentException("removeLowCoverage_minCoverage cannot be negative!");
+            throw new IllegalArgumentException("removeLBadCoverage_minCoverage cannot be negative!");
         
         if (Float.parseFloat(conf.get(REMOVE_BAD_COVERAGE_MAX_COVERAGE)) < 0)
-            throw new IllegalArgumentException("removeLowCoverage_maxCoverage cannot be negative!");
+            throw new IllegalArgumentException("removeBadCoverage_maxCoverage cannot be negative!");
 
 
         if (Integer.parseInt(conf.get(TIP_REMOVE_MAX_LENGTH)) < kmerLength)
