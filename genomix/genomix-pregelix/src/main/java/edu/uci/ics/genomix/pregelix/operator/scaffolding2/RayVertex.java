@@ -53,6 +53,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
     private static int MAX_OUTER_DISTANCE;
     private static int MIN_OUTER_DISTANCE;
     private static int MAX_DISTANCE; // the max(readlengths, outerdistances)
+    private static int EXPAND_CANDIDATE_BRANCHES_MAX_DISTANCE; // the max distance (in bp) the candidate branch expansion should reach across. 
 
     public static final boolean REMOVE_OTHER_OUTGOING = true; // whether to remove other outgoing branches when a dominant edge is chosen
     public static final boolean REMOVE_OTHER_INCOMING = false; // whether to remove other incoming branches when a dominant edge is chosen
@@ -109,6 +110,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
             }
         }
         MAX_DISTANCE = Math.max(MAX_OUTER_DISTANCE, MAX_READ_LENGTH);
+        EXPAND_CANDIDATE_BRANCHES_MAX_DISTANCE = Math.min(MAX_DISTANCE, conf.getInt(GenomixJobConf.SCAFFOLDING_EXPAND_CANDIDATE_BRANCHES_MAX_DISTANCE, Integer.MAX_VALUE));
 
         if (getSuperstep() == 1) {
             // manually clear state
@@ -537,7 +539,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
             outgoingMsg.candidatePathIds.append(new VKmer(id));
 
             // pass this kmer along to my adjacent branches
-            if (outgoingMsg.getToScoreKmer().getKmerLetterLength() >= MAX_DISTANCE || vertex.degree(nextDir) == 0) {
+            if (outgoingMsg.getToScoreKmer().getKmerLetterLength() >= EXPAND_CANDIDATE_BRANCHES_MAX_DISTANCE || vertex.degree(nextDir) == 0) {
                 // this branch doesn't need to search any longer-- pass back to frontier
                 readyToScore = true;
             }
