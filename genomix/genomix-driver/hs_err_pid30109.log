@@ -1,0 +1,1272 @@
+#
+# A fatal error has been detected by the Java Runtime Environment:
+#
+#  SIGSEGV (0xb) at pc=0x00007fed028afbeb, pid=30109, tid=140655113864960
+#
+# JRE version: Java(TM) SE Runtime Environment (7.0_51-b13) (build 1.7.0_51-b13)
+# Java VM: Java HotSpot(TM) 64-Bit Server VM (24.51-b03 mixed mode linux-amd64 compressed oops)
+# Problematic frame:
+# V  [libjvm.so+0x551beb]  STWGCTimer::register_gc_start(long)+0x1b
+#
+# Failed to write core dump. Core dumps have been disabled. To enable core dumping, try "ulimit -c unlimited" before starting Java again
+#
+# If you would like to submit a bug report, please visit:
+#   http://bugreport.sun.com/bugreport/crash.jsp
+#
+
+---------------  T H R E A D  ---------------
+
+Current thread (0x00007fecfc078800):  VMThread [stack: 0x00007fecd2090000,0x00007fecd2191000] [id=30125]
+
+siginfo:si_signo=SIGSEGV: si_errno=0, si_code=1 (SEGV_MAPERR), si_addr=0x0000000000000000
+
+Registers:
+RAX=0x0000000000000000, RBX=0x00007fecfc01e740, RCX=0x0000000000000001, RDX=0x000000000004aef2
+RSP=0x00007fecd218f3f0, RBP=0x00007fecd218f420, RSI=0x000000000c8ce382, RDI=0x00007fed03199cc0
+R8 =0x000000000c8ce382, R9 =0x00000000533c49d3, R10=0x0000000000000001, R11=0x0000000000000001
+R12=0x00007fecfc022ee0, R13=0x00007fed03199cc0, R14=0x00007fed031ae2d8, R15=0x000000000000000a
+RIP=0x00007fed028afbeb, EFLAGS=0x0000000000010206, CSGSFS=0x6552000000000033, ERR=0x0000000000000006
+  TRAPNO=0x000000000000000e
+
+Top of Stack: (sp=0x00007fecd218f3f0)
+0x00007fecd218f3f0:   00007fed031ae2d8 00007fecfc01e740
+0x00007fecd218f400:   00007fecfc022ee0 000000000000000a
+0x00007fecd218f410:   00007fed031ae2d8 000000000000000a
+0x00007fecd218f420:   00007fecd218f7e0 00007fed02bda798
+0x00007fecd218f430:   00007fecd218f450 00007fecd218f470
+0x00007fecd218f440:   00007fecd218f490 00007fed028b10ea
+0x00007fecd218f450:   00007fecd218f490 00007fed028b0c0a
+0x00007fecd218f460:   0000000000000000 0000000000000000
+0x00007fecd218f470:   00007fed03141600 00000007000000a4
+0x00007fecd218f480:   00007fecd218f4c0 00007fed028b0a4a
+0x00007fecd218f490:   0000000000000000 0000000000000000
+0x00007fecd218f4a0:   00007fed0318bf00 00007fed03199a40
+0x00007fecd218f4b0:   00007fed0318bff3 00007fed03199a40
+0x00007fecd218f4c0:   00007fecd218f4e0 00007fed028b0382
+0x00007fecd218f4d0:   00000000533c49c7 00007fecfc023d10
+0x00007fecd218f4e0:   00007fecd218f7e0 00007fed02bd5ee2
+0x00007fecd218f4f0:   0000000052d00000 000000000dd00000
+0x00007fecd218f500:   0000000000000001 0000000000000013
+0x00007fecd218f510:   00007fecfc021270 00007fed0000000a
+0x00007fecd218f520:   00007fecfc021270 00007fecd218f6a0
+0x00007fecd218f530:   00007fecd218f730 00007fecd218f6e0
+0x00007fecd218f540:   00007fecd218f770 00007fed031984f0
+0x00007fecd218f550:   00007fecd218f780 00007fecfc021270
+0x00007fecd218f560:   00007fecfc021270 0000000052d00000
+0x00007fecd218f570:   00000013fc021270 00007fecfc021520
+0x00007fecd218f580:   00007fecfc0215b0 00007fecfc0234c0
+0x00007fecd218f590:   00007fecfc022ee0 00007fecfc075bc0
+0x00007fecd218f5a0:   00007fecfc035680 00007fecfc035690
+0x00007fecd218f5b0:   00007fecfc035a68 00000000000003d8
+0x00007fecd218f5c0:   00000000003ee072 000000000a596f86
+0x00007fecd218f5d0:   004347206c6c7546 000000000a596ff3
+0x00007fecd218f5e0:   004347206c6c7546 00007fecfc075bc0 
+
+Instructions: (pc=0x00007fed028afbeb)
+0x00007fed028afbcb:   00 00 00 00 00 55 49 89 f0 48 89 e5 41 57 41 56
+0x00007fed028afbdb:   41 55 49 89 fd 41 54 53 48 83 ec 08 48 8b 47 18
+0x00007fed028afbeb:   c7 00 00 00 00 00 48 8b 5f 18 c7 47 34 00 00 00
+0x00007fed028afbfb:   00 48 c7 47 38 00 00 00 00 48 c7 47 40 00 00 00 
+
+Register to memory mapping:
+
+RAX=0x0000000000000000 is an unknown value
+RBX=0x00007fecfc01e740 is an unknown value
+RCX=0x0000000000000001 is an unknown value
+RDX=0x000000000004aef2 is an unknown value
+RSP=0x00007fecd218f3f0 is an unknown value
+RBP=0x00007fecd218f420 is an unknown value
+RSI=0x000000000c8ce382 is an unknown value
+RDI=0x00007fed03199cc0: <offset 0xe3bcc0> in /home/elmira/WORK/sources/jdk1.7.0_51/jre/lib/amd64/server/libjvm.so at 0x00007fed0235e000
+R8 =0x000000000c8ce382 is an unknown value
+R9 =0x00000000533c49d3 is an unknown value
+R10=0x0000000000000001 is an unknown value
+R11=0x0000000000000001 is an unknown value
+R12=0x00007fecfc022ee0 is an unknown value
+R13=0x00007fed03199cc0: <offset 0xe3bcc0> in /home/elmira/WORK/sources/jdk1.7.0_51/jre/lib/amd64/server/libjvm.so at 0x00007fed0235e000
+R14=0x00007fed031ae2d8: <offset 0xe502d8> in /home/elmira/WORK/sources/jdk1.7.0_51/jre/lib/amd64/server/libjvm.so at 0x00007fed0235e000
+R15=0x000000000000000a is an unknown value
+
+
+Stack: [0x00007fecd2090000,0x00007fecd2191000],  sp=0x00007fecd218f3f0,  free space=1020k
+Native frames: (J=compiled Java code, j=interpreted, Vv=VM code, C=native code)
+V  [libjvm.so+0x551beb]  STWGCTimer::register_gc_start(long)+0x1b
+V  [libjvm.so+0x87c798]  PSScavenge::invoke_no_policy()+0x28
+V  [libjvm.so+0x87de11]  PSScavenge::invoke()+0x41
+V  [libjvm.so+0x834f10]  ParallelScavengeHeap::failed_mem_allocate(unsigned long)+0x70
+V  [libjvm.so+0x9947e7]  VM_ParallelGCFailedAllocation::doit()+0x97
+V  [libjvm.so+0x99bc15]  VM_Operation::evaluate()+0x55
+V  [libjvm.so+0x99a04a]  VMThread::evaluate_operation(VM_Operation*)+0xba
+V  [libjvm.so+0x99a3ce]  VMThread::loop()+0x1ce
+V  [libjvm.so+0x99a840]  VMThread::run()+0x70
+V  [libjvm.so+0x815538]  java_start(Thread*)+0x108
+
+VM_Operation (0x00007febed31bef0): ParallelGCFailedAllocation, mode: safepoint, requested by thread 0x00007fecb8003000
+
+
+---------------  P R O C E S S  ---------------
+
+Java Threads: ( => current thread )
+  0x00007fecb8004800 JavaThread "Thread-122" [_thread_blocked, id=4193, stack(0x00007febeca17000,0x00007febecb18000)]
+  0x00007fecb8003000 JavaThread "Thread-4" [_thread_blocked, id=4192, stack(0x00007febed21f000,0x00007febed320000)]
+  0x00007fecbc002000 JavaThread "SIGTERM handler" daemon [_thread_blocked, id=4189, stack(0x00007fecd1886000,0x00007fecd1987000)]
+  0x00007febf8b35000 JavaThread "Keep-Alive-Timer" daemon [_thread_blocked, id=4161, stack(0x00007febece1b000,0x00007febecf1c000)]
+  0x00007fec44001800 JavaThread "process reaper" daemon [_thread_blocked, id=4134, stack(0x00007fec70053000,0x00007fec7008c000)]
+  0x00007febf8b64800 JavaThread "Thread-2948" daemon [_thread_blocked, id=3900, stack(0x00007febeaa17000,0x00007febeab18000)]
+  0x00007febf8b63000 JavaThread "Thread-2946" daemon [_thread_blocked, id=3898, stack(0x00007febea7dc000,0x00007febea8dd000)]
+  0x00007febf8adc800 JavaThread "process reaper" daemon [_thread_blocked, id=30998, stack(0x00007febea8dd000,0x00007febea916000)]
+  0x00007febf8a4d000 JavaThread "qtp72307062-379" [_thread_blocked, id=30603, stack(0x00007febed52f000,0x00007febed630000)]
+  0x00007febf8a47800 JavaThread "qtp72307062-378" [_thread_blocked, id=30602, stack(0x00007febed630000,0x00007febed731000)]
+  0x00007febf8a3b000 JavaThread "qtp72307062-376" [_thread_blocked, id=30600, stack(0x00007febed857000,0x00007febed958000)]
+  0x00007febf8a3a800 JavaThread "qtp72307062-375" [_thread_blocked, id=30599, stack(0x00007febf1cdd000,0x00007febf1dde000)]
+  0x00007febf897a000 JavaThread "qtp72307062-374" [_thread_blocked, id=30598, stack(0x00007febed9e5000,0x00007febedae6000)]
+  0x00007febf891c000 JavaThread "qtp72307062-373" [_thread_blocked, id=30597, stack(0x00007febedae6000,0x00007febedbe7000)]
+  0x00007febf891a800 JavaThread "qtp72307062-372" [_thread_blocked, id=30596, stack(0x00007febedbe7000,0x00007febedce8000)]
+  0x00007febf8544800 JavaThread "Thread-318" daemon [_thread_blocked, id=30592, stack(0x00007febee7ac000,0x00007febee8ad000)]
+  0x00007febf84b3800 JavaThread "Thread-317" daemon [_thread_blocked, id=30591, stack(0x00007febee8ad000,0x00007febee9ae000)]
+  0x00007fecfca81800 JavaThread "IPC Network Listener Thread" daemon [_thread_in_native, id=30580, stack(0x00007febf37f8000,0x00007febf38f9000)]
+  0x00007fecfca81000 JavaThread "Thread-316" [_thread_blocked, id=30579, stack(0x00007febf0bcc000,0x00007febf0ccd000)]
+  0x00007fecfca74000 JavaThread "IPC Network Listener Thread" daemon [_thread_in_native, id=30577, stack(0x00007febf0ccd000,0x00007febf0dce000)]
+  0x00007fecfc95e000 JavaThread "AWT-XAWT" daemon [_thread_blocked, id=30517, stack(0x00007fec7008c000,0x00007fec7018d000)]
+  0x00007fecfc93e000 JavaThread "Java2D Disposer" daemon [_thread_blocked, id=30516, stack(0x00007febf0acb000,0x00007febf0bcc000)]
+  0x00007fecfc6a8000 JavaThread "Thread-117" daemon [_thread_blocked, id=30303, stack(0x00007febf0dce000,0x00007febf0ecf000)]
+  0x00007fecfc6a6000 JavaThread "TCPEndpoint IO Thread" daemon [_thread_in_native, id=30302, stack(0x00007febf0ecf000,0x00007febf0fd0000)]
+  0x00007fecfc6ab000 JavaThread "Thread-120" [_thread_blocked, id=30300, stack(0x00007febf10d1000,0x00007febf11d2000)]
+  0x00007fecfc8f2800 JavaThread "TCPEndpoint IO Thread" daemon [_thread_in_native, id=30299, stack(0x00007febf11d2000,0x00007febf12d3000)]
+  0x00007fecfc8e4000 JavaThread "IPC Network Listener Thread" daemon [_thread_in_native, id=30298, stack(0x00007febf12d3000,0x00007febf13d4000)]
+  0x00007fecfc8e3000 JavaThread "Timer-7" daemon [_thread_blocked, id=30292, stack(0x00007febf13d4000,0x00007febf14d5000)]
+  0x00007fecfc8cc000 JavaThread "TCPEndpoint IO Thread" daemon [_thread_in_native, id=30285, stack(0x00007febf15d6000,0x00007febf16d7000)]
+  0x00007fecfc8a8800 JavaThread "TCPEndpoint IO Thread" daemon [_thread_in_native, id=30283, stack(0x00007febf17d8000,0x00007febf18d9000)]
+  0x00007fecfc8a7800 JavaThread "IPC Network Listener Thread" daemon [_thread_in_native, id=30282, stack(0x00007febf18d9000,0x00007febf19da000)]
+  0x00007fecfc8a6800 JavaThread "Timer-6" daemon [_thread_blocked, id=30276, stack(0x00007fec736f7000,0x00007fec737f8000)]
+  0x00007fecfc885800 JavaThread "Thread-112" daemon [_thread_blocked, id=30275, stack(0x00007febf19da000,0x00007febf1adb000)]
+  0x00007fecfc883800 JavaThread "Thread-100" daemon [_thread_blocked, id=30274, stack(0x00007febf1adb000,0x00007febf1bdc000)]
+  0x00007fecfc867800 JavaThread "qtp72307062-136" [_thread_blocked, id=30273, stack(0x00007febf1bdc000,0x00007febf1cdd000)]
+  0x00007fecfc863800 JavaThread "qtp72307062-134" [_thread_blocked, id=30271, stack(0x00007febf1dde000,0x00007febf1edf000)]
+  0x00007fecfc861800 JavaThread "qtp72307062-133" [_thread_blocked, id=30270, stack(0x00007febf1edf000,0x00007febf1fe0000)]
+  0x00007fecfc85f800 JavaThread "qtp72307062-132 Selector1 SelectChannelConnector@0.0.0.0:16002 STARTED" [_thread_blocked, id=30269, stack(0x00007febf1fe0000,0x00007febf20e1000)]
+  0x00007fecfc85d800 JavaThread "qtp72307062-131 Selector0 SelectChannelConnector@0.0.0.0:16002 STARTED" [_thread_blocked, id=30268, stack(0x00007febf20e1000,0x00007febf21e2000)]
+  0x00007fecfc85b800 JavaThread "qtp72307062-130 Acceptor1 SelectChannelConnector@0.0.0.0:16002 STARTING" [_thread_blocked, id=30267, stack(0x00007febf21e2000,0x00007febf22e3000)]
+  0x00007fecfc859000 JavaThread "qtp72307062-129 Acceptor0 SelectChannelConnector@0.0.0.0:16002 STARTING" [_thread_in_native, id=30266, stack(0x00007febf22e3000,0x00007febf23e4000)]
+  0x00007fecfc857800 JavaThread "HashSessionScavenger-3" daemon [_thread_blocked, id=30265, stack(0x00007febf23e4000,0x00007febf24e5000)]
+  0x00007fecfc855000 JavaThread "HashSessionScavenger-2" daemon [_thread_blocked, id=30264, stack(0x00007febf24e5000,0x00007febf25e6000)]
+  0x00007fecfc5bd800 JavaThread "IPC Network Listener Thread" daemon [_thread_in_native, id=30263, stack(0x00007febf25e6000,0x00007febf26e7000)]
+  0x00007fecfc5bb800 JavaThread "IPC Network Listener Thread" daemon [_thread_in_native, id=30262, stack(0x00007febf26e7000,0x00007febf27e8000)]
+  0x00007fecfc5f4000 JavaThread "Timer-5" daemon [_thread_blocked, id=30261, stack(0x00007febf27e8000,0x00007febf28e9000)]
+  0x00007fecfc82c000 JavaThread "Thread-87" daemon [_thread_blocked, id=30259, stack(0x00007febf29ea000,0x00007febf2aeb000)]
+  0x00007fecfc5b8800 JavaThread "qtp124540053-121" [_thread_blocked, id=30258, stack(0x00007febf2aeb000,0x00007febf2bec000)]
+  0x00007fecfc5b6800 JavaThread "qtp124540053-120" [_thread_blocked, id=30257, stack(0x00007febf2bec000,0x00007febf2ced000)]
+  0x00007fecfc5b4800 JavaThread "qtp124540053-119" [_thread_blocked, id=30256, stack(0x00007febf2ced000,0x00007febf2dee000)]
+  0x00007fecfc5b2800 JavaThread "qtp124540053-118" [_thread_blocked, id=30255, stack(0x00007febf2dee000,0x00007febf2eef000)]
+  0x00007fecfc61f800 JavaThread "qtp124540053-117" [_thread_blocked, id=30254, stack(0x00007febf2eef000,0x00007febf2ff0000)]
+  0x00007fecfc61d800 JavaThread "qtp124540053-116" [_thread_blocked, id=30253, stack(0x00007febf2ff0000,0x00007febf30f1000)]
+  0x00007fecfc812800 JavaThread "IPC Network Listener Thread" daemon [_thread_in_native, id=30248, stack(0x00007febf34f5000,0x00007febf35f6000)]
+  0x00007fecfc810800 JavaThread "IPC Network Listener Thread" daemon [_thread_in_native, id=30247, stack(0x00007febf35f6000,0x00007febf36f7000)]
+  0x00007fecfc80c800 JavaThread "Timer-4" daemon [_thread_blocked, id=30246, stack(0x00007febf36f7000,0x00007febf37f8000)]
+  0x00007febf8030800 JavaThread "IPC Client (47) connection to localhost/127.0.0.1:48041 from elmira" daemon [_thread_blocked, id=30240, stack(0x00007febf38f9000,0x00007febf39fa000)]
+  0x00007febf8026800 JavaThread "Directory/File cleanup thread" daemon [_thread_blocked, id=30239, stack(0x00007febf39fa000,0x00007febf3afb000)]
+  0x00007febf8024000 JavaThread "taskCleanup" daemon [_thread_blocked, id=30238, stack(0x00007febf3afb000,0x00007febf3bfc000)]
+  0x00007fecfc563000 JavaThread "Thread-81" [_thread_blocked, id=30237, stack(0x00007febf3bfc000,0x00007febf3cfd000)]
+  0x00007fecfc561000 JavaThread "TaskLauncher for task" daemon [_thread_blocked, id=30236, stack(0x00007febf3cfd000,0x00007febf3dfe000)]
+  0x00007fecfc55b000 JavaThread "TaskLauncher for task" daemon [_thread_blocked, id=30235, stack(0x00007febf3dfe000,0x00007febf3eff000)]
+  0x00007fecfc555800 JavaThread "Map-events fetcher for all reduce tasks on tracker_host0.foo.com:localhost/127.0.0.1:35465" daemon [_thread_blocked, id=30234, stack(0x00007febf3eff000,0x00007febf4000000)]
+  0x00007fecfc551800 JavaThread "IPC Server handler 3 on 35465" daemon [_thread_blocked, id=30232, stack(0x00007fec7018d000,0x00007fec7028e000)]
+  0x00007fecfc550000 JavaThread "IPC Server handler 2 on 35465" daemon [_thread_blocked, id=30231, stack(0x00007fec7028e000,0x00007fec7038f000)]
+  0x00007fecfc54f000 JavaThread "IPC Server handler 1 on 35465" daemon [_thread_blocked, id=30230, stack(0x00007fec7038f000,0x00007fec70490000)]
+  0x00007fecfc5f8800 JavaThread "IPC Server handler 0 on 35465" daemon [_thread_blocked, id=30229, stack(0x00007fec70490000,0x00007fec70591000)]
+  0x00007fecfc5f7000 JavaThread "IPC Server listener on 35465" daemon [_thread_in_native, id=30228, stack(0x00007fec70591000,0x00007fec70692000)]
+  0x00007fecfc71c800 JavaThread "IPC Server Responder" daemon [_thread_in_native, id=30227, stack(0x00007fec70692000,0x00007fec70793000)]
+  0x00007fecfc742000 JavaThread "Timer-3" daemon [_thread_blocked, id=30226, stack(0x00007fec70793000,0x00007fec70894000)]
+  0x00007fecfc0bd800 JavaThread "1322452211@qtp3-0 - Acceptor0 SelectChannelConnector@0.0.0.0:60928" [_thread_blocked, id=30225, stack(0x00007fec70894000,0x00007fec70995000)]
+  0x00007fec04179000 JavaThread "IPC Server handler 9 on 48041" daemon [_thread_blocked, id=30224, stack(0x00007fec711d2000,0x00007fec712d3000)]
+  0x00007fec04177000 JavaThread "IPC Server handler 8 on 48041" daemon [_thread_blocked, id=30223, stack(0x00007fec712d3000,0x00007fec713d4000)]
+  0x00007fec04175000 JavaThread "IPC Server handler 7 on 48041" daemon [_thread_blocked, id=30222, stack(0x00007fec713d4000,0x00007fec714d5000)]
+  0x00007fec04173000 JavaThread "IPC Server handler 6 on 48041" daemon [_thread_blocked, id=30221, stack(0x00007fec714d5000,0x00007fec715d6000)]
+  0x00007fec04171000 JavaThread "IPC Server handler 5 on 48041" daemon [_thread_blocked, id=30220, stack(0x00007fec715d6000,0x00007fec716d7000)]
+  0x00007fec0416f000 JavaThread "IPC Server handler 4 on 48041" daemon [_thread_blocked, id=30219, stack(0x00007fec716d7000,0x00007fec717d8000)]
+  0x00007fec0416d000 JavaThread "IPC Server handler 3 on 48041" daemon [_thread_blocked, id=30218, stack(0x00007fec717d8000,0x00007fec718d9000)]
+  0x00007fec0416b000 JavaThread "IPC Server handler 2 on 48041" daemon [_thread_blocked, id=30217, stack(0x00007fec718d9000,0x00007fec719da000)]
+  0x00007fec04168800 JavaThread "IPC Server handler 1 on 48041" daemon [_thread_blocked, id=30216, stack(0x00007fec719da000,0x00007fec71adb000)]
+  0x00007fec04167000 JavaThread "IPC Server handler 0 on 48041" daemon [_thread_blocked, id=30215, stack(0x00007fec71adb000,0x00007fec71bdc000)]
+  0x00007fec04165800 JavaThread "IPC Server listener on 48041" daemon [_thread_in_native, id=30214, stack(0x00007fec71bdc000,0x00007fec71cdd000)]
+  0x00007fec04164000 JavaThread "IPC Server Responder" daemon [_thread_in_native, id=30213, stack(0x00007fec71cdd000,0x00007fec71dde000)]
+  0x00007fec04163000 JavaThread "expireLaunchingTasks" [_thread_blocked, id=30212, stack(0x00007fec71dde000,0x00007fec71edf000)]
+  0x00007fec0415d800 JavaThread "retireJobs" [_thread_blocked, id=30211, stack(0x00007fec71edf000,0x00007fec71fe0000)]
+  0x00007fec0415c800 JavaThread "expireTrackers" [_thread_blocked, id=30210, stack(0x00007fec721e2000,0x00007fec722e3000)]
+  0x00007fec0415a800 JavaThread "jobInitManager" daemon [_thread_blocked, id=30209, stack(0x00007fec71fe0000,0x00007fec720e1000)]
+  0x00007fec04125800 JavaThread "Thread-53" [_thread_blocked, id=30203, stack(0x00007fec722e3000,0x00007fec723e4000)]
+  0x00007fec04014000 JavaThread "Timer-2" daemon [_thread_blocked, id=30202, stack(0x00007fec723e4000,0x00007fec724e5000)]
+  0x00007fec04034000 JavaThread "976516775@qtp2-1 - Acceptor0 SelectChannelConnector@localhost:45083" [_thread_blocked, id=30201, stack(0x00007fec724e5000,0x00007fec725e6000)]
+  0x00007fec04030000 JavaThread "289301850@qtp2-0" [_thread_blocked, id=30200, stack(0x00007fec725e6000,0x00007fec726e7000)]
+  0x00007fecfc427800 JavaThread "Thread-47" [_thread_blocked, id=30199, stack(0x00007fec726e7000,0x00007fec727e8000)]
+  0x00007fec14004800 JavaThread "org.apache.hadoop.hdfs.server.datanode.DataBlockScanner@18024087" daemon [_thread_blocked, id=30198, stack(0x00007fec727e8000,0x00007fec728e9000)]
+  0x00007fec14001000 JavaThread "org.apache.hadoop.hdfs.server.datanode.DataXceiverServer@50aff428" daemon [_thread_in_native, id=30192, stack(0x00007fec729ea000,0x00007fec72aeb000)]
+  0x00007fecfc7a4000 JavaThread "DataNode: [build/test/data/dfs/data/data1,build/test/data/dfs/data/data2]" daemon [_thread_blocked, id=30191, stack(0x00007fec72aeb000,0x00007fec72bec000)]
+  0x00007fecfc7a2000 JavaThread "IPC Server handler 2 on 44752" daemon [_thread_blocked, id=30190, stack(0x00007fec72bec000,0x00007fec72ced000)]
+  0x00007fecfc7a0000 JavaThread "IPC Server handler 1 on 44752" daemon [_thread_blocked, id=30189, stack(0x00007fec72ced000,0x00007fec72dee000)]
+  0x00007fecfc79d800 JavaThread "IPC Server handler 0 on 44752" daemon [_thread_blocked, id=30188, stack(0x00007fec72dee000,0x00007fec72eef000)]
+  0x00007fecfc79b800 JavaThread "IPC Server listener on 44752" daemon [_thread_in_native, id=30187, stack(0x00007fec72eef000,0x00007fec72ff0000)]
+  0x00007fecfc768800 JavaThread "IPC Server Responder" daemon [_thread_in_native, id=30186, stack(0x00007fec72ff0000,0x00007fec730f1000)]
+  0x00007fecfc75a800 JavaThread "Timer-1" daemon [_thread_blocked, id=30185, stack(0x00007fec730f1000,0x00007fec731f2000)]
+  0x00007fecfc69f800 JavaThread "283885314@qtp1-1 - Acceptor0 SelectChannelConnector@localhost:46117" [_thread_blocked, id=30184, stack(0x00007fec731f2000,0x00007fec732f3000)]
+  0x00007fecfc69e000 JavaThread "280790780@qtp1-0" [_thread_blocked, id=30183, stack(0x00007fec732f3000,0x00007fec733f4000)]
+  0x00007fecfc688800 JavaThread "refreshUsed-/home/elmira/WORK/genomix/genomix/genomix-driver/build/test/data/dfs/data/data2" daemon [_thread_blocked, id=30182, stack(0x00007fec733f4000,0x00007fec734f5000)]
+  0x00007fecfc686000 JavaThread "refreshUsed-/home/elmira/WORK/genomix/genomix/genomix-driver/build/test/data/dfs/data/data1" daemon [_thread_blocked, id=30179, stack(0x00007fec734f5000,0x00007fec735f6000)]
+  0x00007fecfc683000 JavaThread "IPC Client (47) connection to localhost/127.0.0.1:51997 from elmira" daemon [_thread_blocked, id=30176, stack(0x00007fec735f6000,0x00007fec736f7000)]
+  0x00007fecfc661000 JavaThread "IPC Server handler 9 on 51997" daemon [_thread_blocked, id=30171, stack(0x00007fec737f8000,0x00007fec738f9000)]
+  0x00007fecfc65f000 JavaThread "IPC Server handler 8 on 51997" daemon [_thread_blocked, id=30170, stack(0x00007fec738f9000,0x00007fec739fa000)]
+  0x00007fecfc65d000 JavaThread "IPC Server handler 7 on 51997" daemon [_thread_blocked, id=30169, stack(0x00007fec739fa000,0x00007fec73afb000)]
+  0x00007fecfc65b000 JavaThread "IPC Server handler 6 on 51997" daemon [_thread_blocked, id=30168, stack(0x00007fec73afb000,0x00007fec73bfc000)]
+  0x00007fecfc646000 JavaThread "IPC Server handler 5 on 51997" daemon [_thread_blocked, id=30167, stack(0x00007fec73bfc000,0x00007fec73cfd000)]
+  0x00007fecfc644000 JavaThread "IPC Server handler 4 on 51997" daemon [_thread_blocked, id=30166, stack(0x00007fec73cfd000,0x00007fec73dfe000)]
+  0x00007fecfc642800 JavaThread "IPC Server handler 3 on 51997" daemon [_thread_blocked, id=30165, stack(0x00007fec73dfe000,0x00007fec73eff000)]
+  0x00007fecfc638800 JavaThread "IPC Server handler 2 on 51997" daemon [_thread_blocked, id=30164, stack(0x00007fec73eff000,0x00007fec74000000)]
+  0x00007fecfc63f800 JavaThread "IPC Server handler 1 on 51997" daemon [_thread_blocked, id=30163, stack(0x00007fecd0008000,0x00007fecd0109000)]
+  0x00007fecfc63e800 JavaThread "IPC Server handler 0 on 51997" daemon [_thread_blocked, id=30162, stack(0x00007fecd0109000,0x00007fecd020a000)]
+  0x00007fecfc648000 JavaThread "IPC Server listener on 51997" daemon [_thread_in_native, id=30161, stack(0x00007fecd020a000,0x00007fecd030b000)]
+  0x00007fecfc649800 JavaThread "IPC Server Responder" daemon [_thread_in_native, id=30160, stack(0x00007fecd030b000,0x00007fecd040c000)]
+  0x00007fecfc511800 JavaThread "Timer-0" daemon [_thread_blocked, id=30159, stack(0x00007fecd040c000,0x00007fecd050d000)]
+  0x00007fecfc4d6800 JavaThread "2072009750@qtp0-1 - Acceptor0 SelectChannelConnector@localhost:47528" [_thread_blocked, id=30158, stack(0x00007fecd0511000,0x00007fecd0612000)]
+  0x00007fecfc4d3800 JavaThread "1232356156@qtp0-0" [_thread_blocked, id=30157, stack(0x00007fecd0612000,0x00007fecd0713000)]
+  0x00007fecfc434000 JavaThread "org.apache.hadoop.hdfs.server.namenode.DecommissionManager$Monitor@3b32d7bd" daemon [_thread_blocked, id=30156, stack(0x00007fecd0713000,0x00007fecd0814000)]
+  0x00007fecfc443000 JavaThread "org.apache.hadoop.hdfs.server.namenode.FSNamesystem$ReplicationMonitor@65778857" daemon [_thread_blocked, id=30155, stack(0x00007fecd0814000,0x00007fecd0915000)]
+  0x00007fecfc441800 JavaThread "org.apache.hadoop.hdfs.server.namenode.LeaseManager$Monitor@2d8e588c" daemon [_thread_blocked, id=30154, stack(0x00007fecd0915000,0x00007fecd0a16000)]
+  0x00007fecfc440000 JavaThread "org.apache.hadoop.hdfs.server.namenode.FSNamesystem$HeartbeatMonitor@57cd3447" daemon [_thread_blocked, id=30153, stack(0x00007fecd0a16000,0x00007fecd0b17000)]
+  0x00007fecfc43e000 JavaThread "org.apache.hadoop.hdfs.server.namenode.PendingReplicationBlocks$PendingReplicationMonitor@6f760238" daemon [_thread_blocked, id=30152, stack(0x00007fecd0d1f000,0x00007fecd0e20000)]
+  0x00007fecfc0b7800 JavaThread "Service Thread" daemon [_thread_blocked, id=30139, stack(0x00007fecd1583000,0x00007fecd1684000)]
+  0x00007fecfc0b5000 JavaThread "C2 CompilerThread1" daemon [_thread_blocked, id=30138, stack(0x00007fecd1684000,0x00007fecd1785000)]
+  0x00007fecfc0b2000 JavaThread "C2 CompilerThread0" daemon [_thread_blocked, id=30137, stack(0x00007fecd1785000,0x00007fecd1886000)]
+  0x00007fecfc0b0000 JavaThread "JDWP Event Helper Thread" daemon [_thread_blocked, id=30133, stack(0x00007fecd1987000,0x00007fecd1a88000)]
+  0x00007fecfc0ac000 JavaThread "JDWP Transport Listener: dt_socket" daemon [_thread_in_native, id=30130, stack(0x00007fecd1a88000,0x00007fecd1b89000)]
+  0x00007fecfc095000 JavaThread "Signal Dispatcher" daemon [_thread_blocked, id=30128, stack(0x00007fecd1d8d000,0x00007fecd1e8e000)]
+  0x00007fecfc07f000 JavaThread "Finalizer" daemon [_thread_blocked, id=30127, stack(0x00007fecd1e8e000,0x00007fecd1f8f000)]
+  0x00007fecfc07b000 JavaThread "Reference Handler" daemon [_thread_blocked, id=30126, stack(0x00007fecd1f8f000,0x00007fecd2090000)]
+  0x00007fecfc010800 JavaThread "main" [_thread_blocked, id=30116, stack(0x00007fed03cca000,0x00007fed03dcb000)]
+
+Other Threads:
+=>0x00007fecfc078800 VMThread [stack: 0x00007fecd2090000,0x00007fecd2191000] [id=30125]
+  0x00007fecfc0c2000 WatcherThread [stack: 0x00007fecd1482000,0x00007fecd1583000] [id=30140]
+
+VM state:at safepoint (normal execution)
+
+VM Mutex/Monitor currently owned by a thread:  ([mutex/lock_event])
+[0x00007fecfc00ca30] Threads_lock - owner thread: 0x00007fecfc078800
+[0x00007fecfc00cf30] Heap_lock - owner thread: 0x00007fecb8003000
+
+Heap
+ PSYoungGen      total 295424K, used 69120K [0x00000007d6900000, 0x00000007f6780000, 0x0000000800000000)
+  eden space 69120K, 100% used [0x00000007d6900000,0x00000007dac80000,0x00000007dac80000)
+  from space 226304K, 0% used [0x00000007e8980000,0x00000007e8980000,0x00000007f6680000)
+  to   space 226304K, 0% used [0x00000007dac80000,0x00000007dac80000,0x00000007e8980000)
+ ParOldGen       total 1356800K, used 1356511K [0x0000000783c00000, 0x00000007d6900000, 0x00000007d6900000)
+  object space 1356800K, 99% used [0x0000000783c00000,0x00000007d68b7c30,0x00000007d6900000)
+ PSPermGen       total 32768K, used 32297K [0x000000077ea00000, 0x0000000780a00000, 0x0000000783c00000)
+  object space 32768K, 98% used [0x000000077ea00000,0x000000078098a700,0x0000000780a00000)
+
+Card table byte_map: [0x00007fed00096000,0x00007fed004a2000] byte_map_base: 0x00007fecfc4a1000
+
+Polling page: 0x00007fed03de3000
+
+Code Cache  [0x00007fecf9000000, 0x00007fecf94d0000, 0x00007fecfc000000)
+ total_blobs=2261 nmethods=1590 adapters=631 free_code_cache=44344Kb largest_free_block=45322944
+
+Compilation events (10 events):
+Event: 190.744 Thread 0x00007fecfc0b2000 1732             com.sun.org.apache.xerces.internal.impl.XMLEntityManager::getPropertyDefault (36 bytes)
+Event: 190.746 Thread 0x00007fecfc0b2000 nmethod 1732 0x00007fecf91c3150 code [0x00007fecf91c32a0, 0x00007fecf91c3558]
+Event: 190.753 Thread 0x00007fecfc0b5000 1733             com.sun.org.apache.xerces.internal.utils.XMLSecurityManager::readSystemProperties (99 bytes)
+Event: 191.488 Thread 0x00007fecfc0b5000 nmethod 1733 0x00007fecf92121d0 code [0x00007fecf92124a0, 0x00007fecf92136d0]
+Event: 202.373 Thread 0x00007fecfc0b5000 1735             sun.misc.FloatingDecimal::toJavaFormatString (30 bytes)
+Event: 202.373 Thread 0x00007fecfc0b2000 1734             sun.misc.FloatingDecimal::getChars (515 bytes)
+Event: 202.516 Thread 0x00007fecfc0b5000 nmethod 1735 0x00007fecf949bad0 code [0x00007fecf949bc80, 0x00007fecf949c1a8]
+Event: 202.516 Thread 0x00007fecfc0b5000 1736             sun.misc.FloatingDecimal::<init> (225 bytes)
+Event: 202.522 Thread 0x00007fecfc0b2000 nmethod 1734 0x00007fecf94bd150 code [0x00007fecf94bd340, 0x00007fecf94be258]
+Event: 202.565 Thread 0x00007fecfc0b5000 nmethod 1736 0x00007fecf91c2cd0 code [0x00007fecf91c2e20, 0x00007fecf91c3028]
+
+GC Heap History (10 events):
+Event: 196.612 GC heap before
+{Heap before GC invocations=161 (full 45):
+ PSYoungGen      total 295424K, used 75263K [0x00000007d6900000, 0x00000007f6780000, 0x0000000800000000)
+  eden space 69120K, 100% used [0x00000007d6900000,0x00000007dac80000,0x00000007dac80000)
+  from space 226304K, 2% used [0x00000007e8980000,0x00000007e8f7ffd0,0x00000007f6680000)
+  to   space 226304K, 0% used [0x00000007dac80000,0x00000007dac80000,0x00000007e8980000)
+ ParOldGen       total 1356800K, used 1356525K [0x0000000783c00000, 0x00000007d6900000, 0x00000007d6900000)
+  object space 1356800K, 99% used [0x0000000783c00000,0x00000007d68bb780,0x00000007d6900000)
+ PSPermGen       total 32256K, used 32192K [0x000000077ea00000, 0x0000000780980000, 0x0000000783c00000)
+  object space 32256K, 99% used [0x000000077ea00000,0x0000000780970390,0x0000000780980000)
+Event: 196.803 GC heap after
+Heap after GC invocations=161 (full 45):
+ PSYoungGen      total 295424K, used 74523K [0x00000007d6900000, 0x00000007f6780000, 0x0000000800000000)
+  eden space 69120K, 98% used [0x00000007d6900000,0x00000007dabc6d10,0x00000007dac80000)
+  from space 226304K, 2% used [0x00000007e8980000,0x00000007e8f7ffd0,0x00000007f6680000)
+  to   space 226304K, 0% used [0x00000007dac80000,0x00000007dac80000,0x00000007e8980000)
+ ParOldGen       total 1356800K, used 1356520K [0x0000000783c00000, 0x00000007d6900000, 0x00000007d6900000)
+  object space 1356800K, 99% used [0x0000000783c00000,0x00000007d68ba070,0x00000007d6900000)
+ PSPermGen       total 32256K, used 32192K [0x000000077ea00000, 0x0000000780980000, 0x0000000783c00000)
+  object space 32256K, 99% used [0x000000077ea00000,0x0000000780970390,0x0000000780980000)
+}
+Event: 196.867 GC heap before
+{Heap before GC invocations=162 (full 46):
+ PSYoungGen      total 295424K, used 75263K [0x00000007d6900000, 0x00000007f6780000, 0x0000000800000000)
+  eden space 69120K, 100% used [0x00000007d6900000,0x00000007dac80000,0x00000007dac80000)
+  from space 226304K, 2% used [0x00000007e8980000,0x00000007e8f7ffd0,0x00000007f6680000)
+  to   space 226304K, 0% used [0x00000007dac80000,0x00000007dac80000,0x00000007e8980000)
+ ParOldGen       total 1356800K, used 1356520K [0x0000000783c00000, 0x00000007d6900000, 0x00000007d6900000)
+  object space 1356800K, 99% used [0x0000000783c00000,0x00000007d68ba070,0x00000007d6900000)
+ PSPermGen       total 32256K, used 32192K [0x000000077ea00000, 0x0000000780980000, 0x0000000783c00000)
+  object space 32256K, 99% used [0x000000077ea00000,0x0000000780970390,0x0000000780980000)
+Event: 196.915 GC heap after
+Heap after GC invocations=162 (full 46):
+ PSYoungGen      total 295424K, used 74495K [0x00000007d6900000, 0x00000007f6780000, 0x0000000800000000)
+  eden space 69120K, 98% used [0x00000007d6900000,0x00000007dabbff68,0x00000007dac80000)
+  from space 226304K, 2% used [0x00000007e8980000,0x00000007e8f7ffd0,0x00000007f6680000)
+  to   space 226304K, 0% used [0x00000007dac80000,0x00000007dac80000,0x00000007e8980000)
+ ParOldGen       total 1356800K, used 1356520K [0x0000000783c00000, 0x00000007d6900000, 0x00000007d6900000)
+  object space 1356800K, 99% used [0x0000000783c00000,0x00000007d68ba038,0x00000007d6900000)
+ PSPermGen       total 32256K, used 32192K [0x000000077ea00000, 0x0000000780980000, 0x0000000783c00000)
+  object space 32256K, 99% used [0x000000077ea00000,0x0000000780970390,0x0000000780980000)
+}
+Event: 196.918 GC heap before
+{Heap before GC invocations=163 (full 47):
+ PSYoungGen      total 295424K, used 75174K [0x00000007d6900000, 0x00000007f6780000, 0x0000000800000000)
+  eden space 69120K, 99% used [0x00000007d6900000,0x00000007dac69bc0,0x00000007dac80000)
+  from space 226304K, 2% used [0x00000007e8980000,0x00000007e8f7ffd0,0x00000007f6680000)
+  to   space 226304K, 0% used [0x00000007dac80000,0x00000007dac80000,0x00000007e8980000)
+ ParOldGen       total 1356800K, used 1356520K [0x0000000783c00000, 0x00000007d6900000, 0x00000007d6900000)
+  object space 1356800K, 99% used [0x0000000783c00000,0x00000007d68ba038,0x00000007d6900000)
+ PSPermGen       total 32256K, used 32192K [0x000000077ea00000, 0x0000000780980000, 0x0000000783c00000)
+  object space 32256K, 99% used [0x000000077ea00000,0x0000000780970390,0x0000000780980000)
+Event: 196.997 GC heap after
+Heap after GC invocations=163 (full 47):
+ PSYoungGen      total 295424K, used 74584K [0x00000007d6900000, 0x00000007f6780000, 0x0000000800000000)
+  eden space 69120K, 99% used [0x00000007d6900000,0x00000007dabd6150,0x00000007dac80000)
+  from space 226304K, 2% used [0x00000007e8980000,0x00000007e8f7ffd0,0x00000007f6680000)
+  to   space 226304K, 0% used [0x00000007dac80000,0x00000007dac80000,0x00000007e8980000)
+ ParOldGen       total 1356800K, used 1356511K [0x0000000783c00000, 0x00000007d6900000, 0x00000007d6900000)
+  object space 1356800K, 99% used [0x0000000783c00000,0x00000007d68b7f98,0x00000007d6900000)
+ PSPermGen       total 32256K, used 32192K [0x000000077ea00000, 0x0000000780980000, 0x0000000783c00000)
+  object space 32256K, 99% used [0x000000077ea00000,0x0000000780970390,0x0000000780980000)
+}
+Event: 196.997 GC heap before
+{Heap before GC invocations=164 (full 48):
+ PSYoungGen      total 295424K, used 74584K [0x00000007d6900000, 0x00000007f6780000, 0x0000000800000000)
+  eden space 69120K, 99% used [0x00000007d6900000,0x00000007dabd6150,0x00000007dac80000)
+  from space 226304K, 2% used [0x00000007e8980000,0x00000007e8f7ffd0,0x00000007f6680000)
+  to   space 226304K, 0% used [0x00000007dac80000,0x00000007dac80000,0x00000007e8980000)
+ ParOldGen       total 1356800K, used 1356511K [0x0000000783c00000, 0x00000007d6900000, 0x00000007d6900000)
+  object space 1356800K, 99% used [0x0000000783c00000,0x00000007d68b7f98,0x00000007d6900000)
+ PSPermGen       total 32256K, used 32192K [0x000000077ea00000, 0x0000000780980000, 0x0000000783c00000)
+  object space 32256K, 99% used [0x000000077ea00000,0x0000000780970390,0x0000000780980000)
+Event: 197.037 GC heap after
+Heap after GC invocations=164 (full 48):
+ PSYoungGen      total 295424K, used 74559K [0x00000007d6900000, 0x00000007f6780000, 0x0000000800000000)
+  eden space 69120K, 98% used [0x00000007d6900000,0x00000007dabcfc40,0x00000007dac80000)
+  from space 226304K, 2% used [0x00000007e8980000,0x00000007e8f7ffd0,0x00000007f6680000)
+  to   space 226304K, 0% used [0x00000007dac80000,0x00000007dac80000,0x00000007e8980000)
+ ParOldGen       total 1356800K, used 1356511K [0x0000000783c00000, 0x00000007d6900000, 0x00000007d6900000)
+  object space 1356800K, 99% used [0x0000000783c00000,0x00000007d68b7f98,0x00000007d6900000)
+ PSPermGen       total 32256K, used 32192K [0x000000077ea00000, 0x0000000780980000, 0x0000000783c00000)
+  object space 32256K, 99% used [0x000000077ea00000,0x0000000780970390,0x0000000780980000)
+}
+Event: 198.448 GC heap before
+{Heap before GC invocations=165 (full 49):
+ PSYoungGen      total 295424K, used 75263K [0x00000007d6900000, 0x00000007f6780000, 0x0000000800000000)
+  eden space 69120K, 100% used [0x00000007d6900000,0x00000007dac80000,0x00000007dac80000)
+  from space 226304K, 2% used [0x00000007e8980000,0x00000007e8f7ffd0,0x00000007f6680000)
+  to   space 226304K, 0% used [0x00000007dac80000,0x00000007dac80000,0x00000007e8980000)
+ ParOldGen       total 1356800K, used 1356515K [0x0000000783c00000, 0x00000007d6900000, 0x00000007d6900000)
+  object space 1356800K, 99% used [0x0000000783c00000,0x00000007d68b8ce8,0x00000007d6900000)
+ PSPermGen       total 32256K, used 32192K [0x000000077ea00000, 0x0000000780980000, 0x0000000783c00000)
+  object space 32256K, 99% used [0x000000077ea00000,0x0000000780970390,0x0000000780980000)
+Event: 198.563 GC heap after
+Heap after GC invocations=165 (full 49):
+ PSYoungGen      total 295424K, used 55831K [0x00000007d6900000, 0x00000007f6780000, 0x0000000800000000)
+  eden space 69120K, 80% used [0x00000007d6900000,0x00000007d9f85f28,0x00000007dac80000)
+  from space 226304K, 0% used [0x00000007e8980000,0x00000007e8980000,0x00000007f6680000)
+  to   space 226304K, 0% used [0x00000007dac80000,0x00000007dac80000,0x00000007e8980000)
+ ParOldGen       total 1356800K, used 1356511K [0x0000000783c00000, 0x00000007d6900000, 0x00000007d6900000)
+  object space 1356800K, 99% used [0x0000000783c00000,0x00000007d68b7c30,0x00000007d6900000)
+ PSPermGen       total 32256K, used 32192K [0x000000077ea00000, 0x0000000780980000, 0x0000000783c00000)
+  object space 32256K, 99% used [0x000000077ea00000,0x0000000780970390,0x0000000780980000)
+}
+
+Deoptimization events (10 events):
+Event: 201.612 Thread 0x00007fecfc8a7800 Uncommon trap: reason=unreached action=reinterpret pc=0x00007fecf9389918 method=java.io.ObjectStreamClass$WeakClassKey.equals(Ljava/lang/Object;)Z @ 31
+Event: 201.612 Thread 0x00007fecfc8a7800 Uncommon trap: reason=class_check action=maybe_recompile pc=0x00007fecf92bd6e8 method=java.util.concurrent.ConcurrentHashMap$Segment.put(Ljava/lang/Object;ILjava/lang/Object;Z)Ljava/lang/Object; @ 77
+Event: 201.612 Thread 0x00007fecfc8a7800 Uncommon trap: reason=class_check action=maybe_recompile pc=0x00007fecf94a49d8 method=java.io.ObjectStreamClass.lookup(Ljava/lang/Class;Z)Ljava/io/ObjectStreamClass; @ 152
+Event: 201.613 Thread 0x00007fecfc8a7800 Uncommon trap: reason=class_check action=maybe_recompile pc=0x00007fecf94a49d8 method=java.io.ObjectStreamClass.lookup(Ljava/lang/Class;Z)Ljava/io/ObjectStreamClass; @ 152
+Event: 201.613 Thread 0x00007fecfc8a7800 Uncommon trap: reason=class_check action=maybe_recompile pc=0x00007fecf92bd6e8 method=java.util.concurrent.ConcurrentHashMap$Segment.put(Ljava/lang/Object;ILjava/lang/Object;Z)Ljava/lang/Object; @ 77
+Event: 201.613 Thread 0x00007fecfc8a7800 Uncommon trap: reason=class_check action=maybe_recompile pc=0x00007fecf94a49d8 method=java.io.ObjectStreamClass.lookup(Ljava/lang/Class;Z)Ljava/io/ObjectStreamClass; @ 152
+Event: 202.380 Thread 0x00007fecfca81000 Uncommon trap: reason=unhandled action=none pc=0x00007fecf9348004 method=java.lang.Long.parseLong(Ljava/lang/String;I)J @ 13
+Event: 209.952 Thread 0x00007fecfc095000 Uncommon trap: reason=unreached action=reinterpret pc=0x00007fecf93b5370 method=java.security.AccessControlContext.optimize()Ljava/security/AccessControlContext; @ 23
+Event: 209.964 Thread 0x00007fecb8008000 Uncommon trap: reason=unreached action=reinterpret pc=0x00007fecf91baa48 method=java.util.HashMap.getEntry(Ljava/lang/Object;)Ljava/util/HashMap$Entry; @ 10
+Event: 210.219 Thread 0x00007fecfc61c000 Uncommon trap: reason=unloaded action=reinterpret pc=0x00007fecf91a356c method=java.nio.channels.spi.AbstractInterruptibleChannel.end(Z)V @ 41
+
+Internal exceptions (10 events):
+Event: 210.556 Thread 0x00007fecb8003000 Threw 0x00000007dab90d08 at /HUDSON/workspace/7u-2-build-linux-amd64@2/jdk7u51/527/hotspot/src/share/vm/prims/jvm.cpp:1244
+Event: 210.557 Thread 0x00007fecb8003000 Threw 0x00000007dabacbc0 at /HUDSON/workspace/7u-2-build-linux-amd64@2/jdk7u51/527/hotspot/src/share/vm/prims/jvm.cpp:1244
+Event: 210.557 Thread 0x00007fecb8003000 Threw 0x00000007dabc5c50 at /HUDSON/workspace/7u-2-build-linux-amd64@2/jdk7u51/527/hotspot/src/share/vm/prims/jvm.cpp:1244
+Event: 210.557 Thread 0x00007fecb8003000 Threw 0x00000007dabdd610 at /HUDSON/workspace/7u-2-build-linux-amd64@2/jdk7u51/527/hotspot/src/share/vm/prims/jvm.cpp:1244
+Event: 210.557 Thread 0x00007fecb8003000 Threw 0x00000007dabf7280 at /HUDSON/workspace/7u-2-build-linux-amd64@2/jdk7u51/527/hotspot/src/share/vm/prims/jvm.cpp:1244
+Event: 210.558 Thread 0x00007fecb8003000 Threw 0x00000007dac0f5f0 at /HUDSON/workspace/7u-2-build-linux-amd64@2/jdk7u51/527/hotspot/src/share/vm/prims/jvm.cpp:1244
+Event: 210.558 Thread 0x00007fecb8003000 Threw 0x00000007dac27318 at /HUDSON/workspace/7u-2-build-linux-amd64@2/jdk7u51/527/hotspot/src/share/vm/prims/jvm.cpp:1244
+Event: 210.558 Thread 0x00007fecb8003000 Threw 0x00000007dac40080 at /HUDSON/workspace/7u-2-build-linux-amd64@2/jdk7u51/527/hotspot/src/share/vm/prims/jvm.cpp:1244
+Event: 210.558 Thread 0x00007fecb8003000 Threw 0x00000007dac595f0 at /HUDSON/workspace/7u-2-build-linux-amd64@2/jdk7u51/527/hotspot/src/share/vm/prims/jvm.cpp:1244
+Event: 210.560 Thread 0x00007fecb8003000 Threw 0x00000007dac78418 at /HUDSON/workspace/7u-2-build-linux-amd64@2/jdk7u51/527/hotspot/src/share/vm/prims/jvm.cpp:1244
+
+Events (10 events):
+Event: 210.558 loading class 0x00007febf8040770 done
+Event: 210.558 loading class 0x00007febf8040150
+Event: 210.558 loading class 0x00007febf8040150 done
+Event: 210.559 Executing VM operation: RevokeBias
+Event: 210.559 Executing VM operation: RevokeBias done
+Event: 210.559 Executing VM operation: RevokeBias
+Event: 210.560 Executing VM operation: RevokeBias done
+Event: 210.560 loading class 0x00007fecfc80b4f0
+Event: 210.560 loading class 0x00007fecfc80b4f0 done
+Event: 210.560 Executing VM operation: ParallelGCFailedAllocation
+
+
+Dynamic libraries:
+00400000-00401000 r-xp 00000000 08:01 32642177                           /home/elmira/WORK/sources/jdk1.7.0_51/bin/java
+00600000-00601000 rw-p 00000000 08:01 32642177                           /home/elmira/WORK/sources/jdk1.7.0_51/bin/java
+022bc000-022dd000 rw-p 00000000 00:00 0                                  [heap]
+77ea00000-780a00000 rw-p 00000000 00:00 0 
+780a00000-781e80000 ---p 00000000 00:00 0 
+781e80000-783c00000 rw-p 00000000 00:00 0 
+783c00000-7d6900000 rw-p 00000000 00:00 0 
+7d6900000-7f6780000 rw-p 00000000 00:00 0 
+7f6780000-800000000 rw-p 00000000 00:00 0 
+7febe4000000-7febe4e00000 rw-p 00000000 00:00 0 
+7febe4e00000-7febe8000000 ---p 00000000 00:00 0 
+7febe95dc000-7febea7dc000 rw-p 00000000 00:00 0 
+7febea7dc000-7febea7df000 ---p 00000000 00:00 0 
+7febea7df000-7febea8dd000 rw-p 00000000 00:00 0                          [stack:3898]
+7febea8dd000-7febea8e0000 ---p 00000000 00:00 0 
+7febea8e0000-7febea916000 rw-p 00000000 00:00 0                          [stack:30998]
+7febea916000-7febea919000 ---p 00000000 00:00 0 
+7febea919000-7febeaa17000 rw-p 00000000 00:00 0 
+7febeaa17000-7febeaa1a000 ---p 00000000 00:00 0 
+7febeaa1a000-7febeaf18000 rw-p 00000000 00:00 0                          [stack:3900]
+7febec713000-7febec714000 rw-p 00000000 00:00 0 
+7febec714000-7febec717000 ---p 00000000 00:00 0 
+7febec717000-7febec815000 rw-p 00000000 00:00 0 
+7febec815000-7febec818000 ---p 00000000 00:00 0 
+7febec818000-7febec916000 rw-p 00000000 00:00 0 
+7febec916000-7febec919000 ---p 00000000 00:00 0 
+7febec919000-7febeca17000 rw-p 00000000 00:00 0 
+7febeca17000-7febeca1a000 ---p 00000000 00:00 0 
+7febeca1a000-7febecb18000 rw-p 00000000 00:00 0                          [stack:4193]
+7febecb18000-7febecb1b000 ---p 00000000 00:00 0 
+7febecb1b000-7febecc19000 rw-p 00000000 00:00 0 
+7febecc19000-7febecc1c000 ---p 00000000 00:00 0 
+7febecc1c000-7febecd1a000 rw-p 00000000 00:00 0 
+7febecd1a000-7febecd1d000 ---p 00000000 00:00 0 
+7febecd1d000-7febece1b000 rw-p 00000000 00:00 0 
+7febece1b000-7febece1e000 ---p 00000000 00:00 0 
+7febece1e000-7febecf1c000 rw-p 00000000 00:00 0                          [stack:4161]
+7febecf1c000-7febecf1f000 ---p 00000000 00:00 0 
+7febecf1f000-7febed01d000 rw-p 00000000 00:00 0 
+7febed01d000-7febed020000 ---p 00000000 00:00 0 
+7febed020000-7febed11e000 rw-p 00000000 00:00 0 
+7febed11e000-7febed121000 ---p 00000000 00:00 0 
+7febed121000-7febed21f000 rw-p 00000000 00:00 0 
+7febed21f000-7febed222000 ---p 00000000 00:00 0 
+7febed222000-7febed320000 rw-p 00000000 00:00 0                          [stack:4192]
+7febed320000-7febed323000 ---p 00000000 00:00 0 
+7febed323000-7febed421000 rw-p 00000000 00:00 0 
+7febed421000-7febed422000 r--s 00003000 08:01 38537444                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/xmlenc-0.52.jar
+7febed422000-7febed42b000 r--s 0004a000 08:01 38537439                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/wicket-util-1.5.2.jar
+7febed42b000-7febed42e000 r--s 00012000 08:01 38537440                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/wicket-request-1.5.2.jar
+7febed42e000-7febed431000 ---p 00000000 00:00 0 
+7febed431000-7febed52f000 rw-p 00000000 00:00 0 
+7febed52f000-7febed532000 ---p 00000000 00:00 0 
+7febed532000-7febed630000 rw-p 00000000 00:00 0                          [stack:30603]
+7febed630000-7febed633000 ---p 00000000 00:00 0 
+7febed633000-7febed731000 rw-p 00000000 00:00 0                          [stack:30602]
+7febed731000-7febed734000 ---p 00000000 00:00 0 
+7febed734000-7febed832000 rw-p 00000000 00:00 0 
+7febed832000-7febed855000 r--s 0016e000 08:01 38537438                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/wicket-core-1.5.2.jar
+7febed855000-7febed857000 r--s 00009000 08:01 38537409                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/wagon-provider-api-1.0-alpha-6.jar
+7febed857000-7febed85a000 ---p 00000000 00:00 0 
+7febed85a000-7febed958000 rw-p 00000000 00:00 0                          [stack:30600]
+7febed958000-7febed9c2000 r--s 00e1b000 08:01 38537402                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/tools.jar
+7febed9c2000-7febed9c4000 r--s 00005000 08:01 38537424                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/slf4j-api-1.6.3.jar
+7febed9c4000-7febed9c8000 r--s 00030000 08:01 38537429                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/servlet-api-3.0.20100224.jar
+7febed9c8000-7febed9e5000 r--s 0013e000 08:01 38537426                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/mockito-all-1.8.5.jar
+7febed9e5000-7febed9e8000 ---p 00000000 00:00 0 
+7febed9e8000-7febedae6000 rw-p 00000000 00:00 0                          [stack:30598]
+7febedae6000-7febedae9000 ---p 00000000 00:00 0 
+7febedae9000-7febedbe7000 rw-p 00000000 00:00 0                          [stack:30597]
+7febedbe7000-7febedbea000 ---p 00000000 00:00 0 
+7febedbea000-7febedce8000 rw-p 00000000 00:00 0                          [stack:30596]
+7febedce8000-7febedceb000 ---p 00000000 00:00 0 
+7febedceb000-7febedde9000 rw-p 00000000 00:00 0 
+7febedde9000-7febede1b000 r-xp 00000000 08:01 32768808                   /home/elmira/WORK/sources/jdk1.7.0_51/jre/lib/amd64/libsunec.so
+7febede1b000-7febee01a000 ---p 00032000 08:01 32768808                   /home/elmira/WORK/sources/jdk1.7.0_51/jre/lib/amd64/libsunec.so
+7febee01a000-7febee020000 rw-p 00031000 08:01 32768808                   /home/elmira/WORK/sources/jdk1.7.0_51/jre/lib/amd64/libsunec.so
+7febee020000-7febee030000 rw-p 00000000 00:00 0 
+7febee030000-7febee031000 r--s 00000000 08:01 58720616                   /var/cache/fontconfig/c05880de57d1f5e948fdfacc138775d9-le64.cache-4
+7febee031000-7febee03c000 r--s 00000000 08:01 58720609                   /var/cache/fontconfig/945677eb7aeaf62f1d50efc3fb3ec7d8-le64.cache-4
+7febee03c000-7febee03e000 r--s 00000000 08:01 58720611                   /var/cache/fontconfig/99e8ed0e538f840c565b6ed5dad60d56-le64.cache-4
+7febee03e000-7febee044000 r--s 00000000 08:01 58720595                   /var/cache/fontconfig/2cd17615ca594fa2959ae173292e504c-le64.cache-4
+7febee044000-7febee045000 r--s 00000000 08:01 58720626                   /var/cache/fontconfig/e7071f4a29fa870f4323321c154eba04-le64.cache-4
+7febee045000-7febee046000 r--s 00000000 08:01 58720592                   /var/cache/fontconfig/0d8c3b2ac0904cb8a57a757ad11a4a08-le64.cache-4
+7febee046000-7febee04d000 r--s 00000000 08:01 58720613                   /var/cache/fontconfig/a755afe4a08bf5b97852ceb7400b47bc-le64.cache-4
+7febee04d000-7febee051000 r--s 00000000 08:01 58720604                   /var/cache/fontconfig/6d41288fd70b0be22e8c3a91e032eec0-le64.cache-4
+7febee051000-7febee065000 r--s 00000000 08:01 58720590                   /var/cache/fontconfig/04aabc0a78ac019cf9454389977116d2-le64.cache-4
+7febee065000-7febee066000 r--s 00000000 08:01 58720594                   /var/cache/fontconfig/1ac9eb803944fde146138c791f5cc56a-le64.cache-4
+7febee066000-7febee06a000 r--s 00000000 08:01 58720598                   /var/cache/fontconfig/385c0604a188198f04d133e54aba7fe7-le64.cache-4
+7febee06a000-7febee06c000 r--s 00000000 08:01 58720606                   /var/cache/fontconfig/767a8244fc0220cfb567a839d0392e0b-le64.cache-4
+7febee06c000-7febee06f000 r--s 00000000 08:01 58720608                   /var/cache/fontconfig/8801497958630a81b71ace7c5f9b32a8-le64.cache-4
+7febee06f000-7febee073000 r--s 00000000 08:01 58729922                   /var/cache/fontconfig/c57959a16110560c8d0fcea73374aeeb-le64.cache-4
+7febee073000-7febee07a000 r--s 00000000 08:01 58720596                   /var/cache/fontconfig/3047814df9a2f067bd2d96a2b9c36e5a-le64.cache-4
+7febee07a000-7febee08d000 r--s 00000000 08:01 58720620                   /var/cache/fontconfig/d52a8644073d54c13679302ca1180695-le64.cache-4
+7febee08d000-7febee08e000 r--s 00001000 08:01 38537423                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/slf4j-jcl-1.6.3.jar
+7febee08e000-7febee091000 r--s 0001e000 08:01 38537455                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/servlet-api-2.5-6.1.14.jar
+7febee091000-7febee094000 r--s 00027000 08:01 38537410                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/plexus-utils-1.1.jar
+7febee094000-7febee09b000 r--s 00029000 08:01 38537412                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/plexus-container-default-1.0-alpha-9.jar
+7febee09b000-7febee09d000 r--s 0000e000 08:01 38537458                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/oro-2.0.8.jar
+7febee09d000-7febee09f000 r--s 00017000 08:01 38537425                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/mrunit-1.0.0-hadoop1.jar
+7febee09f000-7febee0ac000 r--s 0008f000 08:01 38537462                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/mina-core-2.0.0-M5.jar
+7febee0ac000-7febee0ae000 r--s 00009000 08:01 38537404                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/maven-settings-2.0.4.jar
+7febee0ae000-7febee0af000 r--s 00004000 08:01 38537408                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/maven-repository-metadata-2.0.4.jar
+7febee0af000-7febee0b2000 r--s 00018000 08:01 38537403                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/maven-project-2.0.4.jar
+7febee0b2000-7febee0b4000 r--s 00006000 08:01 38537405                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/maven-profile-2.0.4.jar
+7febee0b4000-7febee0b5000 r--s 00002000 08:01 38537414                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/maven-plugin-api-2.0.jar
+7febee0b5000-7febee0b7000 r--s 00012000 08:01 38537406                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/maven-model-2.0.4.jar
+7febee0b7000-7febee0b9000 r--s 0000a000 08:01 38537407                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/maven-artifact-manager-2.0.4.jar
+7febee0b9000-7febee0bf000 r--s 00034000 08:01 38537399                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/junit-4.8.1.jar
+7febee0bf000-7febee0d0000 r--s 000ea000 08:01 38537451                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/jsp-2.1-6.1.14.jar
+7febee0d0000-7febee0d3000 ---p 00000000 00:00 0 
+7febee0d3000-7febee1d1000 rw-p 00000000 00:00 0 
+7febee1d1000-7febee1d4000 ---p 00000000 00:00 0 
+7febee1d4000-7febee2d2000 rw-p 00000000 00:00 0 
+7febee2d2000-7febee2fc000 r-xp 00000000 08:01 32768817                   /home/elmira/WORK/sources/jdk1.7.0_51/jre/lib/amd64/libdcpr.so
+7febee2fc000-7febee4fc000 ---p 0002a000 08:01 32768817                   /home/elmira/WORK/sources/jdk1.7.0_51/jre/lib/amd64/libdcpr.so
+7febee4fc000-7febee4ff000 rw-p 0002a000 08:01 32768817                   /home/elmira/WORK/sources/jdk1.7.0_51/jre/lib/amd64/libdcpr.so
+7febee4ff000-7febee567000 r-xp 00000000 08:01 32768815                   /home/elmira/WORK/sources/jdk1.7.0_51/jre/lib/amd64/libt2k.so
+7febee567000-7febee767000 ---p 00068000 08:01 32768815                   /home/elmira/WORK/sources/jdk1.7.0_51/jre/lib/amd64/libt2k.so
+7febee767000-7febee76e000 rw-p 00068000 08:01 32768815                   /home/elmira/WORK/sources/jdk1.7.0_51/jre/lib/amd64/libt2k.so
+7febee76e000-7febee77e000 rw-p 00000000 00:00 0 
+7febee77e000-7febee781000 r--s 00011000 08:01 38537411                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/maven-artifact-2.0.4.jar
+7febee781000-7febee782000 r--s 00002000 08:01 38537456                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/kfs-0.3.jar
+7febee782000-7febee785000 r--s 0001e000 08:01 38537450                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/jsp-api-2.1-6.1.14.jar
+7febee785000-7febee787000 r--s 0000a000 08:01 38537418                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/json-20090211.jar
+7febee787000-7febee798000 r--s 0014c000 08:01 38537465                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/jfreechart-1.0.13.jar
+7febee798000-7febee79a000 r--s 00007000 08:01 38537434                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/jetty-xml-8.0.0.RC0.jar
+7febee79a000-7febee79d000 r--s 00017000 08:01 38537433                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/jetty-webapp-8.0.0.RC0.jar
+7febee79d000-7febee7a2000 r--s 00033000 08:01 38537435                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/jetty-util-8.0.0.RC0.jar
+7febee7a2000-7febee7a5000 r--s 00025000 08:01 38537449                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/jetty-util-6.1.14.jar
+7febee7a5000-7febee7a7000 r--s 00014000 08:01 38537436                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/jetty-servlet-8.0.0.RC0.jar
+7febee7a7000-7febee7ac000 r--s 0004a000 08:01 38537428                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/jetty-server-8.0.0.RC0.jar
+7febee7ac000-7febee7af000 ---p 00000000 00:00 0 
+7febee7af000-7febee8ad000 rw-p 00000000 00:00 0                          [stack:30592]
+7febee8ad000-7febee8b0000 ---p 00000000 00:00 0 
+7febee8b0000-7febee9ae000 rw-p 00000000 00:00 0                          [stack:30591]
+7febee9ae000-7febee9af000 r--s 00000000 08:01 58720623                   /var/cache/fontconfig/dc05db6664285cc2f12bf69c139ae4c3-le64.cache-4
+7febee9af000-7febee9b0000 r--s 00000000 08:01 58722503                   /var/cache/fontconfig/4794a0821666d79190d59a36cb4f44b5-le64.cache-4
+7febee9b0000-7febee9b1000 r--s 00000000 08:01 58720601                   /var/cache/fontconfig/56cf4f4769d0f4abc89a4895d7bd3ae1-le64.cache-4
+7febee9b1000-7febee9b7000 r--s 00000000 08:01 58720614                   /var/cache/fontconfig/b47c4e1ecd0709278f4910c18777a504-le64.cache-4
+7febee9b7000-7febee9c3000 r--s 00000000 08:01 58729034                   /var/cache/fontconfig/d589a48862398ed80a3d6066f4f56f4c-le64.cache-4
+7febee9c3000-7febee9c4000 r--s 00003000 08:01 38537441                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/json-simple-1.1.jar
+7febee9c4000-7febee9c7000 r--s 00013000 08:01 38537437                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/jetty-security-8.0.0.RC0.jar
+7febee9c7000-7febee9ca000 r--s 00015000 08:01 38537432                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/jetty-io-8.0.0.RC0.jar
+7febee9ca000-7febee9cc000 r--s 0001b000 08:01 38537431                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/jetty-http-8.0.0.RC0.jar
+7febee9cc000-7febee9ce000 r--s 00004000 08:01 38537430                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/jetty-continuation-8.0.0.RC0.jar
+7febee9ce000-7febee9d5000 r--s 00078000 08:01 38537448                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/jetty-6.1.14.jar
+7febee9d5000-7febee9db000 r--s 00057000 08:01 38537454                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/jets3t-0.7.1.jar
+7febee9db000-7febee9e1000 r--s 00046000 08:01 38537466                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/jcommon-1.0.16.jar
+7febee9e1000-7febee9e4000 r--s 00012000 08:01 38537416                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/javax.servlet-api-3.0.1.jar
+7febee9e4000-7febee9e9000 r--s 00027000 08:01 38537420                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/httpcore-4.1-beta1.jar
+7febee9e9000-7febee9f1000 r--s 00049000 08:01 38537419                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/httpclient-4.1-alpha2.jar
+7febee9f1000-7febee9fa000 r--s 000a4000 08:01 38537457                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/hsqldb-1.8.0.10.jar
+7febee9fa000-7febeea0e000 r--s 0016a000 08:01 38537460                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/hadoop-test-0.20.2.jar
+7febeea0e000-7febeea33000 r--s 0026c000 08:01 38537442                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/hadoop-core-0.20.2.jar
+7febeea33000-7febeea34000 r--s 00007000 08:01 38537464                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/ftpserver-deprecated-1.0.0-M2.jar
+7febeea34000-7febeea57000 r--s 00344000 08:01 38537459                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/core-3.1.1.jar
+7febeea57000-7febeea75000 r--s 00180000 08:01 38537467                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/commons-math3-3.2.jar
+7febeea75000-7febeea8a000 r-xp 00000000 08:01 20447237                   /lib/x86_64-linux-gnu/libgcc_s.so.1
+7febeea8a000-7febeec89000 ---p 00015000 08:01 20447237                   /lib/x86_64-linux-gnu/libgcc_s.so.1
+7febeec89000-7febeec8a000 r--p 00014000 08:01 20447237                   /lib/x86_64-linux-gnu/libgcc_s.so.1
+7febeec8a000-7febeec8b000 rw-p 00015000 08:01 20447237                   /lib/x86_64-linux-gnu/libgcc_s.so.1
+7febeec8b000-7febeecf0000 r-xp 00000000 08:01 32768785                   /home/elmira/WORK/sources/jdk1.7.0_51/jre/lib/amd64/libfontmanager.so
+7febeecf0000-7febeeeef000 ---p 00065000 08:01 32768785                   /home/elmira/WORK/sources/jdk1.7.0_51/jre/lib/amd64/libfontmanager.so
+7febeeeef000-7febeeef3000 rw-p 00064000 08:01 32768785                   /home/elmira/WORK/sources/jdk1.7.0_51/jre/lib/amd64/libfontmanager.so
+7febeeef3000-7febeef04000 rw-p 00000000 00:00 0 
+7febeef04000-7febeef09000 r-xp 00000000 08:01 5250393                    /usr/lib/x86_64-linux-gnu/libXfixes.so.3.1.0
+7febeef09000-7febef108000 ---p 00005000 08:01 5250393                    /usr/lib/x86_64-linux-gnu/libXfixes.so.3.1.0
+7febef108000-7febef109000 r--p 00004000 08:01 5250393                    /usr/lib/x86_64-linux-gnu/libXfixes.so.3.1.0
+7febef109000-7febef10a000 rw-p 00005000 08:01 5250393                    /usr/lib/x86_64-linux-gnu/libXfixes.so.3.1.0
+7febef10a000-7febef113000 r-xp 00000000 08:01 5250385                    /usr/lib/x86_64-linux-gnu/libXcursor.so.1.0.2
+7febef113000-7febef312000 ---p 00009000 08:01 5250385                    /usr/lib/x86_64-linux-gnu/libXcursor.so.1.0.2
+7febef312000-7febef313000 r--p 00008000 08:01 5250385                    /usr/lib/x86_64-linux-gnu/libXcursor.so.1.0.2
+7febef313000-7febef314000 rw-p 00009000 08:01 5250385                    /usr/lib/x86_64-linux-gnu/libXcursor.so.1.0.2
+7febef314000-7febef319000 r-xp 00000000 08:01 5250389                    /usr/lib/x86_64-linux-gnu/libXdmcp.so.6.0.0
+7febef319000-7febef518000 ---p 00005000 08:01 5250389                    /usr/lib/x86_64-linux-gnu/libXdmcp.so.6.0.0
+7febef518000-7febef519000 r--p 00004000 08:01 5250389                    /usr/lib/x86_64-linux-gnu/libXdmcp.so.6.0.0
+7febef519000-7febef51a000 rw-p 00005000 08:01 5250389                    /usr/lib/x86_64-linux-gnu/libXdmcp.so.6.0.0
+7febef51a000-7febef51c000 r-xp 00000000 08:01 5250378                    /usr/lib/x86_64-linux-gnu/libXau.so.6.0.0
+7febef51c000-7febef71c000 ---p 00002000 08:01 5250378                    /usr/lib/x86_64-linux-gnu/libXau.so.6.0.0
+7febef71c000-7febef71d000 r--p 00002000 08:01 5250378                    /usr/lib/x86_64-linux-gnu/libXau.so.6.0.0
+7febef71d000-7febef71e000 rw-p 00003000 08:01 5250378                    /usr/lib/x86_64-linux-gnu/libXau.so.6.0.0
+7febef71e000-7febef73b000 r-xp 00000000 08:01 5251330                    /usr/lib/x86_64-linux-gnu/libxcb.so.1.1.0
+7febef73b000-7febef93a000 ---p 0001d000 08:01 5251330                    /usr/lib/x86_64-linux-gnu/libxcb.so.1.1.0
+7febef93a000-7febef93b000 r--p 0001c000 08:01 5251330                    /usr/lib/x86_64-linux-gnu/libxcb.so.1.1.0
+7febef93b000-7febef93c000 rw-p 0001d000 08:01 5251330                    /usr/lib/x86_64-linux-gnu/libxcb.so.1.1.0
+7febef93c000-7febef94b000 r-xp 00000000 08:01 5250399                    /usr/lib/x86_64-linux-gnu/libXi.so.6.1.0
+7febef94b000-7febefb4a000 ---p 0000f000 08:01 5250399                    /usr/lib/x86_64-linux-gnu/libXi.so.6.1.0
+7febefb4a000-7febefb4b000 r--p 0000e000 08:01 5250399                    /usr/lib/x86_64-linux-gnu/libXi.so.6.1.0
+7febefb4b000-7febefb4c000 rw-p 0000f000 08:01 5250399                    /usr/lib/x86_64-linux-gnu/libXi.so.6.1.0
+7febefb4c000-7febefb51000 r-xp 00000000 08:01 5250417                    /usr/lib/x86_64-linux-gnu/libXtst.so.6.1.0
+7febefb51000-7febefd50000 ---p 00005000 08:01 5250417                    /usr/lib/x86_64-linux-gnu/libXtst.so.6.1.0
+7febefd50000-7febefd51000 r--p 00004000 08:01 5250417                    /usr/lib/x86_64-linux-gnu/libXtst.so.6.1.0
+7febefd51000-7febefd52000 rw-p 00005000 08:01 5250417                    /usr/lib/x86_64-linux-gnu/libXtst.so.6.1.0
+7febefd52000-7febefd5b000 r-xp 00000000 08:01 5250413                    /usr/lib/x86_64-linux-gnu/libXrender.so.1.3.0
+7febefd5b000-7febeff5a000 ---p 00009000 08:01 5250413                    /usr/lib/x86_64-linux-gnu/libXrender.so.1.3.0
+7febeff5a000-7febeff5b000 r--p 00008000 08:01 5250413                    /usr/lib/x86_64-linux-gnu/libXrender.so.1.3.0
+7febeff5b000-7febeff5c000 rw-p 00009000 08:01 5250413                    /usr/lib/x86_64-linux-gnu/libXrender.so.1.3.0
+7febeff5c000-7febf008c000 r-xp 00000000 08:01 5250374                    /usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+7febf008c000-7febf028c000 ---p 00130000 08:01 5250374                    /usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+7febf028c000-7febf028d000 r--p 00130000 08:01 5250374                    /usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+7febf028d000-7febf0291000 rw-p 00131000 08:01 5250374                    /usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+7febf0291000-7febf02a2000 r-xp 00000000 08:01 5250391                    /usr/lib/x86_64-linux-gnu/libXext.so.6.4.0
+7febf02a2000-7febf04a1000 ---p 00011000 08:01 5250391                    /usr/lib/x86_64-linux-gnu/libXext.so.6.4.0
+7febf04a1000-7febf04a2000 r--p 00010000 08:01 5250391                    /usr/lib/x86_64-linux-gnu/libXext.so.6.4.0
+7febf04a2000-7febf04a3000 rw-p 00011000 08:01 5250391                    /usr/lib/x86_64-linux-gnu/libXext.so.6.4.0
+7febf04a3000-7febf04f3000 r-xp 00000000 08:01 32768827                   /home/elmira/WORK/sources/jdk1.7.0_51/jre/lib/amd64/xawt/libmawt.so
+7febf04f3000-7febf06f3000 ---p 00050000 08:01 32768827                   /home/elmira/WORK/sources/jdk1.7.0_51/jre/lib/amd64/xawt/libmawt.so
+7febf06f3000-7febf06f7000 rw-p 00050000 08:01 32768827                   /home/elmira/WORK/sources/jdk1.7.0_51/jre/lib/amd64/xawt/libmawt.so
+7febf06f7000-7febf06f8000 rw-p 00000000 00:00 0 
+7febf06f8000-7febf079a000 r-xp 00000000 08:01 32768797                   /home/elmira/WORK/sources/jdk1.7.0_51/jre/lib/amd64/libawt.so
+7febf079a000-7febf099a000 ---p 000a2000 08:01 32768797                   /home/elmira/WORK/sources/jdk1.7.0_51/jre/lib/amd64/libawt.so
+7febf099a000-7febf09a6000 rw-p 000a2000 08:01 32768797                   /home/elmira/WORK/sources/jdk1.7.0_51/jre/lib/amd64/libawt.so
+7febf09a6000-7febf09ca000 rw-p 00000000 00:00 0 
+7febf09ca000-7febf09cd000 ---p 00000000 00:00 0 
+7febf09cd000-7febf0acb000 rw-p 00000000 00:00 0 
+7febf0acb000-7febf0ace000 ---p 00000000 00:00 0 
+7febf0ace000-7febf0bcc000 rw-p 00000000 00:00 0                          [stack:30516]
+7febf0bcc000-7febf0bcf000 ---p 00000000 00:00 0 
+7febf0bcf000-7febf0ccd000 rw-p 00000000 00:00 0                          [stack:30579]
+7febf0ccd000-7febf0cd0000 ---p 00000000 00:00 0 
+7febf0cd0000-7febf0dce000 rw-p 00000000 00:00 0                          [stack:30577]
+7febf0dce000-7febf0dd1000 ---p 00000000 00:00 0 
+7febf0dd1000-7febf0ecf000 rw-p 00000000 00:00 0                          [stack:30303]
+7febf0ecf000-7febf0ed2000 ---p 00000000 00:00 0 
+7febf0ed2000-7febf0fd0000 rw-p 00000000 00:00 0                          [stack:30302]
+7febf0fd0000-7febf0fd3000 ---p 00000000 00:00 0 
+7febf0fd3000-7febf10d1000 rw-p 00000000 00:00 0 
+7febf10d1000-7febf10d4000 ---p 00000000 00:00 0 
+7febf10d4000-7febf11d2000 rw-p 00000000 00:00 0                          [stack:30300]
+7febf11d2000-7febf11d5000 ---p 00000000 00:00 0 
+7febf11d5000-7febf12d3000 rw-p 00000000 00:00 0                          [stack:30299]
+7febf12d3000-7febf12d6000 ---p 00000000 00:00 0 
+7febf12d6000-7febf13d4000 rw-p 00000000 00:00 0                          [stack:30298]
+7febf13d4000-7febf13d7000 ---p 00000000 00:00 0 
+7febf13d7000-7febf14d5000 rw-p 00000000 00:00 0                          [stack:30292]
+7febf14d5000-7febf14d8000 ---p 00000000 00:00 0 
+7febf14d8000-7febf15d6000 rw-p 00000000 00:00 0 
+7febf15d6000-7febf15d9000 ---p 00000000 00:00 0 
+7febf15d9000-7febf16d7000 rw-p 00000000 00:00 0                          [stack:30285]
+7febf16d7000-7febf16da000 ---p 00000000 00:00 0 
+7febf16da000-7febf17d8000 rw-p 00000000 00:00 0 
+7febf17d8000-7febf17db000 ---p 00000000 00:00 0 
+7febf17db000-7febf18d9000 rw-p 00000000 00:00 0                          [stack:30283]
+7febf18d9000-7febf18dc000 ---p 00000000 00:00 0 
+7febf18dc000-7febf19da000 rw-p 00000000 00:00 0                          [stack:30282]
+7febf19da000-7febf19dd000 ---p 00000000 00:00 0 
+7febf19dd000-7febf1adb000 rw-p 00000000 00:00 0                          [stack:30275]
+7febf1adb000-7febf1ade000 ---p 00000000 00:00 0 
+7febf1ade000-7febf1bdc000 rw-p 00000000 00:00 0                          [stack:30274]
+7febf1bdc000-7febf1bdf000 ---p 00000000 00:00 0 
+7febf1bdf000-7febf1cdd000 rw-p 00000000 00:00 0                          [stack:30273]
+7febf1cdd000-7febf1ce0000 ---p 00000000 00:00 0 
+7febf1ce0000-7febf1dde000 rw-p 00000000 00:00 0                          [stack:30599]
+7febf1dde000-7febf1de1000 ---p 00000000 00:00 0 
+7febf1de1000-7febf1edf000 rw-p 00000000 00:00 0                          [stack:30271]
+7febf1edf000-7febf1ee2000 ---p 00000000 00:00 0 
+7febf1ee2000-7febf1fe0000 rw-p 00000000 00:00 0                          [stack:30270]
+7febf1fe0000-7febf1fe3000 ---p 00000000 00:00 0 
+7febf1fe3000-7febf20e1000 rw-p 00000000 00:00 0                          [stack:30269]
+7febf20e1000-7febf20e4000 ---p 00000000 00:00 0 
+7febf20e4000-7febf21e2000 rw-p 00000000 00:00 0                          [stack:30268]
+7febf21e2000-7febf21e5000 ---p 00000000 00:00 0 
+7febf21e5000-7febf22e3000 rw-p 00000000 00:00 0                          [stack:30267]
+7febf22e3000-7febf22e6000 ---p 00000000 00:00 0 
+7febf22e6000-7febf23e4000 rw-p 00000000 00:00 0                          [stack:30266]
+7febf23e4000-7febf23e7000 ---p 00000000 00:00 0 
+7febf23e7000-7febf24e5000 rw-p 00000000 00:00 0                          [stack:30265]
+7febf24e5000-7febf24e8000 ---p 00000000 00:00 0 
+7febf24e8000-7febf25e6000 rw-p 00000000 00:00 0                          [stack:30264]
+7febf25e6000-7febf25e9000 ---p 00000000 00:00 0 
+7febf25e9000-7febf26e7000 rw-p 00000000 00:00 0                          [stack:30263]
+7febf26e7000-7febf26ea000 ---p 00000000 00:00 0 
+7febf26ea000-7febf27e8000 rw-p 00000000 00:00 0                          [stack:30262]
+7febf27e8000-7febf27eb000 ---p 00000000 00:00 0 
+7febf27eb000-7febf28e9000 rw-p 00000000 00:00 0                          [stack:30261]
+7febf28e9000-7febf28ec000 ---p 00000000 00:00 0 
+7febf28ec000-7febf29ea000 rw-p 00000000 00:00 0 
+7febf29ea000-7febf29ed000 ---p 00000000 00:00 0 
+7febf29ed000-7febf2aeb000 rw-p 00000000 00:00 0                          [stack:30259]
+7febf2aeb000-7febf2aee000 ---p 00000000 00:00 0 
+7febf2aee000-7febf2bec000 rw-p 00000000 00:00 0                          [stack:30258]
+7febf2bec000-7febf2bef000 ---p 00000000 00:00 0 
+7febf2bef000-7febf2ced000 rw-p 00000000 00:00 0                          [stack:30257]
+7febf2ced000-7febf2cf0000 ---p 00000000 00:00 0 
+7febf2cf0000-7febf2dee000 rw-p 00000000 00:00 0                          [stack:30256]
+7febf2dee000-7febf2df1000 ---p 00000000 00:00 0 
+7febf2df1000-7febf2eef000 rw-p 00000000 00:00 0                          [stack:30255]
+7febf2eef000-7febf2ef2000 ---p 00000000 00:00 0 
+7febf2ef2000-7febf2ff0000 rw-p 00000000 00:00 0                          [stack:30254]
+7febf2ff0000-7febf2ff3000 ---p 00000000 00:00 0 
+7febf2ff3000-7febf30f1000 rw-p 00000000 00:00 0                          [stack:30253]
+7febf30f1000-7febf30f4000 ---p 00000000 00:00 0 
+7febf30f4000-7febf31f2000 rw-p 00000000 00:00 0 
+7febf31f2000-7febf31f5000 ---p 00000000 00:00 0 
+7febf31f5000-7febf32f3000 rw-p 00000000 00:00 0 
+7febf32f3000-7febf32f6000 ---p 00000000 00:00 0 
+7febf32f6000-7febf33f4000 rw-p 00000000 00:00 0 
+7febf33f4000-7febf33f7000 ---p 00000000 00:00 0 
+7febf33f7000-7febf34f5000 rw-p 00000000 00:00 0 
+7febf34f5000-7febf34f8000 ---p 00000000 00:00 0 
+7febf34f8000-7febf35f6000 rw-p 00000000 00:00 0                          [stack:30248]
+7febf35f6000-7febf35f9000 ---p 00000000 00:00 0 
+7febf35f9000-7febf36f7000 rw-p 00000000 00:00 0                          [stack:30247]
+7febf36f7000-7febf36fa000 ---p 00000000 00:00 0 
+7febf36fa000-7febf37f8000 rw-p 00000000 00:00 0                          [stack:30246]
+7febf37f8000-7febf37fb000 ---p 00000000 00:00 0 
+7febf37fb000-7febf38f9000 rw-p 00000000 00:00 0                          [stack:30580]
+7febf38f9000-7febf38fc000 ---p 00000000 00:00 0 
+7febf38fc000-7febf39fa000 rw-p 00000000 00:00 0                          [stack:30240]
+7febf39fa000-7febf39fd000 ---p 00000000 00:00 0 
+7febf39fd000-7febf3afb000 rw-p 00000000 00:00 0                          [stack:30239]
+7febf3afb000-7febf3afe000 ---p 00000000 00:00 0 
+7febf3afe000-7febf3bfc000 rw-p 00000000 00:00 0                          [stack:30238]
+7febf3bfc000-7febf3bff000 ---p 00000000 00:00 0 
+7febf3bff000-7febf3cfd000 rw-p 00000000 00:00 0                          [stack:30237]
+7febf3cfd000-7febf3d00000 ---p 00000000 00:00 0 
+7febf3d00000-7febf3dfe000 rw-p 00000000 00:00 0                          [stack:30236]
+7febf3dfe000-7febf3e01000 ---p 00000000 00:00 0 
+7febf3e01000-7febf3eff000 rw-p 00000000 00:00 0                          [stack:30235]
+7febf3eff000-7febf3f02000 ---p 00000000 00:00 0 
+7febf3f02000-7febf4000000 rw-p 00000000 00:00 0                          [stack:30234]
+7febf4000000-7febf4021000 rw-p 00000000 00:00 0 
+7febf4021000-7febf8000000 ---p 00000000 00:00 0 
+7febf8000000-7febfbfbc000 rw-p 00000000 00:00 0 
+7febfbfbc000-7febfc000000 ---p 00000000 00:00 0 
+7febfc000000-7febfc021000 rw-p 00000000 00:00 0 
+7febfc021000-7fec00000000 ---p 00000000 00:00 0 
+7fec00000000-7fec00021000 rw-p 00000000 00:00 0 
+7fec00021000-7fec04000000 ---p 00000000 00:00 0 
+7fec04000000-7fec0417c000 rw-p 00000000 00:00 0 
+7fec0417c000-7fec08000000 ---p 00000000 00:00 0 
+7fec08000000-7fec08021000 rw-p 00000000 00:00 0 
+7fec08021000-7fec0c000000 ---p 00000000 00:00 0 
+7fec0c000000-7fec0c021000 rw-p 00000000 00:00 0 
+7fec0c021000-7fec10000000 ---p 00000000 00:00 0 
+7fec10000000-7fec10021000 rw-p 00000000 00:00 0 
+7fec10021000-7fec14000000 ---p 00000000 00:00 0 
+7fec14000000-7fec14021000 rw-p 00000000 00:00 0 
+7fec14021000-7fec18000000 ---p 00000000 00:00 0 
+7fec18000000-7fec18021000 rw-p 00000000 00:00 0 
+7fec18021000-7fec1c000000 ---p 00000000 00:00 0 
+7fec1c000000-7fec1c021000 rw-p 00000000 00:00 0 
+7fec1c021000-7fec20000000 ---p 00000000 00:00 0 
+7fec20000000-7fec20021000 rw-p 00000000 00:00 0 
+7fec20021000-7fec24000000 ---p 00000000 00:00 0 
+7fec24000000-7fec24021000 rw-p 00000000 00:00 0 
+7fec24021000-7fec28000000 ---p 00000000 00:00 0 
+7fec28000000-7fec28021000 rw-p 00000000 00:00 0 
+7fec28021000-7fec2c000000 ---p 00000000 00:00 0 
+7fec2c000000-7fec2c021000 rw-p 00000000 00:00 0 
+7fec2c021000-7fec30000000 ---p 00000000 00:00 0 
+7fec30000000-7fec30021000 rw-p 00000000 00:00 0 
+7fec30021000-7fec34000000 ---p 00000000 00:00 0 
+7fec34000000-7fec34021000 rw-p 00000000 00:00 0 
+7fec34021000-7fec38000000 ---p 00000000 00:00 0 
+7fec38000000-7fec38021000 rw-p 00000000 00:00 0 
+7fec38021000-7fec3c000000 ---p 00000000 00:00 0 
+7fec3c000000-7fec3c021000 rw-p 00000000 00:00 0 
+7fec3c021000-7fec40000000 ---p 00000000 00:00 0 
+7fec40000000-7fec40021000 rw-p 00000000 00:00 0 
+7fec40021000-7fec44000000 ---p 00000000 00:00 0 
+7fec44000000-7fec44021000 rw-p 00000000 00:00 0 
+7fec44021000-7fec48000000 ---p 00000000 00:00 0 
+7fec48000000-7fec48021000 rw-p 00000000 00:00 0 
+7fec48021000-7fec4c000000 ---p 00000000 00:00 0 
+7fec4c000000-7fec4c021000 rw-p 00000000 00:00 0 
+7fec4c021000-7fec50000000 ---p 00000000 00:00 0 
+7fec50000000-7fec50021000 rw-p 00000000 00:00 0 
+7fec50021000-7fec54000000 ---p 00000000 00:00 0 
+7fec54000000-7fec54021000 rw-p 00000000 00:00 0 
+7fec54021000-7fec58000000 ---p 00000000 00:00 0 
+7fec58000000-7fec5824c000 rw-p 00000000 00:00 0 
+7fec5824c000-7fec5c000000 ---p 00000000 00:00 0 
+7fec5c000000-7fec5c023000 rw-p 00000000 00:00 0 
+7fec5c023000-7fec60000000 ---p 00000000 00:00 0 
+7fec60000000-7fec60021000 rw-p 00000000 00:00 0 
+7fec60021000-7fec64000000 ---p 00000000 00:00 0 
+7fec64000000-7fec64021000 rw-p 00000000 00:00 0 
+7fec64021000-7fec68000000 ---p 00000000 00:00 0 
+7fec68000000-7fec68021000 rw-p 00000000 00:00 0 
+7fec68021000-7fec6c000000 ---p 00000000 00:00 0 
+7fec6c000000-7fec6c021000 rw-p 00000000 00:00 0 
+7fec6c021000-7fec70000000 ---p 00000000 00:00 0 
+7fec70000000-7fec70001000 r--s 00000000 08:01 58720615                   /var/cache/fontconfig/b9d506c9ac06c20b433354fa67a72993-le64.cache-4
+7fec70001000-7fec70007000 r--s 0003d000 08:01 38537463                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/ftpserver-core-1.0.0.jar
+7fec70007000-7fec70009000 r--s 00004000 08:01 38537461                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/ftplet-api-1.0.0.jar
+7fec70009000-7fec7000e000 r--s 00028000 08:01 38537447                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/commons-net-1.4.1.jar
+7fec7000e000-7fec70010000 r--s 0000d000 08:01 38537421                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/commons-logging-1.1.1.jar
+7fec70010000-7fec70016000 r--s 00048000 08:01 38537415                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/commons-lang3-3.1.jar
+7fec70016000-7fec7001a000 r--s 0002a000 08:01 38537417                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/commons-io-2.4.jar
+7fec7001a000-7fec7001f000 r--s 00040000 08:01 38537445                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/commons-httpclient-3.0.1.jar
+7fec7001f000-7fec70022000 r--s 00019000 08:01 38537453                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/commons-el-1.0.jar
+7fec70022000-7fec7002e000 r--s 00073000 08:01 38537427                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/commons-collections-3.0.jar
+7fec7002e000-7fec70030000 r--s 0000a000 08:01 38537446                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/commons-codec-1.3.jar
+7fec70030000-7fec70032000 r--s 00009000 08:01 38537443                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/commons-cli-1.2.jar
+7fec70032000-7fec70034000 r--s 00008000 08:01 38537413                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/classworlds-1.1-alpha-2.jar
+7fec70034000-7fec70041000 r--s 000b9000 08:01 38537401                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/args4j-tools-2.0.25-all.jar
+7fec70041000-7fec70042000 r--s 00001000 08:01 38537400                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/args4j-maven-plugin-2.0.25.jar
+7fec70042000-7fec70044000 r--s 0000a000 08:01 38537422                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/args4j-2.0.12.jar
+7fec70044000-7fec70053000 r--s 000ee000 08:01 38537452                   /home/elmira/WORK/genomix/genomix/genomix-driver/edu.uci.ics.hyracks.control.nc.NodeControllerService/nc-PREGELIX-id-0/applications/120413c4-0c60-4d0c-955d-7b0d75ee172b/ant-1.6.5.jar
+7fec70053000-7fec70056000 ---p 00000000 00:00 0 
+7fec70056000-7fec7008c000 rw-p 00000000 00:00 0                          [stack:4134]
+7fec7008c000-7fec7008f000 ---p 00000000 00:00 0 
+7fec7008f000-7fec7018d000 rw-p 00000000 00:00 0                          [stack:30517]
+7fec7018d000-7fec70190000 ---p 00000000 00:00 0 
+7fec70190000-7fec7028e000 rw-p 00000000 00:00 0                          [stack:30232]
+7fec7028e000-7fec70291000 ---p 00000000 00:00 0 
+7fec70291000-7fec7038f000 rw-p 00000000 00:00 0                          [stack:30231]
+7fec7038f000-7fec70392000 ---p 00000000 00:00 0 
+7fec70392000-7fec70490000 rw-p 00000000 00:00 0                          [stack:30230]
+7fec70490000-7fec70493000 ---p 00000000 00:00 0 
+7fec70493000-7fec70591000 rw-p 00000000 00:00 0                          [stack:30229]
+7fec70591000-7fec70594000 ---p 00000000 00:00 0 
+7fec70594000-7fec70692000 rw-p 00000000 00:00 0                          [stack:30228]
+7fec70692000-7fec70695000 ---p 00000000 00:00 0 
+7fec70695000-7fec70793000 rw-p 00000000 00:00 0                          [stack:30227]
+7fec70793000-7fec70796000 ---p 00000000 00:00 0 
+7fec70796000-7fec70894000 rw-p 00000000 00:00 0                          [stack:30226]
+7fec70894000-7fec70897000 ---p 00000000 00:00 0 
+7fec70897000-7fec70995000 rw-p 00000000 00:00 0                          [stack:30225]
+7fec70995000-7fec70997000 r-xp 00000000 08:01 20447269                   /lib/libnss_mdns4.so.2
+7fec70997000-7fec70b97000 ---p 00002000 08:01 20447269                   /lib/libnss_mdns4.so.2
+7fec70b97000-7fec70b98000 r--p 00002000 08:01 20447269                   /lib/libnss_mdns4.so.2
+7fec70b98000-7fec70b99000 rw-p 00003000 08:01 20447269                   /lib/libnss_mdns4.so.2
+7fec70b99000-7fec70baf000 r-xp 00000000 08:01 20451207                   /lib/x86_64-linux-gnu/libresolv-2.17.so
+7fec70baf000-7fec70daf000 ---p 00016000 08:01 20451207                   /lib/x86_64-linux-gnu/libresolv-2.17.so
+7fec70daf000-7fec70db0000 r--p 00016000 08:01 20451207                   /lib/x86_64-linux-gnu/libresolv-2.17.so
+7fec70db0000-7fec70db1000 rw-p 00017000 08:01 20451207                   /lib/x86_64-linux-gnu/libresolv-2.17.so
+7fec70db1000-7fec70db3000 rw-p 00000000 00:00 0 
+7fec70db3000-7fec70db9000 r-xp 00000000 08:01 20451160                   /lib/x86_64-linux-gnu/libnss_dns-2.17.so
+7fec70db9000-7fec70fb8000 ---p 00006000 08:01 20451160                   /lib/x86_64-linux-gnu/libnss_dns-2.17.so
+7fec70fb8000-7fec70fb9000 r--p 00005000 08:01 20451160                   /lib/x86_64-linux-gnu/libnss_dns-2.17.so
+7fec70fb9000-7fec70fba000 rw-p 00006000 08:01 20451160                   /lib/x86_64-linux-gnu/libnss_dns-2.17.so
+7fec70fba000-7fec70fbc000 r-xp 00000000 08:01 20447270                   /lib/libnss_mdns4_minimal.so.2
+7fec70fbc000-7fec711bb000 ---p 00002000 08:01 20447270                   /lib/libnss_mdns4_minimal.so.2
+7fec711bb000-7fec711bc000 r--p 00001000 08:01 20447270                   /lib/libnss_mdns4_minimal.so.2
+7fec711bc000-7fec711bd000 rw-p 00002000 08:01 20447270                   /lib/libnss_mdns4_minimal.so.2
+7fec711bd000-7fec711c1000 r--s 0002d000 08:01 32768930                   /home/elmira/WORK/sources/jdk1.7.0_51/jre/lib/ext/sunjce_provider.jar
+7fec711c1000-7fec711c2000 r--s 00003000 08:01 32768936                   /home/elmira/WORK/sources/jdk1.7.0_51/jre/lib/ext/sunec.jar
+7fec711c2000-7fec711c5000 r--s 00037000 08:01 32768933                   /home/elmira/WORK/sources/jdk1.7.0_51/jre/lib/ext/sunpkcs11.jar
+7fec711c5000-7fec711c7000 r--s 00019000 08:01 32768939                   /home/elmira/WORK/sources/jdk1.7.0_51/jre/lib/jce.jar
+7fec711c7000-7fec711d2000 r--s 0037c000 08:01 32768174                   /home/elmira/WORK/sources/jdk1.7.0_51/jre/lib/charsets.jar
+7fec711d2000-7fec711d5000 ---p 00000000 00:00 0 
+7fec711d5000-7fec712d3000 rw-p 00000000 00:00 0                          [stack:30224]
+7fec712d3000-7fec712d6000 ---p 00000000 00:00 0 
+7fec712d6000-7fec713d4000 rw-p 00000000 00:00 0                          [stack:30223]
+7fec713d4000-7fec713d7000 ---p 00000000 00:00 0 
+7fec713d7000-7fec714d5000 rw-p 00000000 00:00 0                          [stack:30222]
+7fec714d5000-7fec714d8000 ---p 00000000 00:00 0 
+7fec714d8000-7fec715d6000 rw-p 00000000 00:00 0                          [stack:30221]
+7fec715d6000-7fec715d9000 ---p 00000000 00:00 0 
+7fec715d9000-7fec716d7000 rw-p 00000000 00:00 0                          [stack:30220]
+7fec716d7000-7fec716da000 ---p 00000000 00:00 0 
+7fec716da000-7fec717d8000 rw-p 00000000 00:00 0                          [stack:30219]
+7fec717d8000-7fec717db000 ---p 00000000 00:00 0 
+7fec717db000-7fec718d9000 rw-p 00000000 00:00 0                          [stack:30218]
+7fec718d9000-7fec718dc000 ---p 00000000 00:00 0 
+7fec718dc000-7fec719da000 rw-p 00000000 00:00 0                          [stack:30217]
+7fec719da000-7fec719dd000 ---p 00000000 00:00 0 
+7fec719dd000-7fec71adb000 rw-p 00000000 00:00 0                          [stack:30216]
+7fec71adb000-7fec71ade000 ---p 00000000 00:00 0 
+7fec71ade000-7fec71bdc000 rw-p 00000000 00:00 0                          [stack:30215]
+7fec71bdc000-7fec71bdf000 ---p 00000000 00:00 0 
+7fec71bdf000-7fec71cdd000 rw-p 00000000 00:00 0                          [stack:30214]
+7fec71cdd000-7fec71ce0000 ---p 00000000 00:00 0 
+7fec71ce0000-7fec71dde000 rw-p 00000000 00:00 0                          [stack:30213]
+7fec71dde000-7fec71de1000 ---p 00000000 00:00 0 
+7fec71de1000-7fec71edf000 rw-p 00000000 00:00 0                          [stack:30212]
+7fec71edf000-7fec71ee2000 ---p 00000000 00:00 0 
+7fec71ee2000-7fec71fe0000 rw-p 00000000 00:00 0                          [stack:30211]
+7fec71fe0000-7fec71fe3000 ---p 00000000 00:00 0 
+7fec71fe3000-7fec720e1000 rw-p 00000000 00:00 0                          [stack:30209]
+7fec720e1000-7fec720e4000 ---p 00000000 00:00 0 
+7fec720e4000-7fec721e2000 rw-p 00000000 00:00 0 
+7fec721e2000-7fec721e5000 ---p 00000000 00:00 0 
+7fec721e5000-7fec722e3000 rw-p 00000000 00:00 0                          [stack:30210]
+7fec722e3000-7fec722e6000 ---p 00000000 00:00 0 
+7fec722e6000-7fec723e4000 rw-p 00000000 00:00 0                          [stack:30203]
+7fec723e4000-7fec723e7000 ---p 00000000 00:00 0 
+7fec723e7000-7fec724e5000 rw-p 00000000 00:00 0                          [stack:30202]
+7fec724e5000-7fec724e8000 ---p 00000000 00:00 0 
+7fec724e8000-7fec725e6000 rw-p 00000000 00:00 0                          [stack:30201]
+7fec725e6000-7fec725e9000 ---p 00000000 00:00 0 
+7fec725e9000-7fec726e7000 rw-p 00000000 00:00 0                          [stack:30200]
+7fec726e7000-7fec726ea000 ---p 00000000 00:00 0 
+7fec726ea000-7fec727e8000 rw-p 00000000 00:00 0                          [stack:30199]
+7fec727e8000-7fec727eb000 ---p 00000000 00:00 0 
+7fec727eb000-7fec728e9000 rw-p 00000000 00:00 0                          [stack:30198]
+7fec728e9000-7fec728ec000 ---p 00000000 00:00 0 
+7fec728ec000-7fec729ea000 rw-p 00000000 00:00 0 
+7fec729ea000-7fec729ed000 ---p 00000000 00:00 0 
+7fec729ed000-7fec72aeb000 rw-p 00000000 00:00 0                          [stack:30192]
+7fec72aeb000-7fec72aee000 ---p 00000000 00:00 0 
+7fec72aee000-7fec72bec000 rw-p 00000000 00:00 0                          [stack:30191]
+7fec72bec000-7fec72bef000 ---p 00000000 00:00 0 
+7fec72bef000-7fec72ced000 rw-p 00000000 00:00 0                          [stack:30190]
+7fec72ced000-7fec72cf0000 ---p 00000000 00:00 0 
+7fec72cf0000-7fec72dee000 rw-p 00000000 00:00 0                          [stack:30189]
+7fec72dee000-7fec72df1000 ---p 00000000 00:00 0 
+7fec72df1000-7fec72eef000 rw-p 00000000 00:00 0                          [stack:30188]
+7fec72eef000-7fec72ef2000 ---p 00000000 00:00 0 
+7fec72ef2000-7fec72ff0000 rw-p 00000000 00:00 0                          [stack:30187]
+7fec72ff0000-7fec72ff3000 ---p 00000000 00:00 0 
+7fec72ff3000-7fec730f1000 rw-p 00000000 00:00 0                          [stack:30186]
+7fec730f1000-7fec730f4000 ---p 00000000 00:00 0 
+7fec730f4000-7fec731f2000 rw-p 00000000 00:00 0                          [stack:30185]
+7fec731f2000-7fec731f5000 ---p 00000000 00:00 0 
+7fec731f5000-7fec732f3000 rw-p 00000000 00:00 0                          [stack:30184]
+7fec732f3000-7fec732f6000 ---p 00000000 00:00 0 
+7fec732f6000-7fec733f4000 rw-p 00000000 00:00 0                          [stack:30183]
+7fec733f4000-7fec733f7000 ---p 00000000 00:00 0 
+7fec733f7000-7fec734f5000 rw-p 00000000 00:00 0                          [stack:30182]
+7fec734f5000-7fec734f8000 ---p 00000000 00:00 0 
+7fec734f8000-7fec735f6000 rw-p 00000000 00:00 0                          [stack:30179]
+7fec735f6000-7fec735f9000 ---p 00000000 00:00 0 
+7fec735f9000-7fec736f7000 rw-p 00000000 00:00 0                          [stack:30176]
+7fec736f7000-7fec736fa000 ---p 00000000 00:00 0 
+7fec736fa000-7fec737f8000 rw-p 00000000 00:00 0                          [stack:30276]
+7fec737f8000-7fec737fb000 ---p 00000000 00:00 0 
+7fec737fb000-7fec738f9000 rw-p 00000000 00:00 0                          [stack:30171]
+7fec738f9000-7fec738fc000 ---p 00000000 00:00 0 
+7fec738fc000-7fec739fa000 rw-p 00000000 00:00 0                          [stack:30170]
+7fec739fa000-7fec739fd000 ---p 00000000 00:00 0 
+7fec739fd000-7fec73afb000 rw-p 00000000 00:00 0                          [stack:30169]
+7fec73afb000-7fec73afe000 ---p 00000000 00:00 0 
+7fec73afe000-7fec73bfc000 rw-p 00000000 00:00 0                          [stack:30168]
+7fec73bfc000-7fec73bff000 ---p 00000000 00:00 0 
+7fec73bff000-7fec73cfd000 rw-p 00000000 00:00 0                          [stack:30167]
+7fec73cfd000-7fec73d00000 ---p 00000000 00:00 0 
+7fec73d00000-7fec73dfe000 rw-p 00000000 00:00 0                          [stack:30166]
+7fec73dfe000-7fec73e01000 ---p 00000000 00:00 0 
+7fec73e01000-7fec73eff000 rw-p 00000000 00:00 0                          [stack:30165]
+7fec73eff000-7fec73f02000 ---p 00000000 00:00 0 
+7fec73f02000-7fec74000000 rw-p 00000000 00:00 0                          [stack:30164]
+7fec74000000-7fec74021000 rw-p 00000000 00:00 0 
+7fec74021000-7fec78000000 ---p 00000000 00:00 0 
+7fec78000000-7fec78021000 rw-p 00000000 00:00 0 
+7fec78021000-7fec7c000000 ---p 00000000 00:00 0 
+7fec7c000000-7fec7c021000 rw-p 00000000 00:00 0 
+7fec7c021000-7fec80000000 ---p 00000000 00:00 0 
+7fec80000000-7fec80021000 rw-p 00000000 00:00 0 
+7fec80021000-7fec84000000 ---p 00000000 00:00 0 
+7fec84000000-7fec84021000 rw-p 00000000 00:00 0 
+7fec84021000-7fec88000000 ---p 00000000 00:00 0 
+7fec88000000-7fec88021000 rw-p 00000000 00:00 0 
+7fec88021000-7fec8c000000 ---p 00000000 00:00 0 
+7fec8c000000-7fec8c021000 rw-p 00000000 00:00 0 
+7fec8c021000-7fec90000000 ---p 00000000 00:00 0 
+7fec90000000-7fec90021000 rw-p 00000000 00:00 0 
+7fec90021000-7fec94000000 ---p 00000000 00:00 0 
+7fec94000000-7fec94021000 rw-p 00000000 00:00 0 
+7fec94021000-7fec98000000 ---p 00000000 00:00 0 
+7fec98000000-7fec98021000 rw-p 00000000 00:00 0 
+7fec98021000-7fec9c000000 ---p 00000000 00:00 0 
+7fec9c000000-7fec9c021000 rw-p 00000000 00:00 0 
+7fec9c021000-7feca0000000 ---p 00000000 00:00 0 
+7feca0000000-7feca0021000 rw-p 00000000 00:00 0 
+7feca0021000-7feca4000000 ---p 00000000 00:00 0 
+7feca4000000-7feca4021000 rw-p 00000000 00:00 0 
+7feca4021000-7feca8000000 ---p 00000000 00:00 0 
+7feca8000000-7feca8021000 rw-p 00000000 00:00 0 
+7feca8021000-7fecac000000 ---p 00000000 00:00 0 
+7fecac000000-7fecacfcc000 rw-p 00000000 00:00 0 
+7fecacfcc000-7fecb0000000 ---p 00000000 00:00 0 
+7fecb0000000-7fecb0e2d000 rw-p 00000000 00:00 0 
+7fecb0e2d000-7fecb4000000 ---p 00000000 00:00 0 
+7fecb4000000-7fecb4021000 rw-p 00000000 00:00 0 
+7fecb4021000-7fecb8000000 ---p 00000000 00:00 0 
+7fecb8000000-7fecb8021000 rw-p 00000000 00:00 0 
+7fecb8021000-7fecbc000000 ---p 00000000 00:00 0 
+7fecbc000000-7fecbc021000 rw-p 00000000 00:00 0 
+7fecbc021000-7fecc0000000 ---p 00000000 00:00 0 
+7fecc0000000-7fecc0164000 rw-p 00000000 00:00 0 
+7fecc0164000-7fecc4000000 ---p 00000000 00:00 0 
+7fecc4000000-7fecc4021000 rw-p 00000000 00:00 0 
+7fecc4021000-7fecc8000000 ---p 00000000 00:00 0 
+7fecc8000000-7fecc8021000 rw-p 00000000 00:00 0 
+7fecc8021000-7feccc000000 ---p 00000000 00:00 0 
+7feccc000000-7feccc416000 rw-p 00000000 00:00 0 
+7feccc416000-7fecd0000000 ---p 00000000 00:00 0 
+7fecd0000000-7fecd0001000 r--s 00000000 08:01 58720591                   /var/cache/fontconfig/0c9eb80ebd1c36541ebe2852d3bb0c49-le64.cache-4
+7fecd0001000-7fecd0004000 r--s 00000000 08:01 58721829                   /var/cache/fontconfig/e13b20fdb08344e0e664864cc2ede53d-le64.cache-4
+7fecd0004000-7fecd0008000 r--s 00000000 08:01 58729916                   /var/cache/fontconfig/7ef2298fde41cc6eeb7af42e48b7d293-le64.cache-4
+7fecd0008000-7fecd000b000 ---p 00000000 00:00 0 
+7fecd000b000-7fecd0109000 rw-p 00000000 00:00 0                          [stack:30163]
+7fecd0109000-7fecd010c000 ---p 00000000 00:00 0 
+7fecd010c000-7fecd020a000 rw-p 00000000 00:00 0                          [stack:30162]
+7fecd020a000-7fecd020d000 ---p 00000000 00:00 0 
+7fecd020d000-7fecd030b000 rw-p 00000000 00:00 0                          [stack:30161]
+7fecd030b000-7fecd030e000 ---p 00000000 00:00 0 
+7fecd030e000-7fecd040c000 rw-p 00000000 00:00 0                          [stack:30160]
+7fecd040c000-7fecd040f000 ---p 00000000 00:00 0 
+7fecd040f000-7fecd050d000 rw-p 00000000 00:00 0                          [stack:30159]
+7fecd050d000-7fecd0511000 r--s 0008a000 08:01 32768272                   /home/elmira/WORK/sources/jdk1.7.0_51/jre/lib/jsse.jar
+7fecd0511000-7fecd0514000 ---p 00000000 00:00 0 
+7fecd0514000-7fecd0612000 rw-p 00000000 00:00 0                          [stack:30158]
+7fecd0612000-7fecd0615000 ---p 00000000 00:00 0 
+7fecd0615000-7fecd0713000 rw-p 00000000 00:00 0                          [stack:30157]
+7fecd0713000-7fecd0716000 ---p 00000000 00:00 0 
+7fecd0716000-7fecd0814000 rw-p 00000000 00:00 0                          [stack:30156]
+7fecd0814000-7fecd0817000 ---p 00000000 00:00 0 
+7fecd0817000-7fecd0915000 rw-p 00000000 00:00 0                          [stack:30155]
+7fecd0915000-7fecd0918000 ---p 00000000 00:00 0 
+7fecd0918000-7fecd0a16000 rw-p 00000000 00:00 0                          [stack:30154]
+7fecd0a16000-7fecd0a19000 ---p 00000000 00:00 0 
+7fecd0a19000-7fecd0b17000 rw-p 00000000 00:00 0                          [stack:30153]
+7fecd0b17000-7fecd0b1f000 r-xp 00000000 08:01 32768831                   /home/elmira/WORK/sources/jdk1.7.0_51/jre/lib/amd64/libmanagement.so
+7fecd0b1f000-7fecd0d1e000 ---p 00008000 08:01 32768831                   /home/elmira/WORK/sources/jdk1.7.0_51/jre/lib/amd64/libmanagement.so
+7fecd0d1e000-7fecd0d1f000 rw-p 00007000 08:01 32768831                   /home/elmira/WORK/sources/jdk1.7.0_51/jre/lib/amd64/libmanagement.so
+7fecd0d1f000-7fecd0d22000 ---p 00000000 00:00 0 
+7fecd0d22000-7fecd0e20000 rw-p 00000000 00:00 0                          [stack:30152]
+7fecd0e20000-7fecd0e23000 ---p 00000000 00:00 0 
+7fecd0e23000-7fecd0e59000 rw-p 00000000 00:00 0 
+7fecd0e59000-7fecd0e5a000 r--p 00000000 00:00 0 
+7fecd0e5a000-7fecd0e70000 r-xp 00000000 08:01 32768789                   /home/elmira/WORK/sources/jdk1.7.0_51/jre/lib/amd64/libnet.so
+7fecd0e70000-7fecd1070000 ---p 00016000 08:01 32768789                   /home/elmira/WORK/sources/jdk1.7.0_51/jre/lib/amd64/libnet.so
+7fecd1070000-7fecd1071000 rw-p 00016000 08:01 32768789                   /home/elmira/WORK/sources/jdk1.7.0_51/jre/lib/amd64/libnet.so
+7fecd1071000-7fecd1081000 r-xp 00000000 08:01 32768784                   /home/elmira/WORK/sources/jdk1.7.0_51/jre/lib/amd64/libnio.so
+7fecd1081000-7fecd1281000 ---p 00010000 08:01 32768784                   /home/elmira/WORK/sources/jdk1.7.0_51/jre/lib/amd64/libnio.so
+7fecd1281000-7fecd1282000 rw-p 00010000 08:01 32768784                   /home/elmira/WORK/sources/jdk1.7.0_51/jre/lib/amd64/libnio.so
+7fecd1282000-7fecd1286000 r--s 000f7000 08:01 32768935                   /home/elmira/WORK/sources/jdk1.7.0_51/jre/lib/ext/localedata.jar
+7fecd1286000-7fecd1290000 r--s 00250000 08:01 32768283                   /home/elmira/WORK/sources/jdk1.7.0_51/jre/lib/resources.jar
+7fecd1290000-7fecd12ae000 r--s 00180000 08:01 31590342                   /home/elmira/.m2/repository/org/apache/commons/commons-math3/3.2/commons-math3-3.2.jar
+7fecd12ae000-7fecd12b4000 r--s 00046000 08:01 31590251                   /home/elmira/.m2/repository/jfree/jcommon/1.0.16/jcommon-1.0.16.jar
+7fecd12b4000-7fecd12c5000 r--s 0014c000 08:01 31590254                   /home/elmira/.m2/repository/jfree/jfreechart/1.0.13/jfreechart-1.0.13.jar
+7fecd12c5000-7fecd12c6000 r--s 00007000 08:01 31588588                   /home/elmira/.m2/repository/org/apache/ftpserver/ftpserver-deprecated/1.0.0-M2/ftpserver-deprecated-1.0.0-M2.jar
+7fecd12c6000-7fecd12cc000 r--s 0003d000 08:01 31588587                   /home/elmira/.m2/repository/org/apache/ftpserver/ftpserver-core/1.0.0/ftpserver-core-1.0.0.jar
+7fecd12cc000-7fecd12d9000 r--s 0008f000 08:01 31588585                   /home/elmira/.m2/repository/org/apache/mina/mina-core/2.0.0-M5/mina-core-2.0.0-M5.jar
+7fecd12d9000-7fecd12db000 r--s 00004000 08:01 31588584                   /home/elmira/.m2/repository/org/apache/ftpserver/ftplet-api/1.0.0/ftplet-api-1.0.0.jar
+7fecd12db000-7fecd12ef000 r--s 0016a000 08:01 31588583                   /home/elmira/.m2/repository/org/apache/hadoop/hadoop-test/0.20.2/hadoop-test-0.20.2.jar
+7fecd12ef000-7fecd1312000 r--s 00344000 08:01 31459086                   /home/elmira/.m2/repository/org/eclipse/jdt/core/3.1.1/core-3.1.1.jar
+7fecd1312000-7fecd1314000 r--s 0000e000 08:01 31459093                   /home/elmira/.m2/repository/oro/oro/2.0.8/oro-2.0.8.jar
+7fecd1314000-7fecd131d000 r--s 000a4000 08:01 31588444                   /home/elmira/.m2/repository/hsqldb/hsqldb/1.8.0.10/hsqldb-1.8.0.10.jar
+7fecd131d000-7fecd131e000 r--s 00002000 08:01 31588442                   /home/elmira/.m2/repository/net/sf/kosmosfs/kfs/0.3/kfs-0.3.jar
+7fecd131e000-7fecd1321000 r--s 0001e000 08:01 31459085                   /home/elmira/.m2/repository/org/mortbay/jetty/servlet-api-2.5/6.1.14/servlet-api-2.5-6.1.14.jar
+7fecd1321000-7fecd1327000 r--s 00057000 08:01 31588441                   /home/elmira/.m2/repository/net/java/dev/jets3t/jets3t/0.7.1/jets3t-0.7.1.jar
+7fecd1327000-7fecd132a000 r--s 00019000 08:01 31588440                   /home/elmira/.m2/repository/commons-el/commons-el/1.0/commons-el-1.0.jar
+7fecd132a000-7fecd1339000 r--s 000ee000 08:01 31459091                   /home/elmira/.m2/repository/ant/ant/1.6.5/ant-1.6.5.jar
+7fecd1339000-7fecd134a000 r--s 000ea000 08:01 31459084                   /home/elmira/.m2/repository/org/mortbay/jetty/jsp-2.1/6.1.14/jsp-2.1-6.1.14.jar
+7fecd134a000-7fecd134d000 r--s 0001e000 08:01 31459083                   /home/elmira/.m2/repository/org/mortbay/jetty/jsp-api-2.1/6.1.14/jsp-api-2.1-6.1.14.jar
+7fecd134d000-7fecd1350000 r--s 00025000 08:01 31458940                   /home/elmira/.m2/repository/org/mortbay/jetty/jetty-util/6.1.14/jetty-util-6.1.14.jar
+7fecd1350000-7fecd1357000 r--s 00078000 08:01 31458939                   /home/elmira/.m2/repository/org/mortbay/jetty/jetty/6.1.14/jetty-6.1.14.jar
+7fecd1357000-7fecd135c000 r--s 00028000 08:01 31458938                   /home/elmira/.m2/repository/commons-net/commons-net/1.4.1/commons-net-1.4.1.jar
+7fecd135c000-7fecd135e000 r--s 0000a000 08:01 31459079                   /home/elmira/.m2/repository/commons-codec/commons-codec/1.3/commons-codec-1.3.jar
+7fecd135e000-7fecd1363000 r--s 00040000 08:01 31458930                   /home/elmira/.m2/repository/commons-httpclient/commons-httpclient/3.0.1/commons-httpclient-3.0.1.jar
+7fecd1363000-7fecd1364000 r--s 00003000 08:01 31458914                   /home/elmira/.m2/repository/xmlenc/xmlenc/0.52/xmlenc-0.52.jar
+7fecd1364000-7fecd1366000 r--s 00009000 08:01 31458908                   /home/elmira/.m2/repository/commons-cli/commons-cli/1.2/commons-cli-1.2.jar
+7fecd1366000-7fecd138b000 r--s 0026c000 08:01 31458906                   /home/elmira/.m2/repository/org/apache/hadoop/hadoop-core/0.20.2/hadoop-core-0.20.2.jar
+7fecd138b000-7fecd138c000 r--s 00003000 08:01 31458888                   /home/elmira/.m2/repository/com/googlecode/json-simple/json-simple/1.1/json-simple-1.1.jar
+7fecd138c000-7fecd138f000 r--s 00012000 08:01 31458885                   /home/elmira/.m2/repository/org/apache/wicket/wicket-request/1.5.2/wicket-request-1.5.2.jar
+7fecd138f000-7fecd1398000 r--s 0004a000 08:01 31458884                   /home/elmira/.m2/repository/org/apache/wicket/wicket-util/1.5.2/wicket-util-1.5.2.jar
+7fecd1398000-7fecd13bb000 r--s 0016e000 08:01 31458876                   /home/elmira/.m2/repository/org/apache/wicket/wicket-core/1.5.2/wicket-core-1.5.2.jar
+7fecd13bb000-7fecd13be000 r--s 00013000 08:01 31458883                   /home/elmira/.m2/repository/org/eclipse/jetty/jetty-security/8.0.0.RC0/jetty-security-8.0.0.RC0.jar
+7fecd13be000-7fecd13c0000 r--s 00014000 08:01 31458882                   /home/elmira/.m2/repository/org/eclipse/jetty/jetty-servlet/8.0.0.RC0/jetty-servlet-8.0.0.RC0.jar
+7fecd13c0000-7fecd13c5000 r--s 00033000 08:01 31458873                   /home/elmira/.m2/repository/org/eclipse/jetty/jetty-util/8.0.0.RC0/jetty-util-8.0.0.RC0.jar
+7fecd13c5000-7fecd13c7000 r--s 00007000 08:01 31458872                   /home/elmira/.m2/repository/org/eclipse/jetty/jetty-xml/8.0.0.RC0/jetty-xml-8.0.0.RC0.jar
+7fecd13c7000-7fecd13ca000 r--s 00017000 08:01 31458871                   /home/elmira/.m2/repository/org/eclipse/jetty/jetty-webapp/8.0.0.RC0/jetty-webapp-8.0.0.RC0.jar
+7fecd13ca000-7fecd13cd000 r--s 00015000 08:01 31458870                   /home/elmira/.m2/repository/org/eclipse/jetty/jetty-io/8.0.0.RC0/jetty-io-8.0.0.RC0.jar
+7fecd13cd000-7fecd13cf000 r--s 0001b000 08:01 31458869                   /home/elmira/.m2/repository/org/eclipse/jetty/jetty-http/8.0.0.RC0/jetty-http-8.0.0.RC0.jar
+7fecd13cf000-7fecd13d1000 r--s 00004000 08:01 31458868                   /home/elmira/.m2/repository/org/eclipse/jetty/jetty-continuation/8.0.0.RC0/jetty-continuation-8.0.0.RC0.jar
+7fecd13d1000-7fecd13d5000 r--s 00030000 08:01 31458867                   /home/elmira/.m2/repository/org/mortbay/jetty/servlet-api/3.0.20100224/servlet-api-3.0.20100224.jar
+7fecd13d5000-7fecd13da000 r--s 0004a000 08:01 31458866                   /home/elmira/.m2/repository/org/eclipse/jetty/jetty-server/8.0.0.RC0/jetty-server-8.0.0.RC0.jar
+7fecd13da000-7fecd13e6000 r--s 00073000 08:01 31590323                   /home/elmira/.m2/repository/commons-collections/commons-collections/3.0/commons-collections-3.0.jar
+7fecd13e6000-7fecd1403000 r--s 0013e000 08:01 31590313                   /home/elmira/.m2/repository/org/mockito/mockito-all/1.8.5/mockito-all-1.8.5.jar
+7fecd1403000-7fecd1405000 r--s 00017000 08:01 31590312                   /home/elmira/.m2/repository/org/apache/mrunit/mrunit/1.0.0/mrunit-1.0.0-hadoop1.jar
+7fecd1405000-7fecd1407000 r--s 00005000 08:01 31459112                   /home/elmira/.m2/repository/org/slf4j/slf4j-api/1.6.3/slf4j-api-1.6.3.jar
+7fecd1407000-7fecd1409000 r--s 0000a000 08:01 31458660                   /home/elmira/.m2/repository/args4j/args4j/2.0.12/args4j-2.0.12.jar
+7fecd1409000-7fecd140b000 r--s 0000d000 08:01 31458658                   /home/elmira/.m2/repository/commons-logging/commons-logging/1.1.1/commons-logging-1.1.1.jar
+7fecd140b000-7fecd1410000 r--s 00027000 08:01 31458657                   /home/elmira/.m2/repository/org/apache/httpcomponents/httpcore/4.1-beta1/httpcore-4.1-beta1.jar
+7fecd1410000-7fecd1418000 r--s 00049000 08:01 31458656                   /home/elmira/.m2/repository/org/apache/httpcomponents/httpclient/4.1-alpha2/httpclient-4.1-alpha2.jar
+7fecd1418000-7fecd1482000 r--s 00e1b000 08:01 32642234                   /home/elmira/WORK/sources/jdk1.7.0_51/lib/tools.jar
+7fecd1482000-7fecd1483000 ---p 00000000 00:00 0 
+7fecd1483000-7fecd1583000 rw-p 00000000 00:00 0                          [stack:30140]
+7fecd1583000-7fecd1586000 ---p 00000000 00:00 0 
+7fecd1586000-7fecd1684000 rw-p 00000000 00:00 0                          [stack:30139]
+7fecd1684000-7fecd1687000 ---p 00000000 00:00 0 
+7fecd1687000-7fecd1785000 rw-p 00000000 00:00 0                          [stack:30138]
+7fecd1785000-7fecd1788000 ---p 00000000 00:00 0 
+7fecd1788000-7fecd1886000 rw-p 00000000 00:00 0                          [stack:30137]
+7fecd1886000-7fecd1889000 ---p 00000000 00:00 0 
+7fecd1889000-7fecd1987000 rw-p 00000000 00:00 0                          [stack:4189]
+7fecd1987000-7fecd198a000 ---p 00000000 00:00 0 
+7fecd198a000-7fecd1a88000 rw-p 00000000 00:00 0                          [stack:30133]
+7fecd1a88000-7fecd1a8b000 ---p 00000000 00:00 0 
+7fecd1a8b000-7fecd1b89000 rw-p 00000000 00:00 0                          [stack:30130]
+7fecd1b89000-7fecd1b8d000 r-xp 00000000 08:01 32768804                   /home/elmira/WORK/sources/jdk1.7.0_51/jre/lib/amd64/libdt_socket.so
+7fecd1b8d000-7fecd1d8c000 ---p 00004000 08:01 32768804                   /home/elmira/WORK/sources/jdk1.7.0_51/jre/lib/amd64/libdt_socket.so
+7fecd1d8c000-7fecd1d8d000 rw-p 00003000 08:01 32768804                   /home/elmira/WORK/sources/jdk1.7.0_51/jre/lib/amd64/libdt_socket.so
+7fecd1d8d000-7fecd1d90000 ---p 00000000 00:00 0 
+7fecd1d90000-7fecd1e8e000 rw-p 00000000 00:00 0                          [stack:30128]
+7fecd1e8e000-7fecd1e91000 ---p 00000000 00:00 0 
+7fecd1e91000-7fecd1f8f000 rw-p 00000000 00:00 0                          [stack:30127]
+7fecd1f8f000-7fecd1f92000 ---p 00000000 00:00 0 
+7fecd1f92000-7fecd2090000 rw-p 00000000 00:00 0                          [stack:30126]
+7fecd2090000-7fecd2091000 ---p 00000000 00:00 0 
+7fecd2091000-7fecd3d93000 rw-p 00000000 00:00 0                          [stack:30125]
+7fecd3d93000-7fecd3f50000 r--s 039bf000 08:01 32768846                   /home/elmira/WORK/sources/jdk1.7.0_51/jre/lib/rt.jar
+7fecd3f50000-7fecd8000000 rw-p 00000000 00:00 0 
+7fecd8000000-7fecd8021000 rw-p 00000000 00:00 0 
+7fecd8021000-7fecdc000000 ---p 00000000 00:00 0 
+7fecdc000000-7fecdc029000 rw-p 00000000 00:00 0 
+7fecdc029000-7fece0000000 ---p 00000000 00:00 0 
+7fece0000000-7fece002d000 rw-p 00000000 00:00 0 
+7fece002d000-7fece4000000 ---p 00000000 00:00 0 
+7fece4000000-7fece4021000 rw-p 00000000 00:00 0 
+7fece4021000-7fece8000000 ---p 00000000 00:00 0 
+7fece8000000-7fece8021000 rw-p 00000000 00:00 0 
+7fece8021000-7fecec000000 ---p 00000000 00:00 0 
+7fecec000000-7fecec02d000 rw-p 00000000 00:00 0 
+7fecec02d000-7fecf0000000 ---p 00000000 00:00 0 
+7fecf0000000-7fecf002b000 rw-p 00000000 00:00 0 
+7fecf002b000-7fecf4000000 ---p 00000000 00:00 0 
+7fecf4000000-7fecf4025000 rw-p 00000000 00:00 0 
+7fecf4025000-7fecf8000000 ---p 00000000 00:00 0 
+7fecf8000000-7fecf8001000 r--s 00001000 08:01 31458887                   /home/elmira/.m2/repository/org/slf4j/slf4j-jcl/1.6.3/slf4j-jcl-1.6.3.jar
+7fecf8001000-7fecf8003000 r--s 0000a000 08:01 31458655                   /home/elmira/.m2/repository/org/json/json/20090211/json-20090211.jar
+7fecf8003000-7fecf8007000 r--s 0002a000 08:01 31458919                   /home/elmira/.m2/repository/commons-io/commons-io/2.4/commons-io-2.4.jar
+7fecf8007000-7fecf800a000 r--s 00012000 08:01 31588754                   /home/elmira/.m2/repository/javax/servlet/javax.servlet-api/3.0.1/javax.servlet-api-3.0.1.jar
+7fecf800a000-7fecf8010000 r--s 00048000 08:01 31458661                   /home/elmira/.m2/repository/org/apache/commons/commons-lang3/3.1/commons-lang3-3.1.jar
+7fecf8010000-7fecf8012000 r--s 00008000 08:01 31459108                   /home/elmira/.m2/repository/classworlds/classworlds/1.1-alpha-2/classworlds-1.1-alpha-2.jar
+7fecf8012000-7fecf8019000 r--s 00029000 08:01 31590249                   /home/elmira/.m2/repository/org/codehaus/plexus/plexus-container-default/1.0-alpha-9/plexus-container-default-1.0-alpha-9.jar
+7fecf8019000-7fecf8561000 rw-p 00000000 00:00 0 
+7fecf8561000-7fecf8562000 ---p 00000000 00:00 0 
+7fecf8562000-7fecf8662000 rw-p 00000000 00:00 0                          [stack:30124]
+7fecf8662000-7fecf8663000 ---p 00000000 00:00 0 
+7fecf8663000-7fecf8763000 rw-p 00000000 00:00 0                          [stack:30123]
+7fecf8763000-7fecf8764000 ---p 00000000 00:00 0 
+7fecf8764000-7fecf8864000 rw-p 00000000 00:00 0                          [stack:30122]
+7fecf8864000-7fecf8865000 ---p 00000000 00:00 0 
+7fecf8865000-7fecf8965000 rw-p 00000000 00:00 0                          [stack:30121]
+7fecf8965000-7fecf8966000 ---p 00000000 00:00 0 
+7fecf8966000-7fecf8a66000 rw-p 00000000 00:00 0                          [stack:30120]
+7fecf8a66000-7fecf8a67000 ---p 00000000 00:00 0 
+7fecf8a67000-7fecf8b67000 rw-p 00000000 00:00 0                          [stack:30119]
+7fecf8b67000-7fecf8b68000 ---p 00000000 00:00 0 
+7fecf8b68000-7fecf8c68000 rw-p 00000000 00:00 0                          [stack:30118]
+7fecf8c68000-7fecf8c69000 ---p 00000000 00:00 0 
+7fecf8c69000-7fecf9000000 rw-p 00000000 00:00 0                          [stack:30117]
+7fecf9000000-7fecf94d0000 rwxp 00000000 00:00 0 
+7fecf94d0000-7fecfcb5b000 rw-p 00000000 00:00 0 
+7fecfcb5b000-7fed00000000 ---p 00000000 00:00 0 
+7fed00000000-7fed00001000 r--s 00002000 08:01 31459109                   /home/elmira/.m2/repository/org/apache/maven/maven-plugin-api/2.0/maven-plugin-api-2.0.jar
+7fed00001000-7fed00004000 r--s 00011000 08:01 31590253                   /home/elmira/.m2/repository/org/apache/maven/maven-artifact/2.0.4/maven-artifact-2.0.4.jar
+7fed00004000-7fed00007000 r--s 00027000 08:01 31590247                   /home/elmira/.m2/repository/org/codehaus/plexus/plexus-utils/1.1/plexus-utils-1.1.jar
+7fed00007000-7fed00009000 r--s 00009000 08:01 31590252                   /home/elmira/.m2/repository/org/apache/maven/wagon/wagon-provider-api/1.0-alpha-6/wagon-provider-api-1.0-alpha-6.jar
+7fed00009000-7fed0000b000 r--s 0000a000 08:01 31590248                   /home/elmira/.m2/repository/org/apache/maven/maven-artifact-manager/2.0.4/maven-artifact-manager-2.0.4.jar
+7fed0000b000-7fed0000d000 r--s 00012000 08:01 31590246                   /home/elmira/.m2/repository/org/apache/maven/maven-model/2.0.4/maven-model-2.0.4.jar
+7fed0000d000-7fed0000f000 r--s 00006000 08:01 31590245                   /home/elmira/.m2/repository/org/apache/maven/maven-profile/2.0.4/maven-profile-2.0.4.jar
+7fed0000f000-7fed0001c000 r--s 000b9000 08:01 31590241                   /home/elmira/.m2/repository/args4j/args4j-tools/2.0.25/args4j-tools-2.0.25-all.jar
+7fed0001c000-7fed0007d000 rw-p 00000000 00:00 0 
+7fed0007d000-7fed00088000 ---p 00000000 00:00 0 
+7fed00088000-7fed00096000 rw-p 00000000 00:00 0 
+7fed00096000-7fed000a6000 rw-p 00000000 00:00 0 
+7fed000a6000-7fed000b1000 ---p 00000000 00:00 0 
+7fed000b1000-7fed000bf000 rw-p 00000000 00:00 0 
+7fed000bf000-7fed00355000 rw-p 00000000 00:00 0 
+7fed00355000-7fed00455000 rw-p 00000000 00:00 0 
+7fed00455000-7fed004a1000 rw-p 00000000 00:00 0 
+7fed004a1000-7fed004a2000 rw-p 00000000 00:00 0 
+7fed004a2000-7fed004bc000 r-xp 00000000 08:01 32768834                   /home/elmira/WORK/sources/jdk1.7.0_51/jre/lib/amd64/libzip.so
+7fed004bc000-7fed006bc000 ---p 0001a000 08:01 32768834                   /home/elmira/WORK/sources/jdk1.7.0_51/jre/lib/amd64/libzip.so
+7fed006bc000-7fed006bd000 rw-p 0001a000 08:01 32768834                   /home/elmira/WORK/sources/jdk1.7.0_51/jre/lib/amd64/libzip.so
+7fed006bd000-7fed006c9000 r-xp 00000000 08:01 20451162                   /lib/x86_64-linux-gnu/libnss_files-2.17.so
+7fed006c9000-7fed008c8000 ---p 0000c000 08:01 20451162                   /lib/x86_64-linux-gnu/libnss_files-2.17.so
+7fed008c8000-7fed008c9000 r--p 0000b000 08:01 20451162                   /lib/x86_64-linux-gnu/libnss_files-2.17.so
+7fed008c9000-7fed008ca000 rw-p 0000c000 08:01 20451162                   /lib/x86_64-linux-gnu/libnss_files-2.17.so
+7fed008ca000-7fed008d5000 r-xp 00000000 08:01 20451166                   /lib/x86_64-linux-gnu/libnss_nis-2.17.so
+7fed008d5000-7fed00ad4000 ---p 0000b000 08:01 20451166                   /lib/x86_64-linux-gnu/libnss_nis-2.17.so
+7fed00ad4000-7fed00ad5000 r--p 0000a000 08:01 20451166                   /lib/x86_64-linux-gnu/libnss_nis-2.17.so
+7fed00ad5000-7fed00ad6000 rw-p 0000b000 08:01 20451166                   /lib/x86_64-linux-gnu/libnss_nis-2.17.so
+7fed00ad6000-7fed00aed000 r-xp 00000000 08:01 20451156                   /lib/x86_64-linux-gnu/libnsl-2.17.so
+7fed00aed000-7fed00cec000 ---p 00017000 08:01 20451156                   /lib/x86_64-linux-gnu/libnsl-2.17.so
+7fed00cec000-7fed00ced000 r--p 00016000 08:01 20451156                   /lib/x86_64-linux-gnu/libnsl-2.17.so
+7fed00ced000-7fed00cee000 rw-p 00017000 08:01 20451156                   /lib/x86_64-linux-gnu/libnsl-2.17.so
+7fed00cee000-7fed00cf0000 rw-p 00000000 00:00 0 
+7fed00cf0000-7fed00cf8000 r-xp 00000000 08:01 20451158                   /lib/x86_64-linux-gnu/libnss_compat-2.17.so
+7fed00cf8000-7fed00ef7000 ---p 00008000 08:01 20451158                   /lib/x86_64-linux-gnu/libnss_compat-2.17.so
+7fed00ef7000-7fed00ef8000 r--p 00007000 08:01 20451158                   /lib/x86_64-linux-gnu/libnss_compat-2.17.so
+7fed00ef8000-7fed00ef9000 rw-p 00008000 08:01 20451158                   /lib/x86_64-linux-gnu/libnss_compat-2.17.so
+7fed00ef9000-7fed015db000 r--p 00000000 08:01 5249478                    /usr/lib/locale/locale-archive
+7fed015db000-7fed015de000 r-xp 00000000 08:01 32768795                   /home/elmira/WORK/sources/jdk1.7.0_51/jre/lib/amd64/libnpt.so
+7fed015de000-7fed017dd000 ---p 00003000 08:01 32768795                   /home/elmira/WORK/sources/jdk1.7.0_51/jre/lib/amd64/libnpt.so
+7fed017dd000-7fed017de000 rw-p 00002000 08:01 32768795                   /home/elmira/WORK/sources/jdk1.7.0_51/jre/lib/amd64/libnpt.so
+7fed017de000-7fed01817000 r-xp 00000000 08:01 32768839                   /home/elmira/WORK/sources/jdk1.7.0_51/jre/lib/amd64/libjdwp.so
+7fed01817000-7fed01a17000 ---p 00039000 08:01 32768839                   /home/elmira/WORK/sources/jdk1.7.0_51/jre/lib/amd64/libjdwp.so
+7fed01a17000-7fed01a18000 rw-p 00039000 08:01 32768839                   /home/elmira/WORK/sources/jdk1.7.0_51/jre/lib/amd64/libjdwp.so
+7fed01a18000-7fed01a19000 rw-p 00000000 00:00 0 
+7fed01a19000-7fed01a42000 r-xp 00000000 08:01 32768818                   /home/elmira/WORK/sources/jdk1.7.0_51/jre/lib/amd64/libjava.so
+7fed01a42000-7fed01c42000 ---p 00029000 08:01 32768818                   /home/elmira/WORK/sources/jdk1.7.0_51/jre/lib/amd64/libjava.so
+7fed01c42000-7fed01c44000 rw-p 00029000 08:01 32768818                   /home/elmira/WORK/sources/jdk1.7.0_51/jre/lib/amd64/libjava.so
+7fed01c44000-7fed01c51000 r-xp 00000000 08:01 32768816                   /home/elmira/WORK/sources/jdk1.7.0_51/jre/lib/amd64/libverify.so
+7fed01c51000-7fed01e50000 ---p 0000d000 08:01 32768816                   /home/elmira/WORK/sources/jdk1.7.0_51/jre/lib/amd64/libverify.so
+7fed01e50000-7fed01e52000 rw-p 0000c000 08:01 32768816                   /home/elmira/WORK/sources/jdk1.7.0_51/jre/lib/amd64/libverify.so
+7fed01e52000-7fed01e59000 r-xp 00000000 08:01 20451209                   /lib/x86_64-linux-gnu/librt-2.17.so
+7fed01e59000-7fed02058000 ---p 00007000 08:01 20451209                   /lib/x86_64-linux-gnu/librt-2.17.so
+7fed02058000-7fed02059000 r--p 00006000 08:01 20451209                   /lib/x86_64-linux-gnu/librt-2.17.so
+7fed02059000-7fed0205a000 rw-p 00007000 08:01 20451209                   /lib/x86_64-linux-gnu/librt-2.17.so
+7fed0205a000-7fed0215d000 r-xp 00000000 08:01 20451137                   /lib/x86_64-linux-gnu/libm-2.17.so
+7fed0215d000-7fed0235c000 ---p 00103000 08:01 20451137                   /lib/x86_64-linux-gnu/libm-2.17.so
+7fed0235c000-7fed0235d000 r--p 00102000 08:01 20451137                   /lib/x86_64-linux-gnu/libm-2.17.so
+7fed0235d000-7fed0235e000 rw-p 00103000 08:01 20451137                   /lib/x86_64-linux-gnu/libm-2.17.so
+7fed0235e000-7fed02ec0000 r-xp 00000000 08:01 32768824                   /home/elmira/WORK/sources/jdk1.7.0_51/jre/lib/amd64/server/libjvm.so
+7fed02ec0000-7fed030c0000 ---p 00b62000 08:01 32768824                   /home/elmira/WORK/sources/jdk1.7.0_51/jre/lib/amd64/server/libjvm.so
+7fed030c0000-7fed03183000 rw-p 00b62000 08:01 32768824                   /home/elmira/WORK/sources/jdk1.7.0_51/jre/lib/amd64/server/libjvm.so
+7fed03183000-7fed031c4000 rw-p 00000000 00:00 0 
+7fed031c4000-7fed03381000 r-xp 00000000 08:01 20451086                   /lib/x86_64-linux-gnu/libc-2.17.so
+7fed03381000-7fed03581000 ---p 001bd000 08:01 20451086                   /lib/x86_64-linux-gnu/libc-2.17.so
+7fed03581000-7fed03585000 r--p 001bd000 08:01 20451086                   /lib/x86_64-linux-gnu/libc-2.17.so
+7fed03585000-7fed03587000 rw-p 001c1000 08:01 20451086                   /lib/x86_64-linux-gnu/libc-2.17.so
+7fed03587000-7fed0358c000 rw-p 00000000 00:00 0 
+7fed0358c000-7fed0358f000 r-xp 00000000 08:01 20451101                   /lib/x86_64-linux-gnu/libdl-2.17.so
+7fed0358f000-7fed0378e000 ---p 00003000 08:01 20451101                   /lib/x86_64-linux-gnu/libdl-2.17.so
+7fed0378e000-7fed0378f000 r--p 00002000 08:01 20451101                   /lib/x86_64-linux-gnu/libdl-2.17.so
+7fed0378f000-7fed03790000 rw-p 00003000 08:01 20451101                   /lib/x86_64-linux-gnu/libdl-2.17.so
+7fed03790000-7fed037a6000 r-xp 00000000 08:01 32642247                   /home/elmira/WORK/sources/jdk1.7.0_51/lib/amd64/jli/libjli.so
+7fed037a6000-7fed039a6000 ---p 00016000 08:01 32642247                   /home/elmira/WORK/sources/jdk1.7.0_51/lib/amd64/jli/libjli.so
+7fed039a6000-7fed039a7000 rw-p 00016000 08:01 32642247                   /home/elmira/WORK/sources/jdk1.7.0_51/lib/amd64/jli/libjli.so
+7fed039a7000-7fed039be000 r-xp 00000000 08:01 20451201                   /lib/x86_64-linux-gnu/libpthread-2.17.so
+7fed039be000-7fed03bbe000 ---p 00017000 08:01 20451201                   /lib/x86_64-linux-gnu/libpthread-2.17.so
+7fed03bbe000-7fed03bbf000 r--p 00017000 08:01 20451201                   /lib/x86_64-linux-gnu/libpthread-2.17.so
+7fed03bbf000-7fed03bc0000 rw-p 00018000 08:01 20451201                   /lib/x86_64-linux-gnu/libpthread-2.17.so
+7fed03bc0000-7fed03bc4000 rw-p 00000000 00:00 0 
+7fed03bc4000-7fed03be7000 r-xp 00000000 08:01 20451062                   /lib/x86_64-linux-gnu/ld-2.17.so
+7fed03be7000-7fed03be9000 r--s 00009000 08:01 31590244                   /home/elmira/.m2/repository/org/apache/maven/maven-settings/2.0.4/maven-settings-2.0.4.jar
+7fed03be9000-7fed03c1e000 rw-p 00000000 00:00 0 
+7fed03c1e000-7fed03cca000 rw-p 00000000 00:00 0 
+7fed03cca000-7fed03ccd000 ---p 00000000 00:00 0 
+7fed03ccd000-7fed03dcf000 rw-p 00000000 00:00 0                          [stack:30116]
+7fed03dcf000-7fed03dd0000 r--s 00004000 08:01 31590250                   /home/elmira/.m2/repository/org/apache/maven/maven-repository-metadata/2.0.4/maven-repository-metadata-2.0.4.jar
+7fed03dd0000-7fed03dd3000 r--s 00018000 08:01 31590243                   /home/elmira/.m2/repository/org/apache/maven/maven-project/2.0.4/maven-project-2.0.4.jar
+7fed03dd3000-7fed03dd4000 r--s 00001000 08:01 31590240                   /home/elmira/.m2/repository/org/kohsuke/args4j/args4j-maven-plugin/2.0.25/args4j-maven-plugin-2.0.25.jar
+7fed03dd4000-7fed03dda000 r--s 00034000 08:01 31458496                   /home/elmira/.m2/repository/junit/junit/4.8.1/junit-4.8.1.jar
+7fed03dda000-7fed03de2000 rw-s 00000000 08:01 25429938                   /tmp/hsperfdata_elmira/30109
+7fed03de2000-7fed03de3000 rw-p 00000000 00:00 0 
+7fed03de3000-7fed03de4000 ---p 00000000 00:00 0 
+7fed03de4000-7fed03de6000 rw-p 00000000 00:00 0 
+7fed03de6000-7fed03de7000 r--p 00022000 08:01 20451062                   /lib/x86_64-linux-gnu/ld-2.17.so
+7fed03de7000-7fed03de9000 rw-p 00023000 08:01 20451062                   /lib/x86_64-linux-gnu/ld-2.17.so
+7fff6cb22000-7fff6cb45000 rw-p 00000000 00:00 0                          [stack]
+7fff6cbfe000-7fff6cc00000 r-xp 00000000 00:00 0                          [vdso]
+ffffffffff600000-ffffffffff601000 r-xp 00000000 00:00 0                  [vsyscall]
+

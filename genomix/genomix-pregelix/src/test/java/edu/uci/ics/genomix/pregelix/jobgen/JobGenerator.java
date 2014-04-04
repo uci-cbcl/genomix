@@ -19,7 +19,7 @@ import edu.uci.ics.genomix.pregelix.operator.complexbubblemerge.BubbleMergeWithS
 import edu.uci.ics.genomix.pregelix.operator.extractsubgraph.ExtractSubgraphVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.P1ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.P4ForPathMergeVertex;
-import edu.uci.ics.genomix.pregelix.operator.removelowcoverage.RemoveLowCoverageVertex;
+import edu.uci.ics.genomix.pregelix.operator.removebadcoverage.RemoveBadCoverageVertex;
 import edu.uci.ics.genomix.pregelix.operator.scaffolding2.RayVertex;
 import edu.uci.ics.genomix.pregelix.operator.simplebubblemerge.SimpleBubbleMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.symmetrychecker.SymmetryCheckerVertex;
@@ -169,8 +169,8 @@ public class JobGenerator {
     }
 
     private static void generateRemoveLowCoverageGraphJob(String jobName, String outputPath) throws IOException {
-        PregelixJob job = RemoveLowCoverageVertex
-                .getConfiguredJob(new GenomixJobConf(3), RemoveLowCoverageVertex.class);
+        PregelixJob job = RemoveBadCoverageVertex
+                .getConfiguredJob(new GenomixJobConf(3), RemoveBadCoverageVertex.class);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
 

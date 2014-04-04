@@ -1,4 +1,4 @@
-package edu.uci.ics.genomix.pregelix.operator.removelowcoverage;
+package edu.uci.ics.genomix.pregelix.operator.removebadcoverage;
 
 import java.util.Iterator;
 
@@ -15,7 +15,7 @@ import edu.uci.ics.genomix.pregelix.base.VertexValueWritable.State;
  * only supported by a small number of reads. These edges are identified
  * and removed. This is then followed by recompressing the graph.
  */
-public class RemoveLowCoverageVertex extends DeBruijnGraphCleanVertex<VertexValueWritable, MessageWritable> {
+public class RemoveBadCoverageVertex extends DeBruijnGraphCleanVertex<VertexValueWritable, MessageWritable> {
     protected static float minAverageCoverage = -1;
     protected static float maxAverageCoverage = -1;
 

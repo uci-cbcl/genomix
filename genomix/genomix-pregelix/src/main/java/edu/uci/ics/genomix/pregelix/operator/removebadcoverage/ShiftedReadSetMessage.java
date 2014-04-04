@@ -1,4 +1,4 @@
-package edu.uci.ics.genomix.pregelix.operator.removelowcoverage;
+package edu.uci.ics.genomix.pregelix.operator.removebadcoverage;
 
 import java.io.DataInput;
 import java.io.DataOutput;
