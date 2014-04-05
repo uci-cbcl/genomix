@@ -168,14 +168,14 @@ public class JobGenerator {
         generateP4ForMergeGraphJob("P4ForMergeGraph", outputBase + "MERGE.xml");
     }
 
-    private static void generateRemoveLowCoverageGraphJob(String jobName, String outputPath) throws IOException {
+    private static void generateRemoveBadCoverageGraphJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = RemoveBadCoverageVertex
                 .getConfiguredJob(new GenomixJobConf(3), RemoveBadCoverageVertex.class);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
 
-    private static void genRemoveLowCoverageGraph() throws IOException {
-        generateRemoveLowCoverageGraphJob("RemoveLowCoverageGraph", outputBase + "LOW_COVERAGE.xml");
+    private static void genRemoveBadCoverageGraph() throws IOException {
+        generateRemoveBadCoverageGraphJob("RemoveBadCoverageGraph", outputBase + "BAD_COVERAGE.xml");
     }
 
     private static void generateTipRemoveGraphJob(String jobName, String outputPath) throws IOException {
@@ -234,7 +234,7 @@ public class JobGenerator {
         
         genExtractSubGraph();
         genTipRemoveGraph();
-        genRemoveLowCoverageGraph();
+        genRemoveBadCoverageGraph();
         genP4ForMergeGraph();
         genRayScaffold();
     }
