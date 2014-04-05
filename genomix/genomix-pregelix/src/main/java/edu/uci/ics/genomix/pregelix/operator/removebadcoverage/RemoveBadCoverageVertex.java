@@ -39,7 +39,7 @@ public class RemoveBadCoverageVertex extends DeBruijnGraphCleanVertex<VertexValu
 
     public void detectLowCoverageVertex() {
         VertexValueWritable vertex = getVertexValue();
-        if (vertex.getAverageCoverage() <= minAverageCoverage || vertex.getAverageCoverage() >= maxAverageCoverage) {
+        if (vertex.getAverageCoverage() < minAverageCoverage || vertex.getAverageCoverage() > maxAverageCoverage) {
             //broadcase kill self
             broadcastKillself();
             vertex.setState(State.DEAD_NODE);
