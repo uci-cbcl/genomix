@@ -4,6 +4,8 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map.Entry;
 
 import edu.uci.ics.genomix.data.types.DIR;
 import edu.uci.ics.genomix.data.types.EDGETYPE;
@@ -11,6 +13,7 @@ import edu.uci.ics.genomix.data.types.Kmer;
 import edu.uci.ics.genomix.data.types.VKmer;
 import edu.uci.ics.genomix.data.types.VKmerList;
 import edu.uci.ics.genomix.pregelix.base.MessageWritable;
+import edu.uci.ics.genomix.pregelix.operator.scaffolding2.RayValue.FIELDS;
 
 public class RayMessage extends MessageWritable {
 
@@ -64,6 +67,9 @@ public class RayMessage extends MessageWritable {
     //Parallel Problem
     public VKmer seed = null;
 
+    /** for early stop **/
+    private HashMap<VKmer, Integer> visitCounter = null;
+    
     public RayMessage() {
 
     }
@@ -137,6 +143,13 @@ public class RayMessage extends MessageWritable {
         if (other.seed != null) {
             getSeed().setAsCopy(other.seed);
         }
+        
+        if(other.visitCounter != null && other.visitCounter.size() > 0){
+        	getVisitCounter().clear();
+            for (Entry<VKmer, Integer> entry : other.visitCounter.entrySet()){
+    			getVisitCounter().put(entry.getKey(), entry.getValue());
+    		}
+        }
     }
 
     @Override
@@ -196,6 +209,18 @@ public class RayMessage extends MessageWritable {
         if ((remainingFields & FIELDS.SEED) != 0) {
             getSeed().readFields(in);
         }
+        
+        if ((remainingFields & FIELDS.VISIT_COUNTER) != 0) {
+            getVisitCounter().clear();
+            int count = in.readInt();
+            for (int i = 0; i < count; i++){
+            	VKmer key = new VKmer();
+            	key.readFields(in);
+            	int value = in.readInt();
+            	visitCounter.put(key, value);
+            	
+            }   
+        }
     }
 
     @Override
@@ -233,7 +258,7 @@ public class RayMessage extends MessageWritable {
 
         byte remainingFields = (byte) ((seed != null ? FIELDS.SEED : 0)|(candidateFlipped != null ? FIELDS.CANDIDATE_FLIPPED : 0)
                 | (edgeTypeBackToPrev != null ? FIELDS.EDGETYPE_BACK_TO_PREV : 0)
-                | (numberOfForks != null ? FIELDS.NUMBER_OF_FORKS : 0) | (pathIndex != null ? FIELDS.PATH_INDEX : 0));
+                | (numberOfForks != null ? FIELDS.NUMBER_OF_FORKS : 0) | (pathIndex != null ? FIELDS.PATH_INDEX : 0) | (visitCounter != null ? FIELDS.VISIT_COUNTER : 0));
         out.writeByte(remainingFields);
         if (candidateFlipped != null) {
             out.writeBoolean(candidateFlipped);
@@ -251,6 +276,13 @@ public class RayMessage extends MessageWritable {
 
         if (seed != null) {
             seed.write(out);
+        }
+        if(visitCounter != null){
+        	out.writeInt(visitCounter.size());
+            for (Entry<VKmer, Integer> entry : visitCounter.entrySet()){
+    			entry.getKey().write(out);
+    			out.writeInt(entry.getValue());
+    		}
         }
         
     }
@@ -310,6 +342,7 @@ public class RayMessage extends MessageWritable {
         public static final byte NUMBER_OF_FORKS = 1 << 2;
         public static final byte PATH_INDEX = 1 << 3;  
         public static final byte SEED = 1 << 4;
+        public static final byte VISIT_COUNTER = 1 << 5;
     }
 
     public RayMessageType getMessageType() {
@@ -465,6 +498,16 @@ public class RayMessage extends MessageWritable {
     public void setSeed(VKmer seed){
     	this.seed = seed;
     }
+    
+    public HashMap<VKmer, Integer> getVisitCounter(){
+    	if (visitCounter == null){
+    		visitCounter = new HashMap<VKmer, Integer>();
+    	}
+    	return visitCounter;
+    }
+    public void setVisitCounter(HashMap<VKmer, Integer> visitCounter){
+    	this.visitCounter= visitCounter;
+    }
     @Override
     public void reset() {
         super.reset();
@@ -484,5 +527,6 @@ public class RayMessage extends MessageWritable {
         pathIndex = null;
         candidatePathIds.clear();
         seed = null;
+        visitCounter = null;
     }
 }
