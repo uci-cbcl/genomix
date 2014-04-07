@@ -241,11 +241,8 @@ public class GenomixDriver {
                         "RAY_SCAFFOLD should have been expanded to RAY_SCAFFOLD_FORWARD and *_REVERSE!");
             case RAY_SCAFFOLD_FORWARD:
             case RAY_SCAFFOLD_REVERSE:
-                if (step == Patterns.RAY_SCAFFOLD_FORWARD) {
-                    conf.set(GenomixJobConf.SCAFFOLDING_INITIAL_DIRECTION, DIR.FORWARD.toString());
-                } else {
-                    conf.set(GenomixJobConf.SCAFFOLDING_INITIAL_DIRECTION, DIR.REVERSE.toString());
-                }
+            	DIR rayDir = (step == Patterns.RAY_SCAFFOLD_FORWARD) ? DIR.FORWARD : DIR.REVERSE;
+                conf.set(GenomixJobConf.SCAFFOLDING_INITIAL_DIRECTION, rayDir.toString());
 
                 if (conf.get(GenomixJobConf.SCAFFOLDING_SERIAL_RUN_MIN_LENGTH_THRESHOLD) != null) {
                     // create individual jobs for each Node above threshold, starting at the longest
@@ -296,19 +293,18 @@ public class GenomixDriver {
                     
                 }**/
                     else {
-
                     Float scorePercentile = conf.getFloat(GenomixJobConf.SCAFFOLD_SEED_SCORE_PERCENTILE, -1);
                     Float lengthPercentile = conf.getFloat(GenomixJobConf.SCAFFOLD_SEED_LENGTH_PERCENTILE, -1);
                     if (scorePercentile > 0) {
                         Float topFraction = (scorePercentile > 0 && scorePercentile < 1) ? scorePercentile : null;
                         Integer topCount = (scorePercentile >= 1) ? ((int) scorePercentile.floatValue()) : null;
                         conf.setInt(GenomixJobConf.SCAFFOLDING_SEED_SCORE_THRESHOLD, RayVertex.calculateScoreThreshold(
-                                prevStatsCounters, topFraction, topCount, "scaffoldSeedScore"));
+                                prevStatsCounters, topFraction, topCount, "scaffoldSeedScore-with-" + rayDir));
                     } else {
                         Float topFraction = (lengthPercentile > 0 && lengthPercentile < 1) ? lengthPercentile : null;
                         Integer topCount = (lengthPercentile >= 1) ? ((int) lengthPercentile.floatValue()) : null;
                         conf.setInt(GenomixJobConf.SCAFFOLDING_SEED_LENGTH_THRESHOLD, RayVertex
-                                .calculateScoreThreshold(prevStatsCounters, topFraction, topCount, "kmerLength"));
+                                .calculateScoreThreshold(prevStatsCounters, topFraction, topCount, "kmerLength-with-" + rayDir));
                     }
                     conf.setFloat(GenomixJobConf.COVERAGE_NORMAL_MEAN, (float) cur_normalMean);
                     conf.setFloat(GenomixJobConf.COVERAGE_NORMAL_STD, (float) cur_normalStd);

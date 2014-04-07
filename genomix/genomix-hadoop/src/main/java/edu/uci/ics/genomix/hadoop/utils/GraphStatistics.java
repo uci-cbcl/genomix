@@ -106,12 +106,22 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
         }
         //        updateStats("edgeRead", totalEdgeReads);
 
-        if (value.isPathNode())
+        if (value.isPathNode()) {
             reporter.incrCounter("totals", "pathNode", 1);
+        }
 
-        for (DIR d : DIR.values())
-            if (value.degree(d) == 0)
+        for (DIR d : DIR.values()) {
+            if (value.degree(d) == 0) {
                 reporter.incrCounter("totals", "tips-" + d, 1);
+            } else {
+            	updateStats("kmerLength-with-" + d, value.getInternalKmer().getKmerLetterLength() == 0 ? key.getKmerLetterLength()
+                        : value.getKmerLength());
+                updateStats("coverage-with-" + d, Math.round(value.getAverageCoverage()));
+                if (coverage >= COVERAGE_DIST_MEAN - COVERAGE_DIST_STD && coverage <= COVERAGE_DIST_MEAN + COVERAGE_DIST_STD) {
+                    updateStats("scaffoldSeedScore-with-" + d, value.calculateSeedScore());
+                }
+            }
+        }
 
         if (value.inDegree() == 0 && value.outDegree() == 0)
             reporter.incrCounter("totals", "tips-BOTH", 1);
