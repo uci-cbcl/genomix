@@ -69,8 +69,8 @@ import edu.uci.ics.genomix.pregelix.operator.bridgeremove.BridgeRemoveVertex;
 import edu.uci.ics.genomix.pregelix.operator.extractsubgraph.ExtractSubgraphVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.P1ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.P4ForPathMergeVertex;
-import edu.uci.ics.genomix.pregelix.operator.removelowcoverage.RemoveLowCoverageVertex;
 import edu.uci.ics.genomix.pregelix.operator.scaffolding2.PruneVertex;
+import edu.uci.ics.genomix.pregelix.operator.removebadcoverage.RemoveBadCoverageVertex;
 //import edu.uci.ics.genomix.pregelix.operator.removelowcoverage.ShiftLowCoverageReadSetVertex;
 import edu.uci.ics.genomix.pregelix.operator.scaffolding2.RayVertex;
 import edu.uci.ics.genomix.pregelix.operator.simplebubblemerge.SimpleBubbleMergeVertex;
@@ -130,7 +130,7 @@ public class GenomixDriver {
 
         if (cutoffCoverage > 0) {
             LOG.info("Set the cutoffCoverage to " + cutoffCoverage);
-            conf.setFloat(GenomixJobConf.REMOVE_LOW_COVERAGE_MAX_COVERAGE, cutoffCoverage);
+            conf.setFloat(GenomixJobConf.REMOVE_BAD_COVERAGE_MIN_COVERAGE, cutoffCoverage);
         } else {
             LOG.info("The generated cutoffCoverage is " + cutoffCoverage + "! It's not set.");
         }
@@ -230,8 +230,8 @@ public class GenomixDriver {
                         ShiftLowCoverageReadSetVertex.class));
                 break;
                 **/
-            case REMOVE_LOW_COVERAGE:
-                pregelixJobs.add(RemoveLowCoverageVertex.getConfiguredJob(conf, RemoveLowCoverageVertex.class));
+            case REMOVE_BAD_COVERAGE:
+                pregelixJobs.add(RemoveBadCoverageVertex.getConfiguredJob(conf, RemoveBadCoverageVertex.class));
                 break;
             case BRIDGE:
                 pregelixJobs.add(BridgeRemoveVertex.getConfiguredJob(conf, BridgeRemoveVertex.class));

@@ -971,8 +971,8 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
             return EMPTY_SORTED_SET;
         }
         //FIXME
-        return orientedReads.getOffSetRange(Math.max(0, startOffset), Math.min(myLength, endOffset));
-       // return orientedReads.getOffSetRange(0, vertex.getKmerLength());
+        //return orientedReads.getOffSetRange(Math.max(0, startOffset), Math.min(myLength, endOffset));
+        return orientedReads.getOffSetRange(0, vertex.getKmerLength());
 
     }
 

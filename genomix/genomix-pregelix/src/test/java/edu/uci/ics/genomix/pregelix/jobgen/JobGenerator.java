@@ -19,7 +19,7 @@ import edu.uci.ics.genomix.pregelix.operator.complexbubblemerge.BubbleMergeWithS
 import edu.uci.ics.genomix.pregelix.operator.extractsubgraph.ExtractSubgraphVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.P1ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.P4ForPathMergeVertex;
-import edu.uci.ics.genomix.pregelix.operator.removelowcoverage.RemoveLowCoverageVertex;
+import edu.uci.ics.genomix.pregelix.operator.removebadcoverage.RemoveBadCoverageVertex;
 import edu.uci.ics.genomix.pregelix.operator.scaffolding2.RayVertex;
 import edu.uci.ics.genomix.pregelix.operator.simplebubblemerge.SimpleBubbleMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.symmetrychecker.SymmetryCheckerVertex;
@@ -168,14 +168,14 @@ public class JobGenerator {
         generateP4ForMergeGraphJob("P4ForMergeGraph", outputBase + "MERGE.xml");
     }
 
-    private static void generateRemoveLowCoverageGraphJob(String jobName, String outputPath) throws IOException {
-        PregelixJob job = RemoveLowCoverageVertex
-                .getConfiguredJob(new GenomixJobConf(3), RemoveLowCoverageVertex.class);
+    private static void generateRemoveBadCoverageGraphJob(String jobName, String outputPath) throws IOException {
+        PregelixJob job = RemoveBadCoverageVertex
+                .getConfiguredJob(new GenomixJobConf(3), RemoveBadCoverageVertex.class);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
 
-    private static void genRemoveLowCoverageGraph() throws IOException {
-        generateRemoveLowCoverageGraphJob("RemoveLowCoverageGraph", outputBase + "LOW_COVERAGE.xml");
+    private static void genRemoveBadCoverageGraph() throws IOException {
+        generateRemoveBadCoverageGraphJob("RemoveBadCoverageGraph", outputBase + "BAD_COVERAGE.xml");
     }
 
     private static void generateTipRemoveGraphJob(String jobName, String outputPath) throws IOException {
@@ -234,7 +234,7 @@ public class JobGenerator {
         
         genExtractSubGraph();
         genTipRemoveGraph();
-        genRemoveLowCoverageGraph();
+        genRemoveBadCoverageGraph();
         genP4ForMergeGraph();
         genRayScaffold();
     }

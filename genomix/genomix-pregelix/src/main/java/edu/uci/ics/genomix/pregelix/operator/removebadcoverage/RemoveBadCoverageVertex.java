@@ -1,4 +1,4 @@
-package edu.uci.ics.genomix.pregelix.operator.removelowcoverage;
+package edu.uci.ics.genomix.pregelix.operator.removebadcoverage;
 
 import java.util.Iterator;
 
@@ -10,13 +10,16 @@ import edu.uci.ics.genomix.pregelix.base.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.base.VertexValueWritable.State;
 
 /**
- * Graph clean pattern: Remove Lowcoverage
- * Detais: Chimeric reads and other sequencing artifacts create edges that are
- * only supported by a small number of reads. These edges are identified
- * and removed. This is then followed by recompressing the graph.
+ * Graph clean pattern: Remove Badcoverage
+ * Details: Chimeric reads and other sequencing artifacts create edges that are
+ * only supported by a small number of reads. Besides that, there are some nodes 
+ * with a very high coverage because of repeats. These edges/nodes are identified
+ * and removed. This is then followed by recompressing the graph. 
+ * 
  */
-public class RemoveLowCoverageVertex extends DeBruijnGraphCleanVertex<VertexValueWritable, MessageWritable> {
+public class RemoveBadCoverageVertex extends DeBruijnGraphCleanVertex<VertexValueWritable, MessageWritable> {
     protected static float minAverageCoverage = -1;
+    protected static float maxAverageCoverage = -1;
 
     /**
      * initiate kmerSize, length
@@ -26,14 +29,17 @@ public class RemoveLowCoverageVertex extends DeBruijnGraphCleanVertex<VertexValu
         super.initVertex();
         if (minAverageCoverage < 0)
             minAverageCoverage = Float.parseFloat(getContext().getConfiguration().get(
-                    GenomixJobConf.REMOVE_LOW_COVERAGE_MAX_COVERAGE));
+                    GenomixJobConf.REMOVE_BAD_COVERAGE_MIN_COVERAGE));
+        if(maxAverageCoverage < 0)
+        	maxAverageCoverage = Float.parseFloat(getContext().getConfiguration().get(
+                    GenomixJobConf.REMOVE_BAD_COVERAGE_MAX_COVERAGE));
         if (outgoingMsg == null)
             outgoingMsg = new MessageWritable();
     }
 
     public void detectLowCoverageVertex() {
         VertexValueWritable vertex = getVertexValue();
-        if (vertex.getAverageCoverage() <= minAverageCoverage) {
+        if (vertex.getAverageCoverage() < minAverageCoverage || vertex.getAverageCoverage() > maxAverageCoverage) {
             //broadcase kill self
             broadcastKillself();
             vertex.setState(State.DEAD_NODE);
