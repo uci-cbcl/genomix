@@ -56,7 +56,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
 
     public static final boolean REMOVE_OTHER_OUTGOING = true; // whether to remove other outgoing branches when a dominant edge is chosen
     public static final boolean REMOVE_OTHER_INCOMING = false; // whether to remove other incoming branches when a dominant edge is chosen
-    public static final boolean CANDIDATES_SCORE_WALK = false; // whether to have the candidates score the walk
+    public static final boolean CANDIDATES_SCORE_WALK = true; // whether to have the candidates score the walk
     private static final boolean EXPAND_CANDIDATE_BRANCHES = false; // whether to get kmer from all possible candidate branches
     PrintWriter writer;
     PrintWriter log;
@@ -483,27 +483,32 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
             tmpCandidate.reset();
             // pretend that the candidate is the frontier and the frontier is the candidate
             tmpCandidate.setFrontierFlipped(vertex.getFlippedFromInitDir().get(seed));
-            tmpCandidate.setEdgeTypeBackToFrontier(msg.getEdgeTypeBackToFrontier().mirror());
-            tmpCandidate.setToScoreKmer(new VKmer(msg.getAccumulatedWalkKmer()));
+            tmpCandidate.setEdgeTypeBackToFrontier(msg.getEdgeTypeBackToFrontier());
+            tmpCandidate.setToScoreKmer(new VKmer(msg.getAccumulatedWalkKmer().reverse()));
             tmpCandidate.setToScoreId(new VKmer(id));
-            tmpCandidate.setCandidateFlipped(false); // TODO check this... the accumulated kmer is always in the same dir as the search, right?
+            // TODO check this... the accumulated kmer is always in the same dir as the search, right?
+            // So, when we're going backward it's always flipped?
+            tmpCandidate.setCandidateFlipped(true); 
+            
             // TODO need to truncate to only a subset of readids if the MAX_DISTANCE isn't being used for max candidate search length
             singleEndScores = voteFromReads(true, vertex, !vertex.getFlippedFromInitDir().get(seed),
-                    Collections.singletonList(tmpCandidate), 0, vertex.getKmerLength(), msg.getAccumulatedWalkKmer()
-                            .getKmerLetterLength());
+                    Collections.singletonList(tmpCandidate), 0, msg.getToScoreKmer().getKmerLetterLength() + vertex.getKmerLength() - kmerSize + 1, msg.getAccumulatedWalkKmer()
+                            .getKmerLetterLength() - kmerSize + 1);
             pairedEndScores = HAS_PAIRED_END_READS ? voteFromReads(false, vertex, !vertex.getFlippedFromInitDir().get(seed),
-                    Collections.singletonList(tmpCandidate), 0, vertex.getKmerLength(), msg.getAccumulatedWalkKmer()
-                            .getKmerLetterLength()) : null;
+                    Collections.singletonList(tmpCandidate), 0, msg.getToScoreKmer().getKmerLetterLength() + vertex.getKmerLength() - kmerSize + 1 , msg.getAccumulatedWalkKmer()
+                            .getKmerLetterLength() - kmerSize + 1) : null;
 
             // TODO keep these scores?
 
-            vertex.flippedFromInitialDirection = null;
+            vertex.getFlippedFromInitDir().remove(seed);
         }
 
         outgoingMsg.reset();
+        outgoingMsg.setSingleEndScores(new ArrayList<>(msg.getSingleEndScores()));
         if (singleEndScores != null) {
             outgoingMsg.getSingleEndScores().addAll(singleEndScores);
         }
+        outgoingMsg.setPairedEndScores(new ArrayList<>(msg.getPairedEndScores()));
         if (pairedEndScores != null) {
             outgoingMsg.getPairedEndScores().addAll(pairedEndScores);
         }
@@ -697,7 +702,15 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
                 	}
             	}
         	}
-        	 **/
+        	**/
+        	if (id.equals(frontierNode)) { // only include the candidate's mutual scores once (here, in the frontier's scores)
+        		for (int i = 0; i < msgs.size(); i++) {
+        			if (msgs.get(i).getSingleEndScores().size() > 0) {
+        				outgoingMsg.getSingleEndScores().get(i).addAll(new RayScores(msgs.get(i).getSingleEndScores().get(0)));
+        			}
+        		}
+        	}
+        	
         	if (pairedEndScores != null) {
         		outgoingMsg.getPairedEndScores().addAll(new ArrayList(pairedEndScores));
         	}
@@ -920,8 +933,8 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
             return EMPTY_SORTED_SET;
         }
         //FIXME
-        return orientedReads.getOffSetRange(Math.max(0, startOffset), Math.min(myLength, endOffset));
-       // return orientedReads.getOffSetRange(0, vertex.getKmerLength());
+       // return orientedReads.getOffSetRange(Math.max(0, startOffset), Math.min(myLength, endOffset));
+        return orientedReads.getOffSetRange(0, vertex.getKmerLength());
 
     }
 

@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map.Entry;
 
 import org.apache.hadoop.io.Writable;
@@ -111,6 +112,23 @@ public class RayScores implements Writable {
     	}
     	throw new IllegalStateException("requested single kmer to add but this score has " + scores.size() + " entries! " + scores);
     }
+    
+    public void reverseEdge(){
+    	if (scores.size() != 1) {
+    	    throw new IllegalStateException("requested single key but this score has " + scores.size() + " entries! " + scores);
+    	}
+    	Iterator it = scores.keySet().iterator();
+    	SimpleEntry<EDGETYPE, VKmer> e = (SimpleEntry)it.next();
+    	EDGETYPE tmpEdge = e.getKey().mirror();
+    	VKmer tmpKmer = e.getValue();
+    	if (!(tmpEdge.equals(EDGETYPE.FR)) && !(tmpEdge.equals(EDGETYPE.RF))){
+    		SimpleEntry<EDGETYPE, VKmer> m = new SimpleEntry<>(tmpEdge, tmpKmer);
+    		scores.put(m,scores.get(e));
+    		scores.remove(e);
+    	}  	
+    	System.out.println(scores.size());
+    }
+    
     /**
      * Return true iff queryKmer is "better than" targetKmer according to my scores.
      * Specifically, each of the rule values must be "factor" times larger than the corresponding values for targetKmer
