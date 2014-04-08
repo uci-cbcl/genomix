@@ -56,8 +56,8 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
 
     public static final boolean REMOVE_OTHER_OUTGOING = true; // whether to remove other outgoing branches when a dominant edge is chosen
     public static final boolean REMOVE_OTHER_INCOMING = false; // whether to remove other incoming branches when a dominant edge is chosen
-    public static final boolean CANDIDATES_SCORE_WALK = true; // whether to have the candidates score the walk
-    private static final boolean EXPAND_CANDIDATE_BRANCHES = false; // whether to get kmer from all possible candidate branches
+    public static final boolean CANDIDATES_SCORE_WALK = false; // whether to have the candidates score the walk
+    private static final boolean EXPAND_CANDIDATE_BRANCHES = true; // whether to get kmer from all possible candidate branches
     PrintWriter writer;
     PrintWriter log;
     
@@ -128,12 +128,13 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
     public void compute(Iterator<RayMessage> msgIterator) throws Exception {
         if (getSuperstep() == 1) {
             if (isStartSeed()) {
-        	//if (getVertexId().toString().equals("CAAAAAGAAAAAACCCGCCGC") || getVertexId().toString().equals("ATAAGACGCGCCAGCGTCGCA") ){
+        	//if (getVertexId().toString().equals("AATTATCGGCGAAATGCTGCG") ){
                 msgIterator = getStartMessage();
                 LOG.info("starting seed in " + INITIAL_DIRECTION + ": " + getVertexId() + ", length: "
                         + getVertexValue().getKmerLength() + ", coverge: " + getVertexValue().getAverageCoverage()
                         + ", score: " + getVertexValue().calculateSeedScore());
             }
+           // }
         }
         scaffold(msgIterator);
         voteToHalt();
@@ -190,8 +191,8 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
     }
 
     // local variables for scaffold
-    private ArrayList<RayMessage> requestScoreMsgs = new ArrayList<>();
-    private ArrayList<RayMessage> aggregateScoreMsgs = new ArrayList<>();
+    private HashMap<VKmer, ArrayList<RayMessage>> requestScoreMsgs = new HashMap<>();
+    private HashMap<VKmer, ArrayList<RayMessage>> aggregateScoreMsgs = new HashMap<>();
 
     private void scaffold(Iterator<RayMessage> msgIterator) throws FileNotFoundException, UnsupportedEncodingException {
         // TODO since the messages aren't synchronized by iteration, we might want to  
@@ -247,10 +248,22 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
                     break;
                 case REQUEST_SCORE:
                     // batch-process these (have to truncate to min length)
-                    requestScoreMsgs.add(new RayMessage(msg));
+                	if (requestScoreMsgs.containsKey(msg.getSeed())){
+                     requestScoreMsgs.get(msg.getSeed()).add(new RayMessage(msg));
+                	}else{
+                    	 ArrayList<RayMessage> requestScoreMessagesTemp = new ArrayList<>();
+                    	 requestScoreMessagesTemp.add(new RayMessage(msg));
+                    	 requestScoreMsgs.put(msg.getSeed(), requestScoreMessagesTemp);
+                     }
                     break;
                 case AGGREGATE_SCORE:
-                    aggregateScoreMsgs.add(new RayMessage(msg));
+                	if (aggregateScoreMsgs.containsKey(msg.getSeed())){
+                		aggregateScoreMsgs.get(msg.getSeed()).add(new RayMessage(msg));
+                   	}else{
+                       	 ArrayList<RayMessage> aggregateScoreMessagesTemp = new ArrayList<>();
+                       	aggregateScoreMessagesTemp.add(new RayMessage(msg));
+                       	aggregateScoreMsgs.put(msg.getSeed(), aggregateScoreMessagesTemp);
+                        }
                     break;
                 case PRUNE_EDGE:
                     // remove the given edge back towards the frontier node.  Also, clear the "visited" state of this node
@@ -598,40 +611,18 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
      * 
      * @param msg
      */
-    private void sendScoresToFrontier(ArrayList<RayMessage> unsortedMsgs) {
+    private void sendScoresToFrontier(HashMap<VKmer, ArrayList<RayMessage>> unsortedMsgs) {
         // sort the msgs by their index
-        //ArrayList<RayMessage> msgs = new ArrayList<>(Arrays.asList(new RayMessage[unsortedMsgs.size()]));
-        ArrayList<VKmer> seeds = new ArrayList<VKmer>();
-        for (RayMessage msg : unsortedMsgs){
-        	if(!seeds.contains((msg.getSeed()))){
-        		seeds.add(new VKmer(msg.getSeed()));
-        	}
-        }
-        for (VKmer seed : seeds){
-        	ArrayList<RayMessage> msgs = new ArrayList<>(Arrays.asList(new RayMessage[unsortedMsgs.size()]));
-        	
-        /**	
-        for (RayMessage msg : unsortedMsgs) {
-        	if (msg.getSeed().equals(seed) ){
-            //WriteToLog("requestScoreMsgs",msg.toString(), getVertexId().toString());
-            if (msgs.get(msg.getPathIndex()) != null) {
-                throw new IllegalArgumentException("should only have one msg for each path!");
-            }
-            msgs.set(msg.getPathIndex(), msg);
-        	}
-        }
-        **/
-        //ELMIRA
-        	for (RayMessage msg : unsortedMsgs) {
-        		if (msg.getSeed().equals(seed) ){
-        			//WriteToLog("requestScoreMsgs",msg.toString(), getVertexId().toString());
-        			if (msgs.contains(msg)) {
-        				throw new IllegalArgumentException("should only have one msg for each path!");
-        			}
-        			msgs.add(msg);
+        for (VKmer seed : unsortedMsgs.keySet()){
+        	ArrayList<RayMessage> msgs = new ArrayList<>(Arrays.asList(new RayMessage[unsortedMsgs.get(seed).size()]));
+        	for (RayMessage msg : unsortedMsgs.get(seed)) {
+                    //WriteToLog("requestScoreMsgs",msg.toString(), getVertexId().toString());
+        		if (msgs.get(msg.getPathIndex()) != null) {
+        			throw new IllegalArgumentException("should only have one msg for each path!");
         		}
+        		msgs.set(msg.getPathIndex(), msg);
         	}
-        	msgs.removeAll(Collections.singleton(null));
+        	//msgs.removeAll(Collections.singleton(null));
         	VKmer id = getVertexId();
         	RayValue vertex = getVertexValue();
         	// all msgs should have the same total length and describe me as being at the same offset
@@ -694,15 +685,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         	}
         	//each message has a single-element list containing the candidates' total score of the accumulatedKmer
         	// we need to add that single element to the path score it corresponds to
-        	/**
-        	if (id.equals(frontierNode)) { // only include the candidate's mutual scores once (here, in the frontier's scores)
-       	    	for (int i = 0; i < msgs.size(); i++) {
-                	if (msgs.get(i).getSingleEndScores().size() > 0) {
-                    	outgoingMsg.getSingleEndScores().get(i).addAll(msgs.get(i).getSingleEndScores().get(0));
-                	}
-            	}
-        	}
-        	**/
+
         	if (id.equals(frontierNode)) { // only include the candidate's mutual scores once (here, in the frontier's scores)
         		for (int i = 0; i < msgs.size(); i++) {
         			if (msgs.get(i).getSingleEndScores().size() > 0) {
@@ -959,36 +942,25 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
      * @throws UnsupportedEncodingException 
      * @throws FileNotFoundException 
      */
-    private void compareScoresAndPrune(ArrayList<RayMessage> msgs) throws FileNotFoundException, UnsupportedEncodingException {
+    private void compareScoresAndPrune(HashMap<VKmer, ArrayList<RayMessage>> msgs) throws FileNotFoundException, UnsupportedEncodingException {
         VKmer id = getVertexId();
         RayValue vertex = getVertexValue();
         ArrayList<VKmer> seeds = new ArrayList<VKmer>();
         int walkLength = 0;
-        for (RayMessage msg : msgs){
-        	if(!seeds.contains((msg.getSeed()))){
-        		seeds.add(new VKmer(msg.getSeed()));
-        	}
-        }
-        for (VKmer seed : seeds){	
+        for (VKmer seed : msgs.keySet()){	
         	// aggregate scores and walk info from all msgs
         	// the msgs incoming are one for each walk node and contain a list of scores, one for each path
         	singleEndScores.clear();
         	pairedEndScores.clear();
         	walkIds.clear();
         	walkOffsets.clear();
-        	for (RayMessage msg : msgs){
-        		if (msg.getSeed().equals(seed)){
-        			walkLength = msg.getWalkLength();
-        			break;
-        		}
-        	}
+        	walkLength = msgs.get(seed).get(0).getWalkLength();
         	//int walkLength = msgs.get(0).getWalkLength();
-        	for (RayMessage msg : msgs) {
-        		if (msg.getSeed().equals(seed)){
-        			if (walkLength != msg.getWalkLength()) {
-        				throw new IllegalStateException("One of the messages didn't agree about the walk length! Expected "
-        						+ walkLength + " but saw " + msg.getWalkLength());
-        			}
+        	for (RayMessage msg : msgs.get(seed)) {
+        		if (walkLength != msg.getWalkLength()) {
+        			throw new IllegalStateException("One of the messages didn't agree about the walk length! Expected "
+        					+ walkLength + " but saw " + msg.getWalkLength());
+        		}
         			// add each walk node's contribution to the single path represented by each list element
         			if (msg.getSingleEndScores().size() > 0) {
         				if (singleEndScores.size() == 0) {
@@ -1003,17 +975,19 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
                     	
         						//FIXME
         						//ELMIRA
+        						/**
         						for (int j = 0; j < msg.getSingleEndScores().size() ; j++){
         							if (singleEndScores.get(i).getVkmer().equals(msg.getSingleEndScores().get(j).getVkmer()) &&
         									singleEndScores.get(i).getEdge() == msg.getSingleEndScores().get(j).getEdge()){
         								singleEndScores.get(i).addAll(new RayScores(msg.getSingleEndScores().get(j)));
         							}
         						}
-        						/**
+        						**/
+        					
                     		if ((i < msg.getSingleEndScores().size())){
                     			singleEndScores.get(i).addAll(msg.getSingleEndScores().get(i));
                     		}
-        						 **/
+        						 
         					}
         				}
         			}
@@ -1035,7 +1009,6 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         			walkIds.append(new VKmer(msg.getWalkIds().getPosition(0)));
         			walkOffsets.add(msg.getWalkOffsets().get(0));
         			accumulatedWalk = msg.getAccumulatedWalkKmer();
-        		}
         	}
         	LOG.info("in prune for " + id + " scores are singleend: " + singleEndScores + " pairedend: " + pairedEndScores);
 
@@ -1045,8 +1018,8 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         	if (numSingleEndPaths == -1 && numPairedEndPaths == -1) {
         		storeWalk(walkIds, accumulatedWalk, seed);
         		LOG.info("failed to find a dominant edge (no scores available!). Started at "
-        				+ msgs.get(0).getSourceVertexId() + " and will stop at " + id + " with total length: "
-        				+ msgs.get(0).getWalkLength() + "\n>id " + id + "\n" + msgs.get(0).getAccumulatedWalkKmer());
+        				+ msgs.get(seed).get(0).getSourceVertexId() + " and will stop at " + id + " with total length: "
+        				+ msgs.get(seed).get(0).getWalkLength() + "\n>id " + id + "\n" + msgs.get(seed).get(0).getAccumulatedWalkKmer());
         		//vertex.stopSearch = true;
         		return;
         	} else if (numSingleEndPaths != -1 && numPairedEndPaths != -1 && numSingleEndPaths != numPairedEndPaths) {
@@ -1179,18 +1152,18 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         		outgoingMsg.setWalkIds(new VKmerList(walkIds));
         		outgoingMsg.setWalkOffsets(walkOffsets);
         		outgoingMsg.setWalkLength(walkLength);
-        		outgoingMsg.setAccumulatedWalkKmer(new VKmer(msgs.get(0).getAccumulatedWalkKmer()));
+        		outgoingMsg.setAccumulatedWalkKmer(new VKmer(msgs.get(seed).get(0).getAccumulatedWalkKmer()));
         		outgoingMsg.setFrontierFlipped(vertex.getFlippedFromInitDir().get(seed)); // TODO make sure this is correct
         		outgoingMsg.setCandidateFlipped(vertex.getFlippedFromInitDir().get(seed) ^ dominantEdgeType.causesFlip());
         		sendMsg(dominantKmer, outgoingMsg);
         		// WriteToLog("dominantedgefound" ,msgs.get(0).getAccumulatedWalkKmer().toString() , getVertexId().toString());
         		LOG.info("dominant edge found: " + dominantEdgeType + ":" + dominantKmer);
         	} else {
-        		storeWalk(walkIds, msgs.get(0).getAccumulatedWalkKmer(), seed);
+        		storeWalk(walkIds, msgs.get(seed).get(0).getAccumulatedWalkKmer(), seed);
         		//vertex.stopSearch = true;
-        		LOG.info("failed to find a dominant edge. Started at " + msgs.get(0).getSourceVertexId()
-        				+ " and will stop at " + id + " with total length: " + msgs.get(0).getWalkLength() + "\n>id " + id
-        				+ "\n" + msgs.get(0).getAccumulatedWalkKmer());
+        		LOG.info("failed to find a dominant edge. Started at " + msgs.get(seed).get(0).getSourceVertexId()
+        				+ " and will stop at " + id + " with total length: " + msgs.get(seed).get(0).getWalkLength() + "\n>id " + id
+        				+ "\n" + msgs.get(seed).get(0).getAccumulatedWalkKmer());
         	}
         }
         
