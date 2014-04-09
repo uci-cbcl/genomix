@@ -50,6 +50,7 @@ public class ClearStateOperatorDescriptor extends AbstractSingleActivityOperator
                 RuntimeContext context = (RuntimeContext) ctx.getJobletContext().getApplicationContext()
                         .getApplicationObject();
                 context.clearState(jobId, allStates);
+                System.gc();
             }
 
             @Override
