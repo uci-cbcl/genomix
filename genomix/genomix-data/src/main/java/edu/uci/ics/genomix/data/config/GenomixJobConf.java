@@ -28,6 +28,7 @@ import org.apache.hadoop.mapred.JobConf;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
+import org.kohsuke.args4j.spi.ExplicitBooleanOptionHandler;
 
 import edu.uci.ics.genomix.data.types.ExternalableTreeSet;
 import edu.uci.ics.genomix.data.types.FileManager;
@@ -160,8 +161,26 @@ public class GenomixJobConf extends JobConf {
         @Option(name = "-scaffold_seedLengthPercentile", usage = "Choose scaffolding seeds as the nodes with longest kmer length.  If this is 0 < percentile < 1, this value will be interpreted as a fraction of the graph (so .01 will mean 1% of the graph will be a seed).  For fraction >= 1, it will be interpreted as the (approximate) *number* of seeds to include. Mutually exclusive with -scaffold_seedScorePercentile.", required = false)
         private float scaffold_seedLengthPercentile = -1;
         
+        @Option(name = "-scaffold_removeOtherOutgoing", usage = "Whether or not to remove all non-walk edges in the direction of the walk during scaffold.", handler=ExplicitBooleanOptionHandler.class)
+		private boolean scaffold_removeOtherOutgoing = true;
+
+        @Option(name = "-scaffold_removeOtherIncoming", usage = "Whether or not to remove all non-walk edges behind the the walk during scaffold.", handler=ExplicitBooleanOptionHandler.class)
+		private boolean scaffold_removeOtherIncoming = false;
+
+        @Option(name = "-scaffold_candidatesScoreWalk", usage = "Whether to allow candidates to also score the walk (rather than the walk scoring the candidates).", handler=ExplicitBooleanOptionHandler.class)
+		private boolean scaffold_candidatesScoreWalk = false;
+
+        @Option(name = "-scaffold_expandCandidateBranches", usage = "Whether or not to expand the candidate branch selection into a search (not just one node will be considered).", handler=ExplicitBooleanOptionHandler.class)
+		private boolean scaffold_expandCandidateBranches = false;
+        
         @Option(name = "-scaffold_expandCandidateBranchMaxDistance", usage = "In scaffolding, candidate kmers are expanded by one node (of variable length).  This option causes the search to continue until this many bases are accumulated in the candidate kmers.", required = false)
         private int scaffold_expandCandidateBranchMaxDistance = -1;
+
+        @Option(name = "-scaffold_delayPrune", usage = "Whether or not to delay pruning edges from the scaffold walk until after all walks are completed.", handler=ExplicitBooleanOptionHandler.class)
+		private boolean scaffold_delayPrune = true;
+
+        @Option(name = "-scaffold_earlyStop", usage = "Whether or not to stop walks that cross paths.", handler=ExplicitBooleanOptionHandler.class)
+		private boolean scaffold_earlyStop = false;
 
         // Hyracks/Pregelix Setup
         @Option(name = "-profile", usage = "Whether or not to do runtime profifling", required = false)
@@ -312,6 +331,7 @@ public class GenomixJobConf extends JobConf {
     public static final String REMOVE_BAD_COVERAGE_MAX_COVERAGE = "genomix.removeBadCoverage.maxCoverage";
     public static final String TIP_REMOVE_MAX_LENGTH = "genomix.tipRemove.maxLength";
     public static final String MAX_READIDS_PER_EDGE = "genomix.maxReadidsPerEdge";
+    
     public static final String SCAFFOLDING_INITIAL_DIRECTION = "genomix.scaffolding.initialDirection";
     public static final String SCAFFOLDING_SERIAL_RUN_MIN_LENGTH_THRESHOLD = "genomix.scaffolding.serialRunMinLengthThreshold";
     public static final String SCAFFOLD_SEED_ID = "genomix.scaffolding.seedId";
@@ -320,6 +340,13 @@ public class GenomixJobConf extends JobConf {
     public static final String SCAFFOLDING_SEED_SCORE_THRESHOLD = "genomix.scaffolding.seedScoreThreshold";
     public static final String SCAFFOLDING_SEED_LENGTH_THRESHOLD = "genomix.scaffolding.seedLengthThreshold";
     public static final String SCAFFOLDING_EXPAND_CANDIDATE_BRANCHES_MAX_DISTANCE = "genomix.scaffolding.expandCandidateBranchesMaxDistance";
+	public static final String SCAFFOLDING_REMOVE_OTHER_OUTGOING = "genomix.scaffolding.removeOtherOutgoing";
+	public static final String SCAFFOLDING_REMOVE_OTHER_INCOMING = "genomix.scaffolding.removeOtherIncoming";
+	public static final String SCAFFOLDING_CANDIDATES_SCORE_WALK = "genomix.scaffolding.candidatesScoreWalk";
+	public static final String SCAFFOLDING_EXPAND_CANDIDATE_BRANCHES = "genomix.scaffolding.expandCandidateBranches";
+	public static final String SCAFFOLDING_DELAY_PRUNE = "genomix.scaffolding.delayPrune";
+	public static final String SCAFFOLDING_EARLY_STOP = "genomix.scaffolding.earlyStop";
+	
     public static final String PLOT_SUBGRAPH_START_SEEDS = "genomix.plotSubgraph.startSeeds";
     public static final String PLOT_SUBGRAPH_NUM_HOPS = "genomix.plotSubgraph.numHops";
     public static final String PLOT_SUBGRAPH_GRAPH_VERBOSITY = "genomix.plotSubgraph.graphVerbosity";
@@ -615,7 +642,13 @@ public class GenomixJobConf extends JobConf {
         if (opts.scaffold_expandCandidateBranchMaxDistance != -1) {
         	setInt(SCAFFOLDING_EXPAND_CANDIDATE_BRANCHES_MAX_DISTANCE, opts.scaffold_expandCandidateBranchMaxDistance);
         }
-
+        setBoolean(SCAFFOLDING_REMOVE_OTHER_OUTGOING, opts.scaffold_removeOtherOutgoing);
+        setBoolean(SCAFFOLDING_REMOVE_OTHER_INCOMING, opts.scaffold_removeOtherIncoming);
+        setBoolean(SCAFFOLDING_CANDIDATES_SCORE_WALK, opts.scaffold_candidatesScoreWalk);
+        setBoolean(SCAFFOLDING_EXPAND_CANDIDATE_BRANCHES, opts.scaffold_expandCandidateBranches);
+        setBoolean(SCAFFOLDING_DELAY_PRUNE, opts.scaffold_delayPrune);
+        setBoolean(SCAFFOLDING_EARLY_STOP, opts.scaffold_earlyStop);
+        
         setInt(STATS_EXPECTED_GENOMESIZE, opts.stats_expectedGenomeSize);
         setInt(STATS_MIN_CONTIGLENGTH, opts.stats_minContigLength);
         setInt(THREADS_PER_MACHINE, opts.threadsPerMachine);

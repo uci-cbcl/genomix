@@ -55,12 +55,13 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
     private static int MAX_DISTANCE; // the max(readlengths, outerdistances)
     private static int EXPAND_CANDIDATE_BRANCHES_MAX_DISTANCE; // the max distance (in bp) the candidate branch expansion should reach across. 
 
-    public static final boolean REMOVE_OTHER_OUTGOING = true; // whether to remove other outgoing branches when a dominant edge is chosen
-    public static final boolean REMOVE_OTHER_INCOMING = true; // whether to remove other incoming branches when a dominant edge is chosen
-    public static final boolean CANDIDATES_SCORE_WALK = false; // whether to have the candidates score the walk
-    public static final boolean EXPAND_CANDIDATE_BRANCHES = false; // whether to get kmer from all possible candidate branches
-    public static final boolean DELAY_PRUNE = true; // Whether we should perform the prune as a separate job, after all the walks have completed their march.
-    public static final boolean EARLY_STOP = true;	// whether to stop early if there is large overlap with other walks 
+    public static boolean REMOVE_OTHER_OUTGOING; // whether to remove other outgoing branches when a dominant edge is chosen
+    public static boolean REMOVE_OTHER_INCOMING; // whether to remove other incoming branches when a dominant edge is chosen
+    public static boolean CANDIDATES_SCORE_WALK; // whether to have the candidates score the walk
+    public static boolean EXPAND_CANDIDATE_BRANCHES; // whether to get kmer from all possible candidate branches
+    public static boolean DELAY_PRUNE; // Whether we should perform the prune as a separate job, after all the walks have completed their march.
+    public static boolean EARLY_STOP;	// whether to stop early if there is large overlap with other walks
+    
     public static final boolean STORE_WALK = false; // whether to save the walks - just for test 
     private static int OVERLAP_THRESHOLD = 500;
     
@@ -116,6 +117,13 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         }
         MAX_DISTANCE = Math.max(MAX_OUTER_DISTANCE, MAX_READ_LENGTH);
         EXPAND_CANDIDATE_BRANCHES_MAX_DISTANCE = Math.min(MAX_DISTANCE, conf.getInt(GenomixJobConf.SCAFFOLDING_EXPAND_CANDIDATE_BRANCHES_MAX_DISTANCE, Integer.MAX_VALUE));
+        
+        REMOVE_OTHER_OUTGOING = Boolean.parseBoolean(conf.get(GenomixJobConf.SCAFFOLDING_REMOVE_OTHER_OUTGOING));
+        REMOVE_OTHER_INCOMING = Boolean.parseBoolean(conf.get(GenomixJobConf.SCAFFOLDING_REMOVE_OTHER_INCOMING));
+        CANDIDATES_SCORE_WALK = Boolean.parseBoolean(conf.get(GenomixJobConf.SCAFFOLDING_CANDIDATES_SCORE_WALK));
+        EXPAND_CANDIDATE_BRANCHES = Boolean.parseBoolean(conf.get(GenomixJobConf.SCAFFOLDING_EXPAND_CANDIDATE_BRANCHES));
+        DELAY_PRUNE = Boolean.parseBoolean(conf.get(GenomixJobConf.SCAFFOLDING_DELAY_PRUNE));
+        EARLY_STOP = Boolean.parseBoolean(conf.get(GenomixJobConf.SCAFFOLDING_EARLY_STOP));         
 
         if (getSuperstep() == 1) {
             // manually clear state
