@@ -180,6 +180,7 @@ public class VertexFileScanOperatorDescriptor extends AbstractSingleActivityOper
                 if (appender.getTupleCount() > 0) {
                     FrameUtils.flushFrame(frame, writer);
                 }
+                System.gc();
             }
         };
     }
