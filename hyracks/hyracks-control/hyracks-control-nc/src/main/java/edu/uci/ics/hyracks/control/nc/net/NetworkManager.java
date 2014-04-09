@@ -99,7 +99,7 @@ public class NetworkManager implements IChannelConnectionFactory {
             if (LOGGER.isLoggable(Level.FINE)) {
                 LOGGER.fine("Received initial partition request: " + pid + " on channel: " + ccb);
             }
-            noc = new NetworkOutputChannel(ccb, 1);
+            noc = new NetworkOutputChannel(ccb, 5);
             try {
                 partitionManager.registerPartitionRequest(pid, noc);
             } catch (HyracksException e) {

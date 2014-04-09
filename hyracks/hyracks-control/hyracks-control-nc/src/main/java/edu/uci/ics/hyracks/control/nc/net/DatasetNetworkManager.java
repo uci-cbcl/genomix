@@ -102,7 +102,7 @@ public class DatasetNetworkManager implements IChannelConnectionFactory {
                 LOGGER.fine("Received initial dataset partition read request for JobId: " + jobId + " partition: "
                         + partition + " on channel: " + ccb);
             }
-            noc = new NetworkOutputChannel(ccb, 1);
+            noc = new NetworkOutputChannel(ccb, 5);
             try {
                 partitionManager.initializeDatasetPartitionReader(jobId, rsId, partition, noc);
             } catch (HyracksException e) {
