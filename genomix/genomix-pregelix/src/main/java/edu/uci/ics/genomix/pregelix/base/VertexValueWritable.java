@@ -51,6 +51,7 @@ public class VertexValueWritable extends Node {
     }
 
     public void setAsCopy(VertexValueWritable other) {
+    	super.reset();
         setNode(other);
         state = other.getState();
         isFakeVertex = other.isFakeVertex();
