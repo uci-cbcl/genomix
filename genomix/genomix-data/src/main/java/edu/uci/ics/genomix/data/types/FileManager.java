@@ -21,7 +21,7 @@ public class FileManager {
     private Configuration conf;
     private HashSet<Path> allocatedHdfsPath;
     private HashSet<Path> allocatedLocalPath;
-    
+
     // Currently we didn't expect the different configuration pass in at the same job, 
     // So we use singleton instance and initialize it at first time. 
     private static FileManager fpManager = null;
@@ -45,8 +45,10 @@ public class FileManager {
         lfs = FileSystem.getLocal(conf);
         hdfsWorkPath = hdfsWorkingPath;
         localWorkPath = new Path(BspUtils.TMP_DIR);
-        allocatedHdfsPath = new HashSet<Path>();
-        allocatedLocalPath = new HashSet<Path>();
+        if (allocatedHdfsPath == null)
+            allocatedHdfsPath = new HashSet<Path>();
+        if (allocatedLocalPath == null)
+            allocatedLocalPath = new HashSet<Path>();
         this.conf = conf;
     }
 
@@ -122,7 +124,7 @@ public class FileManager {
 
     private static OutputStream getOutputStream(Path path, HashSet<Path> validation, FileSystem fs) throws IOException {
         if (!validation.contains(path)) {
-            throw new IOException("File not registered:" + path);
+            throw new IOException(Thread.currentThread().getId() + "File not registered:" + path);
         }
         return fs.create(path, (short) 1);
     }
