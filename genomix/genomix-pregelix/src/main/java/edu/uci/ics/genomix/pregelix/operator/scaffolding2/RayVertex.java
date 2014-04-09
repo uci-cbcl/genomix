@@ -11,19 +11,25 @@ import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.logging.Logger;
 
 import org.apache.commons.collections.SetUtils;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapred.Counters;
 import org.apache.hadoop.mapred.Counters.Counter;
+import org.apache.wicket.util.string.Strings;
 
 import edu.uci.ics.genomix.data.config.GenomixJobConf;
 import edu.uci.ics.genomix.data.types.DIR;
@@ -63,6 +69,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
     public static final boolean EARLY_STOP = true;	// whether to stop early if there is large overlap with other walks 
     public static final boolean STORE_WALK = false; // whether to save the walks - just for test 
     private static int OVERLAP_THRESHOLD = 500;
+	private static final boolean DEBUG_WALK_IDS = true;
     
     PrintWriter writer;
     PrintWriter log;
@@ -401,6 +408,16 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         	}
         }
         
+        List<String> otherNodesHere = new ArrayList<>();
+    	for (VKmer prevSeed : vertex.getVisitedList()){
+    		if (!prevSeed.equals(realSeed)){
+    			otherNodesHere.add(prevSeed.toString());
+    		}
+    	}
+    	if (otherNodesHere.size() > 0) {
+    		LOG.info("For seed " + realSeed + ", node " + id + ", iteration " + getSuperstep() + ", visitedIds: " + msg.getWalkIds() + " we saw " + otherNodesHere.size() + " other seeds here already: " + Strings.join(",", otherNodesHere) + " . accumulatedKmer: " + msg.getWalkLength() + "\n" + msg.getAccumulatedWalkKmer());
+    	}
+        
         // I am the new frontier but this message is coming from the previous frontier; I was the "candidate"
         vertex.getFlippedFromInitDir().put(realSeed, msg.getCandidateFlipped());
         DIR nextDir = msg.getEdgeTypeBackToFrontier().mirror().neighborDir();
@@ -666,7 +683,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         	VKmer seed = new VKmer(msgs.get(0).getSeed());
         	// if the search has progressed beyond the reads I contain, don't do any scoring and don't report back
         	// to the frontier node. This effectively prunes me from the walk (I won't be queried anymore)
-        	if (vertex.isOutOfRange(myOffset, walkLength, MAX_DISTANCE, seed)) {
+        	if (!DEBUG_WALK_IDS && vertex.isOutOfRange(myOffset, walkLength, MAX_DISTANCE, seed)) {
         		if (id.equals(frontierNode)) {
         			// special case: I am the frontier node. Send an empty note just in case no 
         			// other nodes in the walk report back
@@ -990,6 +1007,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         	walkOffsets.clear();
         	walkLength = msgs.get(0).getWalkLength();
         	VKmer seed = new VKmer(msgs.get(0).getSeed());
+        	ArrayList<Pair<VKmer, Integer>> walkIdsAndOffsets = new ArrayList<>();
         	//int walkLength = msgs.get(0).getWalkLength();
         	for (RayMessage msg : msgs) {
         		if (walkLength != msg.getWalkLength()) {
@@ -1041,10 +1059,30 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         					}
         				}
         			}
-        			walkIds.append(new VKmer(msg.getWalkIds().getPosition(0)));
-        			walkOffsets.add(msg.getWalkOffsets().get(0));
+        			if (DEBUG_WALK_IDS) {
+        				walkIdsAndOffsets.add(new ImmutablePair<>(new VKmer(msg.getWalkIds().getPosition(0)), msg.getWalkOffsets().get(0)));
+        			} else {
+	        			walkIds.append(new VKmer(msg.getWalkIds().getPosition(0)));
+	        			walkOffsets.add(msg.getWalkOffsets().get(0));
+        			}
         			accumulatedWalk = msg.getAccumulatedWalkKmer();
         	}
+        	if (DEBUG_WALK_IDS) {
+        		// sort by walk offset
+            	Collections.sort(walkIdsAndOffsets, new Comparator<Pair<VKmer, Integer>>() {
+    				@Override public int compare(Pair<VKmer, Integer> o1, Pair<VKmer, Integer> o2) {
+    					return o1.getRight().compareTo(o2.getRight());
+    				}
+    			});
+            	// add them back to the lists
+            	walkIds.clear();
+            	walkOffsets.clear();
+            	for (Pair<VKmer, Integer> p : walkIdsAndOffsets) {
+            		walkIds.append(p.getLeft());
+            		walkOffsets.add(p.getRight());
+            	}
+        	}
+        	
         	HashMap <VKmer, Integer> visitCounter = msgs.get(0).getVisitCounter();
         	LOG.info("in prune for " + id + " scores are singleend: " + singleEndScores + " pairedend: " + pairedEndScores);
 
