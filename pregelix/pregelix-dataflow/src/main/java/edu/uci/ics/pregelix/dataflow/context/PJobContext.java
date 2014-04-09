@@ -72,7 +72,6 @@ public class PJobContext {
 
             setProperties(numVertices, numEdges, currentIteration, superStep, false, cl);
         }
-        System.gc();
     }
 
     public void recoverVertexProperties(long numVertices, long numEdges, long currentIteration, ClassLoader cl) {
