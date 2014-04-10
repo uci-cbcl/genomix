@@ -442,24 +442,25 @@ public class JobScheduler {
         final ActivityClusterGraph acg = jobRun.getActivityClusterGraph();
         final Map<ConnectorDescriptorId, IConnectorPolicy> connectorPolicies = new HashMap<ConnectorDescriptorId, IConnectorPolicy>(
                 jobRun.getConnectorPolicyMap());
-        for (Map.Entry<String, List<TaskAttemptDescriptor>> entry : taskAttemptMap.entrySet()) {
-            String nodeId = entry.getKey();
-            final List<TaskAttemptDescriptor> taskDescriptors = entry.getValue();
-            final NodeControllerState node = ccs.getNodeMap().get(nodeId);
-            if (node != null) {
-                node.getActiveJobIds().add(jobRun.getJobId());
-                boolean changed = jobRun.getParticipatingNodeIds().add(nodeId);
-                if (LOGGER.isLoggable(Level.FINE)) {
-                    LOGGER.fine("Starting: " + taskDescriptors + " at " + entry.getKey());
-                }
-                try {
-                    byte[] jagBytes = changed ? JavaSerializationUtils.serialize(acg) : null;
+        try {
+            byte[] acgBytes = JavaSerializationUtils.serialize(acg);
+            for (Map.Entry<String, List<TaskAttemptDescriptor>> entry : taskAttemptMap.entrySet()) {
+                String nodeId = entry.getKey();
+                final List<TaskAttemptDescriptor> taskDescriptors = entry.getValue();
+                final NodeControllerState node = ccs.getNodeMap().get(nodeId);
+                if (node != null) {
+                    node.getActiveJobIds().add(jobRun.getJobId());
+                    boolean changed = jobRun.getParticipatingNodeIds().add(nodeId);
+                    if (LOGGER.isLoggable(Level.FINE)) {
+                        LOGGER.fine("Starting: " + taskDescriptors + " at " + entry.getKey());
+                    }
+                    byte[] jagBytes = changed ? acgBytes : null;
                     node.getNodeController().startTasks(deploymentId, jobId, jagBytes, taskDescriptors,
                             connectorPolicies, jobRun.getFlags());
-                } catch (Exception e) {
-                    e.printStackTrace();
                 }
             }
+        } catch (Exception e) {
+            throw new HyracksException(e);
         }
     }
 

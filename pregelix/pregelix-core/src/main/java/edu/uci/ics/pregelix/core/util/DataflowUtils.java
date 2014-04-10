@@ -22,8 +22,8 @@ import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
-import edu.uci.ics.pregelix.core.hadoop.config.ConfigurationFactory;
 import edu.uci.ics.pregelix.core.runtime.touchpoint.WritableRecordDescriptorFactory;
+import edu.uci.ics.pregelix.dataflow.base.IConfigurationFactory;
 import edu.uci.ics.pregelix.dataflow.std.base.IAggregateFunctionFactory;
 import edu.uci.ics.pregelix.dataflow.std.base.IRecordDescriptorFactory;
 import edu.uci.ics.pregelix.dataflow.std.base.ISerializableAggregateFunctionFactory;
@@ -74,25 +74,25 @@ public class DataflowUtils {
         return recordDescriptor;
     }
 
-    public static IRecordDescriptorFactory getWritableRecordDescriptorFactoryFromWritableClasses(Configuration conf,
-            String... classNames) throws HyracksException {
-        IRecordDescriptorFactory rdFactory = new WritableRecordDescriptorFactory(conf, classNames);
+    public static IRecordDescriptorFactory getWritableRecordDescriptorFactoryFromWritableClasses(
+            IConfigurationFactory confFactory, String... classNames) throws HyracksException {
+        IRecordDescriptorFactory rdFactory = new WritableRecordDescriptorFactory(confFactory, classNames);
         return rdFactory;
     }
 
-    public static IClusteredAggregatorDescriptorFactory getAccumulatingAggregatorFactory(Configuration conf,
-            boolean isFinal, boolean partialAggAsInput) {
-        IAggregateFunctionFactory aggFuncFactory = new AggregationFunctionFactory(new ConfigurationFactory(conf),
-                isFinal, partialAggAsInput);
+    public static IClusteredAggregatorDescriptorFactory getAccumulatingAggregatorFactory(
+            IConfigurationFactory confFactory, boolean isFinal, boolean partialAggAsInput) {
+        IAggregateFunctionFactory aggFuncFactory = new AggregationFunctionFactory(confFactory, isFinal,
+                partialAggAsInput);
         IClusteredAggregatorDescriptorFactory aggregatorFactory = new AccumulatingAggregatorFactory(
                 new IAggregateFunctionFactory[] { aggFuncFactory });
         return aggregatorFactory;
     }
 
-    public static IAggregatorDescriptorFactory getSerializableAggregatorFactory(Configuration conf, boolean isFinal,
-            boolean partialAggAsInput) {
-        ISerializableAggregateFunctionFactory aggFuncFactory = new SerializableAggregationFunctionFactory(
-                new ConfigurationFactory(conf), partialAggAsInput);
+    public static IAggregatorDescriptorFactory getSerializableAggregatorFactory(IConfigurationFactory confFactory,
+            boolean isFinal, boolean partialAggAsInput) {
+        ISerializableAggregateFunctionFactory aggFuncFactory = new SerializableAggregationFunctionFactory(confFactory,
+                partialAggAsInput);
         IAggregatorDescriptorFactory aggregatorFactory = new SerializableAggregatorDescriptorFactory(aggFuncFactory);
         return aggregatorFactory;
     }

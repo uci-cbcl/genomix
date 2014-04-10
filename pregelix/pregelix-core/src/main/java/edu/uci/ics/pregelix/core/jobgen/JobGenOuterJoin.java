@@ -38,7 +38,6 @@ import edu.uci.ics.pregelix.api.graph.MsgList;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.api.util.BspUtils;
 import edu.uci.ics.pregelix.core.data.TypeTraits;
-import edu.uci.ics.pregelix.core.hadoop.config.ConfigurationFactory;
 import edu.uci.ics.pregelix.core.optimizer.IOptimizer;
 import edu.uci.ics.pregelix.core.util.DataflowUtils;
 import edu.uci.ics.pregelix.dataflow.ConnectorPolicyAssignmentPolicy;
@@ -79,7 +78,7 @@ public class JobGenOuterJoin extends JobGen {
         Class<? extends Writable> vertexClass = BspUtils.getVertexClass(conf);
         Class<? extends Writable> messageValueClass = BspUtils.getMessageValueClass(conf);
         String[] partialAggregateValueClassNames = BspUtils.getPartialAggregateValueClassNames(conf);
-        IConfigurationFactory confFactory = new ConfigurationFactory(conf);
+        IConfigurationFactory confFactory = getConfigurationFactory();
         JobSpecification spec = new JobSpecification();
 
         /**
@@ -110,10 +109,10 @@ public class JobGenOuterJoin extends JobGen {
                 VLongWritable.class.getName());
         RecordDescriptor rdPartialAggregate = DataflowUtils.getRecordDescriptorFromWritableClasses(conf,
                 partialAggregateValueClassNames);
-        IConfigurationFactory configurationFactory = new ConfigurationFactory(conf);
+        IConfigurationFactory configurationFactory = getConfigurationFactory();
         IRuntimeHookFactory preHookFactory = new RuntimeHookFactory(configurationFactory);
         IRecordDescriptorFactory inputRdFactory = DataflowUtils.getWritableRecordDescriptorFactoryFromWritableClasses(
-                conf, vertexIdClass.getName(), vertexClass.getName());
+                getConfigurationFactory(), vertexIdClass.getName(), vertexClass.getName());
         RecordDescriptor rdUnnestedMessage = DataflowUtils.getRecordDescriptorFromKeyValueClasses(conf,
                 vertexIdClass.getName(), messageValueClass.getName());
         RecordDescriptor rdInsert = DataflowUtils.getRecordDescriptorFromKeyValueClasses(conf, vertexIdClass.getName(),
@@ -164,7 +163,7 @@ public class JobGenOuterJoin extends JobGen {
          * final aggregate write operator
          */
         IRecordDescriptorFactory aggRdFactory = DataflowUtils.getWritableRecordDescriptorFactoryFromWritableClasses(
-                conf, partialAggregateValueClassNames);
+                getConfigurationFactory(), partialAggregateValueClassNames);
         FinalAggregateOperatorDescriptor finalAggregator = new FinalAggregateOperatorDescriptor(spec,
                 configurationFactory, aggRdFactory, jobId);
         PartitionConstraintHelper.addPartitionCountConstraint(spec, finalAggregator, 1);
@@ -263,7 +262,7 @@ public class JobGenOuterJoin extends JobGen {
         /**
          * construct pre-superstep hook
          */
-        IConfigurationFactory confFactory = new ConfigurationFactory(conf);
+        IConfigurationFactory confFactory = getConfigurationFactory();
         RuntimeHookOperatorDescriptor preSuperStep = new RuntimeHookOperatorDescriptor(spec,
                 new PreSuperStepRuntimeHookFactory(jobId, confFactory));
         setLocationConstraint(spec, preSuperStep);
@@ -290,10 +289,11 @@ public class JobGenOuterJoin extends JobGen {
                 VLongWritable.class.getName());
         RecordDescriptor rdPartialAggregate = DataflowUtils.getRecordDescriptorFromWritableClasses(conf,
                 partialAggregateValueClassNames);
-        IConfigurationFactory configurationFactory = new ConfigurationFactory(conf);
+        IConfigurationFactory configurationFactory = getConfigurationFactory();
         IRuntimeHookFactory preHookFactory = new RuntimeHookFactory(configurationFactory);
         IRecordDescriptorFactory inputRdFactory = DataflowUtils.getWritableRecordDescriptorFactoryFromWritableClasses(
-                conf, vertexIdClass.getName(), MsgList.class.getName(), vertexIdClass.getName(), vertexClass.getName());
+                getConfigurationFactory(), vertexIdClass.getName(), MsgList.class.getName(), vertexIdClass.getName(),
+                vertexClass.getName());
 
         IndexNestedLoopJoinFunctionUpdateOperatorDescriptor join = new IndexNestedLoopJoinFunctionUpdateOperatorDescriptor(
                 spec, storageManagerInterface, lcManagerProvider, fileSplitProvider, typeTraits, comparatorFactories,
@@ -338,7 +338,7 @@ public class JobGenOuterJoin extends JobGen {
          * final aggregate write operator
          */
         IRecordDescriptorFactory aggRdFactory = DataflowUtils.getWritableRecordDescriptorFactoryFromWritableClasses(
-                conf, partialAggregateValueClassNames);
+                getConfigurationFactory(), partialAggregateValueClassNames);
         FinalAggregateOperatorDescriptor finalAggregator = new FinalAggregateOperatorDescriptor(spec,
                 configurationFactory, aggRdFactory, jobId);
         PartitionConstraintHelper.addPartitionCountConstraint(spec, finalAggregator, 1);

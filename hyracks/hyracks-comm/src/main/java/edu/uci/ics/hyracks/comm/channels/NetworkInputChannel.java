@@ -95,9 +95,10 @@ public class NetworkInputChannel implements IInputChannel {
         }
         ccb.getReadInterface().setFullBufferAcceptor(new ReadFullBufferAcceptor());
         ccb.getWriteInterface().setEmptyBufferAcceptor(new WriteEmptyBufferAcceptor());
-        for (int i = 0; i < nBuffers; ++i) {
-            ccb.getReadInterface().getEmptyBufferAcceptor().accept(ctx.allocateFrame());
-        }
+        //for (int i = 0; i < nBuffers; ++i) {
+        //    ccb.getReadInterface().getEmptyBufferAcceptor().accept(ctx.allocateFrame());
+        //}
+        ccb.getReadInterface().setBufferFactory(new ReadBufferFactory(nBuffers, ctx), nBuffers, ctx.getFrameSize());
         ByteBuffer writeBuffer = ByteBuffer.allocate(INITIAL_MESSAGE_SIZE);
         writeBuffer.putLong(partitionId.getJobId().getId());
         writeBuffer.putInt(partitionId.getConnectorDescriptorId().getId());
@@ -108,6 +109,8 @@ public class NetworkInputChannel implements IInputChannel {
             LOGGER.fine("Sending partition request: " + partitionId + " on channel: " + ccb);
         }
         ccb.getWriteInterface().getFullBufferAcceptor().accept(writeBuffer);
+        //ccb.getWriteInterface().setBufferFactory(new WriteBufferFactory(partitionId, INITIAL_MESSAGE_SIZE), 1,
+        //        ctx.getFrameSize());
         ccb.getWriteInterface().getFullBufferAcceptor().close();
     }
 

@@ -39,6 +39,7 @@ public class FunctionProxy {
     private TupleDeserializer tupleDe;
     private RecordDescriptor inputRd;
     private ClassLoader ctxCL;
+    private boolean initialized = false;
 
     public FunctionProxy(IHyracksTaskContext ctx, IUpdateFunctionFactory functionFactory,
             IRuntimeHookFactory preHookFactory, IRuntimeHookFactory postHookFactory,
@@ -59,11 +60,15 @@ public class FunctionProxy {
     public void functionOpen() throws HyracksDataException {
         ctxCL = Thread.currentThread().getContextClassLoader();
         Thread.currentThread().setContextClassLoader(ctx.getJobletContext().getClassLoader());
-        inputRd = inputRdFactory.createRecordDescriptor(ctx);
-        tupleDe = new TupleDeserializer(inputRd);
         for (IFrameWriter writer : writers) {
             writer.open();
         }
+
+    }
+
+    private void init() throws HyracksDataException {
+        inputRd = inputRdFactory.createRecordDescriptor(ctx);
+        tupleDe = new TupleDeserializer(inputRd);
         if (preHookFactory != null)
             preHookFactory.createRuntimeHook().configure(ctx);
         function.open(ctx, inputRd, writers);
@@ -82,6 +87,10 @@ public class FunctionProxy {
      */
     public void functionCall(IFrameTupleAccessor leftAccessor, int leftTupleIndex, ITupleReference right,
             ArrayTupleBuilder cloneUpdateTb, IIndexCursor cursor) throws HyracksDataException {
+        if (!initialized) {
+            init();
+            initialized = true;
+        }
         Object[] tuple = tupleDe.deserializeRecord(leftAccessor, leftTupleIndex, right);
         function.process(tuple);
         function.update(right, cloneUpdateTb, cursor);
@@ -95,6 +104,10 @@ public class FunctionProxy {
      */
     public void functionCall(ITupleReference updateRef, ArrayTupleBuilder cloneUpdateTb, IIndexCursor cursor)
             throws HyracksDataException {
+        if (!initialized) {
+            init();
+            initialized = true;
+        }
         Object[] tuple = tupleDe.deserializeRecord(updateRef);
         function.process(tuple);
         function.update(updateRef, cloneUpdateTb, cursor);
@@ -111,6 +124,10 @@ public class FunctionProxy {
      */
     public void functionCall(ArrayTupleBuilder tb, ITupleReference inPlaceUpdateRef, ArrayTupleBuilder cloneUpdateTb,
             IIndexCursor cursor, boolean nullLeft) throws HyracksDataException {
+        if (!initialized) {
+            init();
+            initialized = true;
+        }
         Object[] tuple = tupleDe.deserializeRecord(tb, inPlaceUpdateRef, nullLeft);
         if (tuple[1] == null) {
             /** skip vertice that should not be invoked */
@@ -126,9 +143,11 @@ public class FunctionProxy {
      * @throws HyracksDataException
      */
     public void functionClose() throws HyracksDataException {
-        if (postHookFactory != null)
-            postHookFactory.createRuntimeHook().configure(ctx);
-        function.close();
+        if (initialized) {
+            if (postHookFactory != null)
+                postHookFactory.createRuntimeHook().configure(ctx);
+            function.close();
+        }
         for (IFrameWriter writer : writers) {
             writer.close();
         }
