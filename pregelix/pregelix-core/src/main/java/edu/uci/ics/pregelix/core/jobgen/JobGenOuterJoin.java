@@ -78,9 +78,10 @@ public class JobGenOuterJoin extends JobGen {
         Class<? extends Writable> vertexClass = BspUtils.getVertexClass(conf);
         Class<? extends Writable> messageValueClass = BspUtils.getMessageValueClass(conf);
         String[] partialAggregateValueClassNames = BspUtils.getPartialAggregateValueClassNames(conf);
-        IConfigurationFactory confFactory = getConfigurationFactory();
-        JobSpecification spec = new JobSpecification();
 
+        IConfigurationFactory confFactory = getConfigurationFactory();
+        JobSpecification spec = new JobSpecification(frameSize);
+	
         /**
          * construct empty tuple operator
          */
@@ -237,7 +238,7 @@ public class JobGenOuterJoin extends JobGen {
         Class<? extends Writable> vertexClass = BspUtils.getVertexClass(conf);
         Class<? extends Writable> messageValueClass = BspUtils.getMessageValueClass(conf);
         String[] partialAggregateValueClassNames = BspUtils.getPartialAggregateValueClassNames(conf);
-        JobSpecification spec = new JobSpecification();
+        JobSpecification spec = new JobSpecification(frameSize);
 
         /**
          * source aggregate
