@@ -48,6 +48,9 @@ public class RuntimeHookFactory implements IRuntimeHookFactory {
                 try {
                     TaskAttemptContext mapperContext = ctxFactory.createContext(conf, new TaskAttemptID());
                     mapperContext.getConfiguration().setClassLoader(ctx.getJobletContext().getClassLoader());
+                    if(BspUtils.getJobId(conf)==null){
+                        System.out.println("here");
+                    }
                     IterationUtils.setJobContext(BspUtils.getJobId(conf), ctx, mapperContext);
                 } catch (Exception e) {
                     throw new HyracksDataException(e);

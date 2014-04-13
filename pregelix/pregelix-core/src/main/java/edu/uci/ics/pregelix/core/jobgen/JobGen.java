@@ -175,7 +175,6 @@ public abstract class JobGen implements IJobGen {
         this.optimizer = optimizer;
         conf = job.getConfiguration();
         pregelixJob = job;
-        initJobConfiguration();
         job.setJobId(jobId);
         // set the frame size to be the one user specified if the user did specify.
         int specifiedFrameSize = BspUtils.getFrameSize(job.getConfiguration());
@@ -186,6 +185,7 @@ public abstract class JobGen implements IJobGen {
         if (maxFrameNumber <= 0) {
             maxFrameNumber = 1000;
         }
+        initJobConfiguration();
     }
 
     public void reset(PregelixJob job) {
@@ -614,7 +614,7 @@ public abstract class JobGen implements IJobGen {
         /**
          * construct btree search operator
          */
-        IConfigurationFactory confFactory = getConfigurationFactory();
+        IConfigurationFactory confFactory = new ConfigurationFactory(conf);
         RecordDescriptor recordDescriptor = DataflowUtils.getRecordDescriptorFromKeyValueClasses(conf,
                 vertexIdClass.getName(), vertexClass.getName());
         IBinaryComparatorFactory[] comparatorFactories = new IBinaryComparatorFactory[1];
@@ -711,7 +711,7 @@ public abstract class JobGen implements IJobGen {
         tmpJob.setOutputValueClass(MsgList.class);
 
         IRecordDescriptorFactory inputRdFactory = DataflowUtils.getWritableRecordDescriptorFactoryFromWritableClasses(
-                getConfigurationFactory(), vertexIdClass.getName(), MsgList.class.getName());
+                new ConfigurationFactory(tmpJob.getConfiguration()), vertexIdClass.getName(), MsgList.class.getName());
         HDFSFileWriteOperatorDescriptor hdfsWriter = new HDFSFileWriteOperatorDescriptor(spec, tmpJob, inputRdFactory);
         setLocationConstraint(spec, hdfsWriter);
 
@@ -777,7 +777,7 @@ public abstract class JobGen implements IJobGen {
         /** construct runtime hook */
         RuntimeHookOperatorDescriptor postSuperStep = new RuntimeHookOperatorDescriptor(spec,
                 new RecoveryRuntimeHookFactory(jobId, lastCheckpointedIteration, new ConfigurationFactory(
-                        pregelixJob.getConfiguration())));
+                        tmpJob.getConfiguration())));
         setLocationConstraint(spec, postSuperStep);
 
         /** construct empty sink operator */
