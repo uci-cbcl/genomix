@@ -139,17 +139,23 @@ public class MaterializingPipelinedPartition implements IFrameWriter, IPartition
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("open(" + pid + " by " + taId);
         }
+        manager.registerPartition(pid, taId, this, PartitionState.STARTED);
+    }
+
+    private void initInternal() throws HyracksDataException {
         fRef = manager.getFileFactory().createUnmanagedWorkspaceFile(pid.toString().replace(":", "$"));
         handle = ctx.getIOManager().open(fRef, IIOManager.FileReadWriteMode.READ_WRITE,
                 IIOManager.FileSyncMode.METADATA_ASYNC_DATA_ASYNC);
         size = 0;
         eos = false;
         failed = false;
-        manager.registerPartition(pid, taId, this, PartitionState.STARTED);
     }
 
     @Override
     public synchronized void nextFrame(ByteBuffer buffer) throws HyracksDataException {
+        if (handle == null) {
+            initInternal();
+        }
         size += ctx.getIOManager().syncWrite(handle, size, buffer);
         notifyAll();
     }
@@ -167,7 +173,9 @@ public class MaterializingPipelinedPartition implements IFrameWriter, IPartition
         }
         synchronized (this) {
             eos = true;
-            ctx.getIOManager().close(handle);
+            if (handle != null) {
+                ctx.getIOManager().close(handle);
+            }
             handle = null;
             notifyAll();
         }
