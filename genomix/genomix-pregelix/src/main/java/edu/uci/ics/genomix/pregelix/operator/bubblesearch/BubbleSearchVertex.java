@@ -1,26 +1,37 @@
 package edu.uci.ics.genomix.pregelix.operator.bubblesearch;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hadoop.conf.Configuration;
 
+import edu.uci.ics.genomix.data.config.GenomixJobConf;
+import edu.uci.ics.genomix.data.types.DIR;
 import edu.uci.ics.genomix.data.types.EDGETYPE;
 import edu.uci.ics.genomix.data.types.Node;
 import edu.uci.ics.genomix.data.types.VKmer;
 import edu.uci.ics.genomix.pregelix.base.DeBruijnGraphCleanVertex;
+import edu.uci.ics.genomix.pregelix.base.MessageWritable;
+import edu.uci.ics.genomix.pregelix.base.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.operator.bubblesearch.BubbleSearchMessage.MessageType;
 import edu.uci.ics.genomix.pregelix.operator.bubblesearch.BubbleSearchMessage.NodeInfo;
+import edu.uci.ics.pregelix.api.job.PregelixJob;
 
 public class BubbleSearchVertex extends DeBruijnGraphCleanVertex<BubbleSearchValue, BubbleSearchMessage> {
 	
 	private static final double MIN_SIMILARITY = .95;
 	private int MAX_BRANCH_LENGTH = 100;
 	private int MAX_ITERATIONS = 50;
+
+	private boolean isStartSeed() {
+		return getVertexValue().degree(DIR.FORWARD) > 1;
+	}
 
 	@Override
 	public void compute(Iterator<BubbleSearchMessage> msgIterator) throws Exception {
@@ -83,7 +94,8 @@ public class BubbleSearchVertex extends DeBruijnGraphCleanVertex<BubbleSearchVal
 			for (BubbleSearchMessage msg : completePaths) {
 				sendMsg(getVertexId(), msg);
 			}
-		} else {
+		} else if (vertex.totalBranches > 0) {
+			ArrayList<Pair<EDGETYPE, VKmer>> edgesToRemove = new ArrayList<>();
 			// we have a complete set of possible bubbles. For similar bubbles that don't share the first edge, remove the edge with less average coverage
 			// TODO: care about coverage in conflicting cases
 			for (int i=0; i < completePaths.size(); i++) {
@@ -103,26 +115,31 @@ public class BubbleSearchVertex extends DeBruijnGraphCleanVertex<BubbleSearchVal
 					for (Pair<Integer, Integer> endpoints : bubbles) {
 						List<NodeInfo> uncommonI = pathI.subList(1, endpoints.getLeft());
 						List<NodeInfo> uncommonJ = pathJ.subList(1, endpoints.getRight());
-						if (similarKmers(uncommonI, uncommonJ)) {
+						if (uncommonI.size() > 0 && uncommonJ.size() > 0 && similarKmers(uncommonI, uncommonJ)) {
 							float coverageI = coverage(uncommonI);
 							float coverageJ = coverage(uncommonJ);
 							if (coverageI < coverageJ) {
-								vertex.edgesToRemove.add(new ImmutablePair<>(uncommonI.get(0).incomingET, uncommonI.get(0).nodeId));
+//								vertex.edgesToRemove.add(new ImmutablePair<>(uncommonI.get(0).incomingET, uncommonI.get(0).nodeId));
+								edgesToRemove.add(new ImmutablePair<>(uncommonI.get(0).incomingET, uncommonI.get(0).nodeId));
 							} else {
-								vertex.edgesToRemove.add(new ImmutablePair<>(uncommonJ.get(0).incomingET, uncommonJ.get(0).nodeId));
+//								vertex.edgesToRemove.add(new ImmutablePair<>(uncommonJ.get(0).incomingET, uncommonJ.get(0).nodeId));
+								edgesToRemove.add(new ImmutablePair<>(uncommonJ.get(0).incomingET, uncommonJ.get(0).nodeId));
 							}
 						}
 					}
 				}
 			}
 			// remove the requested edges
-			for (Pair<EDGETYPE, VKmer> toRemove : vertex.edgesToRemove) {
+//			for (Pair<EDGETYPE, VKmer> toRemove : vertex.edgesToRemove) {
+			for (Pair<EDGETYPE, VKmer> toRemove : edgesToRemove) {
 				vertex.getEdges(toRemove.getLeft()).remove(toRemove.getRight(), true);
 				outgoingMsg.reset();
 				outgoingMsg.type = MessageType.PRUNE_EDGE;
 				outgoingMsg.path.add(new NodeInfo(getVertexId(), new VKmer(), toRemove.getLeft().mirror(), 0));
 				sendMsg(toRemove.getRight(), outgoingMsg);
 			}
+//			vertex.edgesToRemove.clear();
+			edgesToRemove.clear();
 		}
 	}
 	
@@ -131,7 +148,7 @@ public class BubbleSearchVertex extends DeBruijnGraphCleanVertex<BubbleSearchVal
 		ArrayList<Pair<Integer, Integer>> allBubbles = new ArrayList<>();
 		for (int i=1; i < pathI.size(); i++) {
 			for (int j=1; j < pathJ.size(); j++) {
-				if (pathI.get(i).nodeId.equals(pathJ.get(i).nodeId)) {
+				if (pathI.get(i).nodeId.equals(pathJ.get(j).nodeId)) {
 					allBubbles.add(new ImmutablePair<>(i, j));
 				}
 			}
@@ -176,8 +193,15 @@ public class BubbleSearchVertex extends DeBruijnGraphCleanVertex<BubbleSearchVal
 		super.configure(conf);
 		outgoingMsg = new BubbleSearchMessage();
 	}
+	
+    public static PregelixJob getConfiguredJob(
+            GenomixJobConf conf,
+            Class<? extends DeBruijnGraphCleanVertex<? extends VertexValueWritable, ? extends MessageWritable>> vertexClass)
+            throws IOException {
+        PregelixJob job = DeBruijnGraphCleanVertex.getConfiguredJob(conf, vertexClass);
+        job.setVertexInputFormatClass(NodeToBubbleSearchVertexInputFormat.class);
+        job.setVertexOutputFormatClass(BubbleSearchVertexToNodeOutputFormat.class);
+        return job;
+    }
 
-	private boolean isStartSeed() {
-		return false;
-	}
 }

@@ -66,6 +66,7 @@ import edu.uci.ics.genomix.hyracks.graph.driver.GenomixHyracksDriver;
 import edu.uci.ics.genomix.hyracks.graph.driver.GenomixHyracksDriver.Plan;
 import edu.uci.ics.genomix.mixture.model.FittingMixture;
 import edu.uci.ics.genomix.pregelix.operator.bridgeremove.BridgeRemoveVertex;
+import edu.uci.ics.genomix.pregelix.operator.bubblesearch.BubbleSearchVertex;
 import edu.uci.ics.genomix.pregelix.operator.extractsubgraph.ExtractSubgraphVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.P1ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.P4ForPathMergeVertex;
@@ -222,7 +223,8 @@ public class GenomixDriver {
                 pregelixJobs.add(TipRemoveWithSearchVertex.getConfiguredJob(conf, TipRemoveWithSearchVertex.class));
                 break; 
             case BUBBLE:
-                pregelixJobs.add(SimpleBubbleMergeVertex.getConfiguredJob(conf, SimpleBubbleMergeVertex.class));
+//                pregelixJobs.add(SimpleBubbleMergeVertex.getConfiguredJob(conf, SimpleBubbleMergeVertex.class));
+            	pregelixJobs.add(BubbleSearchVertex.getConfiguredJob(conf, BubbleSearchVertex.class));
                 break;
             /**    
             case SHIFT_LOW_COVERAGE:
