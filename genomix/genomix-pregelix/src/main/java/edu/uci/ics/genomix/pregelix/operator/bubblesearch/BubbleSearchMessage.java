@@ -67,6 +67,12 @@ public class BubbleSearchMessage extends MessageWritable {
 	public EDGETYPE outgoingET;  // The ET from the last node in path towards the next node
 	public VKmer seed = new VKmer(); 
 	public int additionalBranches;
+	
+	@Override
+	public String toString() {
+		return "<msg type: " + type + ", outgoingET:" + outgoingET + ", seed:" + seed + ", addBranches:" + additionalBranches + ", path: size=" + path.size() + ",length=" + BubbleSearchVertex.kmerLength(path) + "nodes=" + path + ">";  
+		
+	}
 
 	@Override
 	public void reset() {

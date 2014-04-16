@@ -3,8 +3,10 @@ package edu.uci.ics.genomix.pregelix.operator.bubblesearch;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -22,6 +24,7 @@ import edu.uci.ics.genomix.pregelix.base.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.operator.bubblesearch.BubbleSearchMessage.MessageType;
 import edu.uci.ics.genomix.pregelix.operator.bubblesearch.BubbleSearchMessage.NodeInfo;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
+import java.util.Random;
 
 public class BubbleSearchVertex extends DeBruijnGraphCleanVertex<BubbleSearchValue, BubbleSearchMessage> {
 	
@@ -30,7 +33,8 @@ public class BubbleSearchVertex extends DeBruijnGraphCleanVertex<BubbleSearchVal
 	private int MAX_ITERATIONS = 50;
 
 	private boolean isStartSeed() {
-		return getVertexValue().degree(DIR.FORWARD) > 1;
+		return getVertexId().equals(new VKmer("CCCCCCCCCCCGTCCGCCCCC"));
+//		return getVertexValue().degree(DIR.FORWARD) > 1 && new Random().nextFloat() < .0001;
 	}
 
 	@Override
@@ -42,6 +46,7 @@ public class BubbleSearchVertex extends DeBruijnGraphCleanVertex<BubbleSearchVal
 			msg.outgoingET = EDGETYPE.FF;
 			msg.seed = new VKmer(getVertexId());
 			msgIterator = Collections.singleton(msg).iterator();
+			LOG.info("Starting bubblesearch seed at " + getVertexId());
 		}
 		
 		ArrayList<BubbleSearchMessage> completePaths = new ArrayList<>();
@@ -53,6 +58,7 @@ public class BubbleSearchVertex extends DeBruijnGraphCleanVertex<BubbleSearchVal
 				if (vertex.degree(msg.outgoingET.neighborDir()) == 0 || getSuperstep() > MAX_ITERATIONS || kmerLength(msg.path) > MAX_BRANCH_LENGTH) {
 					msg.type = MessageType.COMPLETE_PATH;
 					sendMsg(msg.seed, msg);
+					LOG.info("Path completed at " + getVertexId() + " with " + msg);
 					continue;
 				}
 				msg.type = MessageType.EXPAND_PATH;
@@ -73,6 +79,7 @@ public class BubbleSearchVertex extends DeBruijnGraphCleanVertex<BubbleSearchVal
 				break;
 			case ADDITIONAL_BRANCHES:
 				vertex.totalBranches += msg.additionalBranches;
+//				LOG.info("Tracking " + msg.additionalBranches + " more branches");
 				break;
 			case COMPLETE_PATH:
 				completePaths.add(msg);
@@ -80,11 +87,13 @@ public class BubbleSearchVertex extends DeBruijnGraphCleanVertex<BubbleSearchVal
 			case PRUNE_EDGE:
 //				vertex.edgesToRemove.add(new ImmutablePair<>(msg.path.get(0).incomingET, msg.path.get(0).nodeId));
 				vertex.getEdges(msg.path.get(0).incomingET).remove(msg.path.get(0).nodeId, true);
+				LOG.info("Removing reciprocal bubble start " + msg.path.get(0));
 				break;
 			}
 		}
 		
 		handleCompletePaths(completePaths);
+		voteToHalt();
 	}
 	
 	private void handleCompletePaths(ArrayList<BubbleSearchMessage> completePaths) {
@@ -94,8 +103,9 @@ public class BubbleSearchVertex extends DeBruijnGraphCleanVertex<BubbleSearchVal
 			for (BubbleSearchMessage msg : completePaths) {
 				sendMsg(getVertexId(), msg);
 			}
+			LOG.info("Resent " + completePaths.size() + " waiting paths. Need " + vertex.totalBranches + " to finish.");
 		} else if (vertex.totalBranches > 0) {
-			ArrayList<Pair<EDGETYPE, VKmer>> edgesToRemove = new ArrayList<>();
+			HashSet<Pair<EDGETYPE, VKmer>> edgesToRemove = new HashSet<>();
 			// we have a complete set of possible bubbles. For similar bubbles that don't share the first edge, remove the edge with less average coverage
 			// TODO: care about coverage in conflicting cases
 			for (int i=0; i < completePaths.size(); i++) {
@@ -137,6 +147,7 @@ public class BubbleSearchVertex extends DeBruijnGraphCleanVertex<BubbleSearchVal
 				outgoingMsg.type = MessageType.PRUNE_EDGE;
 				outgoingMsg.path.add(new NodeInfo(getVertexId(), new VKmer(), toRemove.getLeft().mirror(), 0));
 				sendMsg(toRemove.getRight(), outgoingMsg);
+				LOG.info("Removing bubble start " + toRemove);
 			}
 //			vertex.edgesToRemove.clear();
 			edgesToRemove.clear();
@@ -180,7 +191,7 @@ public class BubbleSearchVertex extends DeBruijnGraphCleanVertex<BubbleSearchVal
 		return coverage;
 	}
 	
-	private int kmerLength(ArrayList<NodeInfo> path) {
+	public static int kmerLength(ArrayList<NodeInfo> path) {
 		int length = path.get(0).nodeSeq.getKmerLetterLength();
 		for (int i=1; i < path.size(); i++) {
 			length += path.get(i).nodeSeq.getKmerLetterLength() - kmerSize + 1;
