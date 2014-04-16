@@ -47,6 +47,7 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 
 import edu.uci.ics.hyracks.api.constraints.PartitionConstraintHelper;
+import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -100,6 +101,7 @@ import edu.uci.ics.pregelix.core.base.IJobGen;
 import edu.uci.ics.pregelix.core.data.TypeTraits;
 import edu.uci.ics.pregelix.core.hadoop.config.ConfigurationFactory;
 import edu.uci.ics.pregelix.core.jobgen.clusterconfig.ClusterConfig;
+import edu.uci.ics.pregelix.core.optimizer.IOptimizer;
 import edu.uci.ics.pregelix.core.util.DataflowUtils;
 import edu.uci.ics.pregelix.dataflow.ClearStateOperatorDescriptor;
 import edu.uci.ics.pregelix.dataflow.EmptySinkOperatorDescriptor;
@@ -140,6 +142,7 @@ public abstract class JobGen implements IJobGen {
     protected String jobId = UUID.randomUUID().toString();;
     protected int frameSize = ClusterConfig.getFrameSize();
     protected int maxFrameNumber = (int) (((long) 32 * MB) / frameSize);
+    protected IOptimizer optimizer;
 
     private static final Map<String, String> MERGE_POLICY_PROPERTIES;
     static {
@@ -150,18 +153,19 @@ public abstract class JobGen implements IJobGen {
     protected static final String SECONDARY_INDEX_ODD = "secondary1";
     protected static final String SECONDARY_INDEX_EVEN = "secondary2";
 
-    public JobGen(PregelixJob job) {
-        init(job);
-    }
-    
-    public JobGen(PregelixJob job, String jobId) {
-        if(jobId!=null){
-            this.jobId = jobId;
-        }
-        init(job);
+    public JobGen(PregelixJob job, IOptimizer optimizer) {
+        init(job, optimizer);
     }
 
-    private void init(PregelixJob job) {
+    public JobGen(PregelixJob job, String jobId, IOptimizer optimizer) {
+        if (jobId != null) {
+            this.jobId = jobId;
+        }
+        init(job, optimizer);
+    }
+
+    private void init(PregelixJob job, IOptimizer optimizer) {
+        this.optimizer = optimizer;
         conf = job.getConfiguration();
         pregelixJob = job;
         initJobConfiguration();
@@ -178,7 +182,7 @@ public abstract class JobGen implements IJobGen {
     }
 
     public void reset(PregelixJob job) {
-        init(job);
+        init(job, this.optimizer);
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -223,7 +227,7 @@ public abstract class JobGen implements IJobGen {
     @Override
     public JobSpecification generateCreatingJob() throws HyracksException {
         Class<? extends WritableComparable<?>> vertexIdClass = BspUtils.getVertexIndexClass(conf);
-        JobSpecification spec = new JobSpecification();
+        JobSpecification spec = new JobSpecification(frameSize);
         ITypeTraits[] typeTraits = new ITypeTraits[2];
         typeTraits[0] = new TypeTraits(false);
         typeTraits[1] = new TypeTraits(false);
@@ -232,12 +236,12 @@ public abstract class JobGen implements IJobGen {
 
         int[] keyFields = new int[1];
         keyFields[0] = 0;
-        IFileSplitProvider fileSplitProvider = ClusterConfig.getFileSplitProvider(jobId, PRIMARY_INDEX);
+        IFileSplitProvider fileSplitProvider = getFileSplitProvider(jobId, PRIMARY_INDEX);
         TreeIndexCreateOperatorDescriptor btreeCreate = new TreeIndexCreateOperatorDescriptor(spec,
                 storageManagerInterface, lcManagerProvider, fileSplitProvider, typeTraits, comparatorFactories,
                 keyFields, getIndexDataflowHelperFactory(), new TransientLocalResourceFactoryProvider(),
                 NoOpOperationCallbackFactory.INSTANCE);
-        ClusterConfig.setLocationConstraint(spec, btreeCreate);
+        setLocationConstraint(spec, btreeCreate);
         spec.setFrameSize(frameSize);
         return spec;
     }
@@ -257,8 +261,8 @@ public abstract class JobGen implements IJobGen {
         Class<? extends WritableComparable<?>> vertexIdClass = BspUtils.getVertexIndexClass(conf);
         Class<? extends Writable> vertexClass = BspUtils.getVertexClass(conf);
         int maxFrameLimit = (int) (((long) 512 * MB) / frameSize);
-        JobSpecification spec = new JobSpecification();
-        IFileSplitProvider fileSplitProvider = ClusterConfig.getFileSplitProvider(jobId, PRIMARY_INDEX);
+        JobSpecification spec = new JobSpecification(frameSize);
+        IFileSplitProvider fileSplitProvider = getFileSplitProvider(jobId, PRIMARY_INDEX);
 
         /**
          * the graph file scan operator and use count constraint first, will use
@@ -277,7 +281,7 @@ public abstract class JobGen implements IJobGen {
         String[] readSchedule = ClusterConfig.getHdfsScheduler().getLocationConstraints(splits);
         VertexFileScanOperatorDescriptor scanner = new VertexFileScanOperatorDescriptor(spec, recordDescriptor, splits,
                 readSchedule, confFactory);
-        ClusterConfig.setLocationConstraint(spec, scanner);
+        setLocationConstraint(spec, scanner);
 
         /**
          * construct sort operator
@@ -289,7 +293,7 @@ public abstract class JobGen implements IJobGen {
         comparatorFactories[0] = JobGenUtil.getIBinaryComparatorFactory(0, vertexIdClass);;
         ExternalSortOperatorDescriptor sorter = new ExternalSortOperatorDescriptor(spec, maxFrameLimit, sortFields,
                 nkmFactory, comparatorFactories, recordDescriptor);
-        ClusterConfig.setLocationConstraint(spec, sorter);
+        setLocationConstraint(spec, sorter);
 
         /**
          * construct write file operator
@@ -321,7 +325,7 @@ public abstract class JobGen implements IJobGen {
     public JobSpecification scanIndexPrintGraph(String nodeName, String path) throws HyracksException {
         Class<? extends WritableComparable<?>> vertexIdClass = BspUtils.getVertexIndexClass(conf);
         Class<? extends Writable> vertexClass = BspUtils.getVertexClass(conf);
-        JobSpecification spec = new JobSpecification();
+        JobSpecification spec = new JobSpecification(frameSize);
 
         /**
          * construct empty tuple operator
@@ -336,7 +340,7 @@ public abstract class JobGen implements IJobGen {
         RecordDescriptor keyRecDesc = new RecordDescriptor(keyRecDescSers);
         ConstantTupleSourceOperatorDescriptor emptyTupleSource = new ConstantTupleSourceOperatorDescriptor(spec,
                 keyRecDesc, tb.getFieldEndOffsets(), tb.getByteArray(), tb.getSize());
-        ClusterConfig.setLocationConstraint(spec, emptyTupleSource);
+        setLocationConstraint(spec, emptyTupleSource);
 
         /**
          * construct btree search operator
@@ -346,14 +350,14 @@ public abstract class JobGen implements IJobGen {
                 vertexIdClass.getName(), vertexClass.getName());
         IBinaryComparatorFactory[] comparatorFactories = new IBinaryComparatorFactory[1];
         comparatorFactories[0] = JobGenUtil.getIBinaryComparatorFactory(0, vertexIdClass);;
-        IFileSplitProvider fileSplitProvider = ClusterConfig.getFileSplitProvider(jobId, PRIMARY_INDEX);
+        IFileSplitProvider fileSplitProvider = getFileSplitProvider(jobId, PRIMARY_INDEX);
         ITypeTraits[] typeTraits = new ITypeTraits[2];
         typeTraits[0] = new TypeTraits(false);
         typeTraits[1] = new TypeTraits(false);
         BTreeSearchOperatorDescriptor scanner = new BTreeSearchOperatorDescriptor(spec, recordDescriptor,
                 storageManagerInterface, lcManagerProvider, fileSplitProvider, typeTraits, comparatorFactories, null,
                 null, null, true, true, getIndexDataflowHelperFactory(), false, NoOpOperationCallbackFactory.INSTANCE);
-        ClusterConfig.setLocationConstraint(spec, scanner);
+        setLocationConstraint(spec, scanner);
 
         /**
          * construct write file operator
@@ -461,9 +465,9 @@ public abstract class JobGen implements IJobGen {
      * generate a "clear state" job
      */
     public JobSpecification generateClearState() throws HyracksException {
-        JobSpecification spec = new JobSpecification();
+        JobSpecification spec = new JobSpecification(frameSize);
         ClearStateOperatorDescriptor clearState = new ClearStateOperatorDescriptor(spec, jobId);
-        ClusterConfig.setLocationConstraint(spec, clearState);
+        setLocationConstraint(spec, clearState);
         spec.addRoot(clearState);
         return spec;
     }
@@ -475,13 +479,13 @@ public abstract class JobGen implements IJobGen {
      * @throws HyracksException
      */
     protected JobSpecification dropIndex(String indexName) throws HyracksException {
-        JobSpecification spec = new JobSpecification();
+        JobSpecification spec = new JobSpecification(frameSize);
 
-        IFileSplitProvider fileSplitProvider = ClusterConfig.getFileSplitProvider(jobId, indexName);
+        IFileSplitProvider fileSplitProvider = getFileSplitProvider(jobId, indexName);
         IndexDropOperatorDescriptor drop = new IndexDropOperatorDescriptor(spec, storageManagerInterface,
                 lcManagerProvider, fileSplitProvider, getIndexDataflowHelperFactory());
 
-        ClusterConfig.setLocationConstraint(spec, drop);
+        setLocationConstraint(spec, drop);
         spec.addRoot(drop);
         spec.setFrameSize(frameSize);
         return spec;
@@ -503,7 +507,8 @@ public abstract class JobGen implements IJobGen {
         if (BspUtils.useLSM(conf)) {
             return new LSMBTreeDataflowHelperFactory(new VirtualBufferCacheProvider(),
                     new ConstantMergePolicyFactory(), MERGE_POLICY_PROPERTIES, NoOpOperationTrackerProvider.INSTANCE,
-                    SynchronousSchedulerProvider.INSTANCE, NoOpIOOperationCallback.INSTANCE, 0.01);
+                    /* TODO verify whether key dup check is required or not in preglix: to be safe, just check it as it has been done*/
+                    SynchronousSchedulerProvider.INSTANCE, NoOpIOOperationCallback.INSTANCE, 0.01, true);
         } else {
             return new BTreeDataflowHelperFactory();
         }
@@ -514,8 +519,8 @@ public abstract class JobGen implements IJobGen {
         Configuration conf = job.getConfiguration();
         Class<? extends WritableComparable<?>> vertexIdClass = BspUtils.getVertexIndexClass(conf);
         Class<? extends Writable> vertexClass = BspUtils.getVertexClass(conf);
-        JobSpecification spec = new JobSpecification();
-        IFileSplitProvider fileSplitProvider = ClusterConfig.getFileSplitProvider(jobId, PRIMARY_INDEX);
+        JobSpecification spec = new JobSpecification(frameSize);
+        IFileSplitProvider fileSplitProvider = getFileSplitProvider(jobId, PRIMARY_INDEX);
 
         /**
          * the graph file scan operator and use count constraint first, will use
@@ -537,7 +542,7 @@ public abstract class JobGen implements IJobGen {
         String[] readSchedule = ClusterConfig.getHdfsScheduler().getLocationConstraints(splits);
         VertexFileScanOperatorDescriptor scanner = new VertexFileScanOperatorDescriptor(spec, recordDescriptor, splits,
                 readSchedule, confFactory);
-        ClusterConfig.setLocationConstraint(spec, scanner);
+        setLocationConstraint(spec, scanner);
 
         /**
          * construct sort operator
@@ -549,7 +554,7 @@ public abstract class JobGen implements IJobGen {
         comparatorFactories[0] = JobGenUtil.getIBinaryComparatorFactory(0, vertexIdClass);;
         ExternalSortOperatorDescriptor sorter = new ExternalSortOperatorDescriptor(spec, maxFrameNumber, sortFields,
                 nkmFactory, comparatorFactories, recordDescriptor);
-        ClusterConfig.setLocationConstraint(spec, sorter);
+        setLocationConstraint(spec, sorter);
 
         /**
          * construct tree bulk load operator
@@ -564,7 +569,7 @@ public abstract class JobGen implements IJobGen {
                 storageManagerInterface, lcManagerProvider, fileSplitProvider, typeTraits, comparatorFactories,
                 sortFields, fieldPermutation, DEFAULT_BTREE_FILL_FACTOR, true, 0, false,
                 getIndexDataflowHelperFactory(), NoOpOperationCallbackFactory.INSTANCE);
-        ClusterConfig.setLocationConstraint(spec, btreeBulkLoad);
+        setLocationConstraint(spec, btreeBulkLoad);
 
         /**
          * connect operator descriptors
@@ -581,7 +586,7 @@ public abstract class JobGen implements IJobGen {
             HyracksException {
         Class<? extends WritableComparable<?>> vertexIdClass = BspUtils.getVertexIndexClass(conf);
         Class<? extends Writable> vertexClass = BspUtils.getVertexClass(conf);
-        JobSpecification spec = new JobSpecification();
+        JobSpecification spec = new JobSpecification(frameSize);
 
         /**
          * construct empty tuple operator
@@ -596,7 +601,7 @@ public abstract class JobGen implements IJobGen {
         RecordDescriptor keyRecDesc = new RecordDescriptor(keyRecDescSers);
         ConstantTupleSourceOperatorDescriptor emptyTupleSource = new ConstantTupleSourceOperatorDescriptor(spec,
                 keyRecDesc, tb.getFieldEndOffsets(), tb.getByteArray(), tb.getSize());
-        ClusterConfig.setLocationConstraint(spec, emptyTupleSource);
+        setLocationConstraint(spec, emptyTupleSource);
 
         /**
          * construct btree search operator
@@ -606,7 +611,7 @@ public abstract class JobGen implements IJobGen {
                 vertexIdClass.getName(), vertexClass.getName());
         IBinaryComparatorFactory[] comparatorFactories = new IBinaryComparatorFactory[1];
         comparatorFactories[0] = JobGenUtil.getIBinaryComparatorFactory(0, vertexIdClass);;
-        IFileSplitProvider fileSplitProvider = ClusterConfig.getFileSplitProvider(jobId, PRIMARY_INDEX);
+        IFileSplitProvider fileSplitProvider = getFileSplitProvider(jobId, PRIMARY_INDEX);
 
         ITypeTraits[] typeTraits = new ITypeTraits[2];
         typeTraits[0] = new TypeTraits(false);
@@ -615,7 +620,7 @@ public abstract class JobGen implements IJobGen {
         BTreeSearchOperatorDescriptor scanner = new BTreeSearchOperatorDescriptor(spec, recordDescriptor,
                 storageManagerInterface, lcManagerProvider, fileSplitProvider, typeTraits, comparatorFactories, null,
                 null, null, true, true, getIndexDataflowHelperFactory(), false, NoOpOperationCallbackFactory.INSTANCE);
-        ClusterConfig.setLocationConstraint(spec, scanner);
+        setLocationConstraint(spec, scanner);
 
         ExternalSortOperatorDescriptor sort = null;
         if (!ckpointing) {
@@ -625,7 +630,7 @@ public abstract class JobGen implements IJobGen {
             sortCmpFactories[0] = JobGenUtil.getFinalBinaryComparatorFactory(vertexIdClass);
             sort = new ExternalSortOperatorDescriptor(spec, maxFrameNumber, keyFields, nkmFactory, sortCmpFactories,
                     recordDescriptor);
-            ClusterConfig.setLocationConstraint(spec, scanner);
+            setLocationConstraint(spec, scanner);
         }
 
         /**
@@ -636,7 +641,7 @@ public abstract class JobGen implements IJobGen {
                 conf, vertexIdClass.getName(), vertexClass.getName());
         VertexFileWriteOperatorDescriptor writer = new VertexFileWriteOperatorDescriptor(spec, confFactory,
                 inputRdFactory, preHookFactory);
-        ClusterConfig.setLocationConstraint(spec, writer);
+        setLocationConstraint(spec, writer);
 
         /**
          * connect operator descriptors
@@ -669,7 +674,7 @@ public abstract class JobGen implements IJobGen {
     /** generate plan specific state checkpointing */
     protected JobSpecification[] generateStateCheckpointing(int lastSuccessfulIteration) throws HyracksException {
         Class<? extends WritableComparable<?>> vertexIdClass = BspUtils.getVertexIndexClass(conf);
-        JobSpecification spec = new JobSpecification();
+        JobSpecification spec = new JobSpecification(frameSize);
 
         /**
          * source aggregate
@@ -681,14 +686,14 @@ public abstract class JobGen implements IJobGen {
          * construct empty tuple operator
          */
         EmptyTupleSourceOperatorDescriptor emptyTupleSource = new EmptyTupleSourceOperatorDescriptor(spec);
-        ClusterConfig.setLocationConstraint(spec, emptyTupleSource);
+        setLocationConstraint(spec, emptyTupleSource);
 
         /**
          * construct the materializing write operator
          */
         MaterializingReadOperatorDescriptor materializeRead = new MaterializingReadOperatorDescriptor(spec, rdFinal,
                 false, jobId, lastSuccessfulIteration + 1);
-        ClusterConfig.setLocationConstraint(spec, materializeRead);
+        setLocationConstraint(spec, materializeRead);
 
         String checkpointPath = BspUtils.getMessageCheckpointPath(conf, lastSuccessfulIteration);;
         PregelixJob tmpJob = createCloneJob("State checkpointing for job " + jobId, pregelixJob);
@@ -700,7 +705,7 @@ public abstract class JobGen implements IJobGen {
         IRecordDescriptorFactory inputRdFactory = DataflowUtils.getWritableRecordDescriptorFactoryFromWritableClasses(
                 conf, vertexIdClass.getName(), MsgList.class.getName());
         HDFSFileWriteOperatorDescriptor hdfsWriter = new HDFSFileWriteOperatorDescriptor(spec, tmpJob, inputRdFactory);
-        ClusterConfig.setLocationConstraint(spec, hdfsWriter);
+        setLocationConstraint(spec, hdfsWriter);
 
         spec.connect(new OneToOneConnectorDescriptor(spec), emptyTupleSource, 0, materializeRead, 0);
         spec.connect(new OneToOneConnectorDescriptor(spec), materializeRead, 0, hdfsWriter, 0);
@@ -722,7 +727,7 @@ public abstract class JobGen implements IJobGen {
         }
         Configuration conf = tmpJob.getConfiguration();
         Class vertexIdClass = BspUtils.getVertexIndexClass(conf);
-        JobSpecification spec = new JobSpecification();
+        JobSpecification spec = new JobSpecification(frameSize);
 
         /***
          * HDFS read operator
@@ -743,7 +748,7 @@ public abstract class JobGen implements IJobGen {
         String[] readSchedule = ClusterConfig.getHdfsScheduler().getLocationConstraints(splits);
         HDFSReadOperatorDescriptor scanner = new HDFSReadOperatorDescriptor(spec, recordDescriptor, tmpJob, splits,
                 readSchedule, new KeyValueParserFactory());
-        ClusterConfig.setLocationConstraint(spec, scanner);
+        setLocationConstraint(spec, scanner);
 
         /** construct the sort operator to sort message states */
         int[] keyFields = new int[] { 0 };
@@ -752,24 +757,24 @@ public abstract class JobGen implements IJobGen {
         sortCmpFactories[0] = JobGenUtil.getIBinaryComparatorFactory(lastCheckpointedIteration, vertexIdClass);
         ExternalSortOperatorDescriptor sort = new ExternalSortOperatorDescriptor(spec, maxFrameNumber, keyFields,
                 nkmFactory, sortCmpFactories, recordDescriptor, Algorithm.QUICK_SORT);
-        ClusterConfig.setLocationConstraint(spec, sort);
+        setLocationConstraint(spec, sort);
 
         /**
          * construct the materializing write operator
          */
         MaterializingWriteOperatorDescriptor materialize = new MaterializingWriteOperatorDescriptor(spec,
                 recordDescriptor, jobId, lastCheckpointedIteration);
-        ClusterConfig.setLocationConstraint(spec, materialize);
+        setLocationConstraint(spec, materialize);
 
         /** construct runtime hook */
         RuntimeHookOperatorDescriptor postSuperStep = new RuntimeHookOperatorDescriptor(spec,
                 new RecoveryRuntimeHookFactory(jobId, lastCheckpointedIteration, new ConfigurationFactory(
                         pregelixJob.getConfiguration())));
-        ClusterConfig.setLocationConstraint(spec, postSuperStep);
+        setLocationConstraint(spec, postSuperStep);
 
         /** construct empty sink operator */
         EmptySinkOperatorDescriptor emptySink = new EmptySinkOperatorDescriptor(spec);
-        ClusterConfig.setLocationConstraint(spec, emptySink);
+        setLocationConstraint(spec, emptySink);
 
         /**
          * connect operator descriptors
@@ -807,7 +812,7 @@ public abstract class JobGen implements IJobGen {
          */
         List<JobSpecification> list = new ArrayList<JobSpecification>();
         list.add(bulkLoadLiveVertexBTree(iteration));
-        JobGen jobGen = new JobGenInnerJoin(pregelixJob, jobId);
+        JobGen jobGen = new JobGenInnerJoin(pregelixJob, jobId, optimizer);
         return Pair.of(list, jobGen);
     }
 
@@ -821,18 +826,18 @@ public abstract class JobGen implements IJobGen {
     private JobSpecification bulkLoadLiveVertexBTree(int iteration) throws HyracksException {
         Class<? extends WritableComparable<?>> vertexIdClass = BspUtils.getVertexIndexClass(conf);
         Class<? extends Writable> vertexClass = BspUtils.getVertexClass(conf);
-        JobSpecification spec = new JobSpecification();
+        JobSpecification spec = new JobSpecification(frameSize);
 
         /**
          * construct empty tuple operator
          */
         EmptyTupleSourceOperatorDescriptor emptyTupleSource = new EmptyTupleSourceOperatorDescriptor(spec);
-        ClusterConfig.setLocationConstraint(spec, emptyTupleSource);
+        setLocationConstraint(spec, emptyTupleSource);
 
         /**
          * construct btree search and function call update operator
          */
-        IFileSplitProvider fileSplitProvider = ClusterConfig.getFileSplitProvider(jobId, PRIMARY_INDEX);
+        IFileSplitProvider fileSplitProvider = getFileSplitProvider(jobId, PRIMARY_INDEX);
         RecordDescriptor recordDescriptor = DataflowUtils.getRecordDescriptorFromKeyValueClasses(conf,
                 vertexIdClass.getName(), vertexClass.getName());
         IBinaryComparatorFactory[] comparatorFactories = new IBinaryComparatorFactory[1];
@@ -852,12 +857,12 @@ public abstract class JobGen implements IJobGen {
                 comparatorFactories, JobGenUtil.getForwardScan(iteration), null, null, true, true,
                 getIndexDataflowHelperFactory(), inputRdFactory, 1, new ExtractLiveVertexIdFunctionFactory(),
                 preHookFactory, null, rdFinal);
-        ClusterConfig.setLocationConstraint(spec, scanner);
+        setLocationConstraint(spec, scanner);
 
         /**
          * construct bulk-load index operator
          */
-        IFileSplitProvider secondaryFileSplitProvider = ClusterConfig.getFileSplitProvider(jobId, SECONDARY_INDEX_ODD);
+        IFileSplitProvider secondaryFileSplitProvider = getFileSplitProvider(jobId, SECONDARY_INDEX_ODD);
         int[] fieldPermutation = new int[] { 0, 1 };
         int[] keyFields = new int[] { 0 };
         IBinaryComparatorFactory[] indexCmpFactories = new IBinaryComparatorFactory[1];
@@ -866,7 +871,7 @@ public abstract class JobGen implements IJobGen {
         TreeIndexBulkReLoadOperatorDescriptor btreeBulkLoad = new TreeIndexBulkReLoadOperatorDescriptor(spec,
                 storageManagerInterface, lcManagerProvider, secondaryFileSplitProvider, typeTraits, indexCmpFactories,
                 fieldPermutation, keyFields, DEFAULT_BTREE_FILL_FACTOR, getIndexDataflowHelperFactory());
-        ClusterConfig.setLocationConstraint(spec, btreeBulkLoad);
+        setLocationConstraint(spec, btreeBulkLoad);
 
         /** connect job spec */
         spec.connect(new OneToOneConnectorDescriptor(spec), emptyTupleSource, 0, scanner, 0);
@@ -874,6 +879,27 @@ public abstract class JobGen implements IJobGen {
         spec.addRoot(btreeBulkLoad);
 
         return spec;
+    }
+
+    /**
+     * set the location constraint for operators
+     * 
+     * @param spec
+     * @param operator
+     */
+    public void setLocationConstraint(JobSpecification spec, IOperatorDescriptor operator) {
+        optimizer.setOptimizedLocationConstraints(spec, operator);
+    }
+
+    /**
+     * get the file split provider
+     * 
+     * @param jobId
+     * @param indexName
+     * @return the IFileSplitProvider instance
+     */
+    public IFileSplitProvider getFileSplitProvider(String jobId, String indexName) {
+        return optimizer.getOptimizedFileSplitProvider(jobId, indexName);
     }
 
 }
