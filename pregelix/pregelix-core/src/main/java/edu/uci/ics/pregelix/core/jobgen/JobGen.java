@@ -546,7 +546,7 @@ public abstract class JobGen implements IJobGen {
         }
         RecordDescriptor recordDescriptor = DataflowUtils.getRecordDescriptorFromKeyValueClasses(conf,
                 vertexIdClass.getName(), vertexClass.getName());
-        IConfigurationFactory confFactory = getConfigurationFactory();
+        IConfigurationFactory confFactory = new ConfigurationFactory(conf);
         String[] readSchedule = ClusterConfig.getHdfsScheduler().getLocationConstraints(splits);
         VertexFileScanOperatorDescriptor scanner = new VertexFileScanOperatorDescriptor(spec, recordDescriptor, splits,
                 readSchedule, confFactory);
