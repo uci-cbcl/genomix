@@ -14,15 +14,11 @@
  */
 package edu.uci.ics.hyracks.control.nc.work;
 
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.util.Map;
 
 import edu.uci.ics.hyracks.api.comm.NetworkAddress;
-import edu.uci.ics.hyracks.api.comm.PartitionChannel;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
-import edu.uci.ics.hyracks.comm.channels.NetworkInputChannel;
 import edu.uci.ics.hyracks.control.common.work.AbstractWork;
 import edu.uci.ics.hyracks.control.nc.Joblet;
 import edu.uci.ics.hyracks.control.nc.NodeControllerService;
@@ -46,10 +42,11 @@ public class ReportPartitionAvailabilityWork extends AbstractWork {
             Map<JobId, Joblet> jobletMap = ncs.getJobletMap();
             Joblet ji = jobletMap.get(pid.getJobId());
             if (ji != null) {
-                PartitionChannel channel = new PartitionChannel(pid, new NetworkInputChannel(ncs.getNetworkManager(),
-                        new InetSocketAddress(InetAddress.getByAddress(networkAddress.getIpAddress()),
-                                networkAddress.getPort()), pid, 5));
-                ji.reportPartitionAvailability(channel);
+                //TODO  it is a no-op and probably for future use
+                //PartitionChannel channel = new PartitionChannel(pid, new NetworkInputChannel(ncs.getNetworkManager(),
+                //        new InetSocketAddress(InetAddress.getByAddress(networkAddress.getIpAddress()),
+                //                networkAddress.getPort()), pid, 5));
+                //  ji.reportPartitionAvailability(channel);
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
