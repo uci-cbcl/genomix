@@ -103,6 +103,7 @@ public class NetworkManager implements IChannelConnectionFactory {
             try {
                 partitionManager.registerPartitionRequest(pid, noc);
             } catch (HyracksException e) {
+                e.printStackTrace();
                 noc.abort();
             }
         }

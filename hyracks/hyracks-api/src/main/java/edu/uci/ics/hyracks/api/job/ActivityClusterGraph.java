@@ -17,6 +17,7 @@ package edu.uci.ics.hyracks.api.job;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.json.JSONArray;
@@ -25,6 +26,7 @@ import org.json.JSONObject;
 
 import edu.uci.ics.hyracks.api.dataflow.ActivityId;
 import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
+import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.connectors.IConnectorPolicyAssignmentPolicy;
 
 public class ActivityClusterGraph implements Serializable {
@@ -133,6 +135,16 @@ public class ActivityClusterGraph implements Serializable {
 
     public void setUseConnectorPolicyForScheduling(boolean useConnectorPolicyForScheduling) {
         this.useConnectorPolicyForScheduling = useConnectorPolicyForScheduling;
+    }
+
+    public List<IConnectorDescriptor> getActivityInputs(ActivityId activityId) {
+        ActivityCluster ac = activityMap.get(activityId);
+        return ac.getActivityInputMap().get(activityId);
+    }
+
+    public ActivityId getProducerActivity(ConnectorDescriptorId cid) {
+        ActivityCluster ac = connectorMap.get(cid);
+        return ac.getProducerActivity(cid);
     }
 
     public JSONObject toJSON() throws JSONException {

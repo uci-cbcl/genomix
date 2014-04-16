@@ -30,11 +30,13 @@ import java.util.logging.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import edu.uci.ics.hyracks.api.comm.NetworkAddress;
 import edu.uci.ics.hyracks.api.constraints.Constraint;
 import edu.uci.ics.hyracks.api.constraints.expressions.LValueConstraintExpression;
 import edu.uci.ics.hyracks.api.constraints.expressions.PartitionLocationExpression;
 import edu.uci.ics.hyracks.api.dataflow.ActivityId;
 import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
+import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.dataflow.TaskId;
@@ -338,29 +340,34 @@ public class JobScheduler {
         tcAttempt.initializePendingTaskCounter();
         tcAttempts.add(tcAttempt);
 
-        /* TODO - Further improvement for reducing messages -- not yet complete.
+        /**
+         * Improvement for reducing master/slave message communications, for each TaskAttemptDescriptor,
+         * we set the NetworkAddress[][] partitionLocations, in which each row is for an incoming connector descriptor
+         * and each column is for an input channel of the connector.
+         */
         for (Map.Entry<String, List<TaskAttemptDescriptor>> e : taskAttemptMap.entrySet()) {
             List<TaskAttemptDescriptor> tads = e.getValue();
             for (TaskAttemptDescriptor tad : tads) {
                 TaskId tid = tad.getTaskAttemptId().getTaskId();
                 ActivityId aid = tid.getActivityId();
-                List<IConnectorDescriptor> inConnectors = jag.getActivityInputConnectorDescriptors(aid);
+                List<IConnectorDescriptor> inConnectors = acg.getActivityInputs(aid);
                 int[] inPartitionCounts = tad.getInputPartitionCounts();
-                NetworkAddress[][] partitionLocations = new NetworkAddress[inPartitionCounts.length][];
-                for (int i = 0; i < inPartitionCounts.length; ++i) {
-                    ConnectorDescriptorId cdId = inConnectors.get(i).getConnectorId();
-                    ActivityId producerAid = jag.getProducerActivity(cdId);
-                    partitionLocations[i] = new NetworkAddress[inPartitionCounts[i]];
-                    for (int j = 0; j < inPartitionCounts[i]; ++j) {
-                        TaskId producerTaskId = new TaskId(producerAid, j);
-                        String nodeId = findTaskLocation(producerTaskId);
-                        partitionLocations[i][j] = ccs.getNodeMap().get(nodeId).getDataPort();
+                if (inPartitionCounts != null) {
+                    NetworkAddress[][] partitionLocations = new NetworkAddress[inPartitionCounts.length][];
+                    for (int i = 0; i < inPartitionCounts.length; ++i) {
+                        ConnectorDescriptorId cdId = inConnectors.get(i).getConnectorId();
+                        ActivityId producerAid = acg.getProducerActivity(cdId);
+                        partitionLocations[i] = new NetworkAddress[inPartitionCounts[i]];
+                        for (int j = 0; j < inPartitionCounts[i]; ++j) {
+                            TaskId producerTaskId = new TaskId(producerAid, j);
+                            String nodeId = findTaskLocation(producerTaskId);
+                            partitionLocations[i][j] = ccs.getNodeMap().get(nodeId).getDataPort();
+                        }
                     }
+                    tad.setInputPartitionLocations(partitionLocations);
                 }
-                tad.setInputPartitionLocations(partitionLocations);
             }
         }
-        */
 
         tcAttempt.setStatus(TaskClusterAttempt.TaskClusterStatus.RUNNING);
         tcAttempt.setStartTime(System.currentTimeMillis());

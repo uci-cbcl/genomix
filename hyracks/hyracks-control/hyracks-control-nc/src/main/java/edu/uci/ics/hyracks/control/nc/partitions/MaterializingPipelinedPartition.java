@@ -165,16 +165,11 @@ public class MaterializingPipelinedPartition implements IFrameWriter, IPartition
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("close(" + pid + " by " + taId);
         }
-        boolean commit = false;
         synchronized (this) {
             eos = true;
             ctx.getIOManager().close(handle);
             handle = null;
-            commit = !failed;
             notifyAll();
-        }
-        if (commit) {
-            manager.updatePartitionState(pid, taId, this, PartitionState.COMMITTED);
         }
     }
 }
