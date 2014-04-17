@@ -25,7 +25,6 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.api.util.ConservativeCheckpointHook;
 import edu.uci.ics.pregelix.api.util.DefaultVertexPartitioner;
-import edu.uci.ics.pregelix.api.util.HadoopCountersGlobalAggregateHook;
 import edu.uci.ics.pregelix.example.ConnectedComponentsVertex;
 import edu.uci.ics.pregelix.example.ConnectedComponentsVertex.SimpleConnectedComponentsVertexOutputFormat;
 import edu.uci.ics.pregelix.example.EarlyTerminationVertex;
@@ -54,8 +53,6 @@ import edu.uci.ics.pregelix.example.trianglecounting.TextTriangleCountingInputFo
 import edu.uci.ics.pregelix.example.trianglecounting.TriangleCountingAggregator;
 import edu.uci.ics.pregelix.example.trianglecounting.TriangleCountingVertex;
 import edu.uci.ics.pregelix.example.trianglecounting.TriangleCountingVertex.TriangleCountingVertexOutputFormat;
-import edu.uci.ics.pregelix.example.trianglecounting.TriangleCountingWithAggregateHadoopCountersVertex.TriangleHadoopCountersAggregator;
-import edu.uci.ics.pregelix.example.trianglecounting.TriangleCountingWithAggregateHadoopCountersVertex;
 
 public class JobGenerator {
     private static String outputBase = "src/test/resources/jobs/";
@@ -82,6 +79,7 @@ public class JobGenerator {
         FileOutputFormat.setOutputPath(job, new Path(HDFS_OUTPUTPAH));
         job.getConfiguration().setLong(PregelixJob.NUM_VERTICE, 20);
         job.setCheckpointHook(ConservativeCheckpointHook.class);
+        job.setEnableDynamicOptimization(true);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
 
@@ -98,6 +96,7 @@ public class JobGenerator {
         FileOutputFormat.setOutputPath(job, new Path(HDFS_OUTPUTPAH2));
         job.getConfiguration().setLong(PregelixJob.NUM_VERTICE, 23);
         job.setCheckpointHook(ConservativeCheckpointHook.class);
+        job.setEnableDynamicOptimization(true);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
 
@@ -112,6 +111,7 @@ public class JobGenerator {
         FileOutputFormat.setOutputPath(job, new Path(HDFS_OUTPUTPAH));
         job.getConfiguration().setLong(PregelixJob.NUM_VERTICE, 20);
         job.getConfiguration().setLong(ShortestPathsVertex.SOURCE_ID, 0);
+        job.setDynamicVertexValueSize(true);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
 
@@ -126,6 +126,7 @@ public class JobGenerator {
         FileOutputFormat.setOutputPath(job, new Path(HDFS_OUTPUTPAH));
         job.getConfiguration().setLong(PregelixJob.NUM_VERTICE, 20);
         job.setCheckpointHook(ConservativeCheckpointHook.class);
+        job.setEnableDynamicOptimization(true);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
 
@@ -140,6 +141,7 @@ public class JobGenerator {
         FileInputFormat.setInputPaths(job, HDFS_INPUTPATH);
         FileOutputFormat.setOutputPath(job, new Path(HDFS_OUTPUTPAH));
         job.getConfiguration().setLong(PregelixJob.NUM_VERTICE, 20);
+        job.setEnableDynamicOptimization(true);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
 
@@ -155,6 +157,7 @@ public class JobGenerator {
         FileInputFormat.setInputPaths(job, HDFS_INPUTPATH2);
         FileOutputFormat.setOutputPath(job, new Path(HDFS_OUTPUTPAH2));
         job.getConfiguration().setLong(PregelixJob.NUM_VERTICE, 23);
+        job.setEnableDynamicOptimization(true);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
 
@@ -214,6 +217,7 @@ public class JobGenerator {
         FileOutputFormat.setOutputPath(job, new Path(HDFS_OUTPUTPAH));
         job.getConfiguration().setLong(PregelixJob.NUM_VERTICE, 20);
         job.getConfiguration().setLong(ShortestPathsVertex.SOURCE_ID, 0);
+        job.setDynamicVertexValueSize(true);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
 
@@ -228,6 +232,7 @@ public class JobGenerator {
         FileInputFormat.setInputPaths(job, HDFS_INPUTPATH);
         FileOutputFormat.setOutputPath(job, new Path(HDFS_OUTPUTPAH));
         job.getConfiguration().setLong(PregelixJob.NUM_VERTICE, 20);
+        job.setEnableDynamicOptimization(true);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
 
@@ -240,19 +245,7 @@ public class JobGenerator {
         job.setNoramlizedKeyComputerClass(VLongNormalizedKeyComputer.class);
         FileInputFormat.setInputPaths(job, HDFS_INPUTPATH3);
         FileOutputFormat.setOutputPath(job, new Path(HDFS_OUTPUTPAH3));
-        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
-    }
-    
-    private static void generateTriangleCountingWithHadoopCountersJob(String jobName, String outputPath) throws IOException {
-        PregelixJob job = new PregelixJob(jobName);
-        job.setVertexClass(TriangleCountingWithAggregateHadoopCountersVertex.class);
-        job.addGlobalAggregatorClass(TriangleCountingAggregator.class);
-        job.setCounterAggregatorClass(TriangleCountingWithAggregateHadoopCountersVertex.TriangleHadoopCountersAggregator.class);
-        job.setVertexInputFormatClass(TextTriangleCountingInputFormat.class);
-        job.setVertexOutputFormatClass(TriangleCountingVertexOutputFormat.class);
-        job.setNoramlizedKeyComputerClass(VLongNormalizedKeyComputer.class);
-        FileInputFormat.setInputPaths(job, HDFS_INPUTPATH3);
-        FileOutputFormat.setOutputPath(job, new Path(HDFS_OUTPUTPAH3));
+        job.setDynamicVertexValueSize(true);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
 
@@ -391,7 +384,6 @@ public class JobGenerator {
 
     private static void genTriangleCounting() throws IOException {
         generateTriangleCountingJob("Triangle Counting", outputBase + "TriangleCounting.xml");
-//        generateTriangleCountingWithHadoopCountersJob("Triangle Counting", outputBase + "TriangleCountingWithHadoopCounters.xml");
     }
 
     private static void genMaximalClique() throws IOException {
