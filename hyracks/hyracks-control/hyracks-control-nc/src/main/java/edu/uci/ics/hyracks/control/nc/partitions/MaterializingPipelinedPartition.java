@@ -84,47 +84,56 @@ public class MaterializingPipelinedPartition implements IFrameWriter, IPartition
             @Override
             public void run() {
                 try {
-                    IFileHandle fh = ioManager.open(fRef, IIOManager.FileReadWriteMode.READ_ONLY,
-                            IIOManager.FileSyncMode.METADATA_ASYNC_DATA_ASYNC);
+                    synchronized (MaterializingPipelinedPartition.this) {
+                        while (fRef == null && eos == false) {
+                            MaterializingPipelinedPartition.this.wait();
+                        }
+                    }
+                    IFileHandle fh = fRef == null ? null : ioManager.open(fRef,
+                            IIOManager.FileReadWriteMode.READ_ONLY, IIOManager.FileSyncMode.METADATA_ASYNC_DATA_ASYNC);
                     try {
                         writer.open();
                         try {
-                            long offset = 0;
-                            ByteBuffer buffer = ctx.allocateFrame();
-                            boolean fail = false;
-                            boolean done = false;
-                            while (!fail && !done) {
-                                synchronized (MaterializingPipelinedPartition.this) {
-                                    while (offset >= size && !eos && !failed) {
-                                        try {
-                                            MaterializingPipelinedPartition.this.wait();
-                                        } catch (InterruptedException e) {
-                                            throw new HyracksDataException(e);
+                            if (fh != null) {
+                                long offset = 0;
+                                ByteBuffer buffer = ctx.allocateFrame();
+                                boolean fail = false;
+                                boolean done = false;
+                                while (!fail && !done) {
+                                    synchronized (MaterializingPipelinedPartition.this) {
+                                        while (offset >= size && !eos && !failed) {
+                                            try {
+                                                MaterializingPipelinedPartition.this.wait();
+                                            } catch (InterruptedException e) {
+                                                throw new HyracksDataException(e);
+                                            }
                                         }
+                                        fail = failed;
+                                        done = eos && offset >= size;
                                     }
-                                    fail = failed;
-                                    done = eos && offset >= size;
-                                }
-                                if (fail) {
-                                    writer.fail();
-                                } else if (!done) {
-                                    buffer.clear();
-                                    long readLen = ioManager.syncRead(fh, offset, buffer);
-                                    if (readLen < buffer.capacity()) {
-                                        throw new HyracksDataException("Premature end of file");
+                                    if (fail) {
+                                        writer.fail();
+                                    } else if (!done) {
+                                        buffer.clear();
+                                        long readLen = ioManager.syncRead(fh, offset, buffer);
+                                        if (readLen < buffer.capacity()) {
+                                            throw new HyracksDataException("Premature end of file");
+                                        }
+                                        offset += readLen;
+                                        buffer.flip();
+                                        writer.nextFrame(buffer);
                                     }
-                                    offset += readLen;
-                                    buffer.flip();
-                                    writer.nextFrame(buffer);
                                 }
                             }
                         } finally {
                             writer.close();
                         }
                     } finally {
-                        ioManager.close(fh);
+                        if (fh != null) {
+                            ioManager.close(fh);
+                        }
                     }
-                } catch (HyracksDataException e) {
+                } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
             }
@@ -141,23 +150,23 @@ public class MaterializingPipelinedPartition implements IFrameWriter, IPartition
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("open(" + pid + " by " + taId);
         }
-        manager.registerPartition(pid, taId, this, PartitionState.STARTED);
-    }
-
-    private void initInternal() throws HyracksDataException {
-        fRef = manager.getFileFactory().createUnmanagedWorkspaceFile(pid.toString().replace(":", "$"));
-        handle = ctx.getIOManager().open(fRef, IIOManager.FileReadWriteMode.READ_WRITE,
-                IIOManager.FileSyncMode.METADATA_ASYNC_DATA_ASYNC);
         size = 0;
         eos = false;
         failed = false;
+        manager.registerPartition(pid, taId, this, PartitionState.STARTED);
+    }
+
+    private void checkOrCreateFile() throws HyracksDataException {
+        if (fRef == null) {
+            fRef = manager.getFileFactory().createUnmanagedWorkspaceFile(pid.toString().replace(":", "$"));
+            handle = ctx.getIOManager().open(fRef, IIOManager.FileReadWriteMode.READ_WRITE,
+                    IIOManager.FileSyncMode.METADATA_ASYNC_DATA_ASYNC);
+        }
     }
 
     @Override
     public synchronized void nextFrame(ByteBuffer buffer) throws HyracksDataException {
-        if (handle == null) {
-            initInternal();
-        }
+        checkOrCreateFile();
         size += ctx.getIOManager().syncWrite(handle, size, buffer);
         notifyAll();
     }
