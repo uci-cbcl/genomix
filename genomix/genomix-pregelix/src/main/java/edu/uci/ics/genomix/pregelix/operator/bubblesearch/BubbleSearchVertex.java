@@ -3,6 +3,7 @@ package edu.uci.ics.genomix.pregelix.operator.bubblesearch;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -24,17 +25,19 @@ import edu.uci.ics.genomix.pregelix.base.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.operator.bubblesearch.BubbleSearchMessage.MessageType;
 import edu.uci.ics.genomix.pregelix.operator.bubblesearch.BubbleSearchMessage.NodeInfo;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
+
 import java.util.Random;
 
 public class BubbleSearchVertex extends DeBruijnGraphCleanVertex<BubbleSearchValue, BubbleSearchMessage> {
 	
 	private static final double MIN_SIMILARITY = .95;
-	private int MAX_BRANCH_LENGTH = 100;
-	private int MAX_ITERATIONS = 50;
+	private static final int MAX_BRANCH_LENGTH = 100;
+	private static final int MAX_ITERATIONS = 6;
 
 	private boolean isStartSeed() {
-		return getVertexId().equals(new VKmer("CCCCCCCCCCCGTCCGCCCCC"));
+//		return getVertexId().equals(new VKmer("CCCCCCCCCCCGTCCGCCCCC"));
 //		return getVertexValue().degree(DIR.FORWARD) > 1 && new Random().nextFloat() < .0001;
+		return getVertexValue().degree(DIR.FORWARD) > 1;
 	}
 
 	@Override
@@ -47,6 +50,9 @@ public class BubbleSearchVertex extends DeBruijnGraphCleanVertex<BubbleSearchVal
 			msg.seed = new VKmer(getVertexId());
 			msgIterator = Collections.singleton(msg).iterator();
 			LOG.info("Starting bubblesearch seed at " + getVertexId());
+		} else if (getSuperstep() > MAX_ITERATIONS + 5) {
+			voteToHalt();
+			return;
 		}
 		
 		ArrayList<BubbleSearchMessage> completePaths = new ArrayList<>();
@@ -58,7 +64,7 @@ public class BubbleSearchVertex extends DeBruijnGraphCleanVertex<BubbleSearchVal
 				if (vertex.degree(msg.outgoingET.neighborDir()) == 0 || getSuperstep() > MAX_ITERATIONS || kmerLength(msg.path) > MAX_BRANCH_LENGTH) {
 					msg.type = MessageType.COMPLETE_PATH;
 					sendMsg(msg.seed, msg);
-					LOG.info("Path completed at " + getVertexId() + " with " + msg);
+//					LOG.info("Path completed at " + getVertexId() + " with " + msg);
 					continue;
 				}
 				msg.type = MessageType.EXPAND_PATH;
@@ -103,7 +109,9 @@ public class BubbleSearchVertex extends DeBruijnGraphCleanVertex<BubbleSearchVal
 			for (BubbleSearchMessage msg : completePaths) {
 				sendMsg(getVertexId(), msg);
 			}
-			LOG.info("Resent " + completePaths.size() + " waiting paths. Need " + vertex.totalBranches + " to finish.");
+			if (completePaths.size() > 0) {
+				LOG.info("Resent " + completePaths.size() + " waiting paths from " + getVertexId() + ". Need " + vertex.totalBranches + " to finish.");
+			}
 		} else if (vertex.totalBranches > 0) {
 			HashSet<Pair<EDGETYPE, VKmer>> edgesToRemove = new HashSet<>();
 			// we have a complete set of possible bubbles. For similar bubbles that don't share the first edge, remove the edge with less average coverage
