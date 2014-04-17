@@ -109,4 +109,14 @@ public class BubbleSearchMessage extends MessageWritable {
 		seed.readFields(in);
 		additionalBranches = in.readInt();
 	}
+	
+	@Override
+	public int sizeInBytes() {
+		int sizeInBytes = super.sizeInBytes();
+		sizeInBytes += 1 + 1 + seed.getKmerByteLength() + Integer.SIZE / 8;
+		for (NodeInfo p : path) {
+			sizeInBytes += Float.SIZE / 8 + 1 + p.nodeId.getKmerByteLength() + p.nodeSeq.getKmerByteLength();
+		}
+		return sizeInBytes;
+	}
 }
