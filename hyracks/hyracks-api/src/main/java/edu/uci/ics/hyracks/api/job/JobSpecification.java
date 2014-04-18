@@ -98,7 +98,7 @@ public class JobSpecification implements Serializable, IOperatorDescriptorRegist
         operatorIdCounter = 0;
         connectorIdCounter = 0;
         maxReattempts = 2;
-        useConnectorPolicyForScheduling = true;
+        useConnectorPolicyForScheduling = false;
         setFrameSize(frameSize);
     }
 
