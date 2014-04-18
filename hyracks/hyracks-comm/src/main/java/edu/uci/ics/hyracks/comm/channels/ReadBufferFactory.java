@@ -25,12 +25,12 @@ import edu.uci.ics.hyracks.net.protocols.muxdemux.IBufferFactory;
 public class ReadBufferFactory implements IBufferFactory {
 
     private final int limit;
-    private final IHyracksCommonContext ctx;
+    private final int frameSize;
     private int counter = 0;
 
     public ReadBufferFactory(int limit, IHyracksCommonContext ctx) {
         this.limit = limit;
-        this.ctx = ctx;
+        this.frameSize = ctx.getFrameSize();
     }
 
     @Override
@@ -39,7 +39,7 @@ public class ReadBufferFactory implements IBufferFactory {
             if (counter >= limit) {
                 return null;
             } else {
-                ByteBuffer frame = ctx.allocateFrame();
+                ByteBuffer frame = ByteBuffer.allocate(frameSize);
                 counter++;
                 return frame;
             }

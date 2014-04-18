@@ -19,7 +19,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class ClockPageReplacementStrategy implements IPageReplacementStrategy {
-    private static final int MAX_UNSUCCESSFUL_CYCLE_COUNT = 3;
+    private static final int MAX_UNSUCCESSFUL_CYCLE_COUNT = 1;
 
     private final Lock lock;
     private IBufferCacheInternal bufferCache;
@@ -60,11 +60,14 @@ public class ClockPageReplacementStrategy implements IPageReplacementStrategy {
     @Override
     public ICachedPageInternal findVictim() {
         lock.lock();
+        if (numPages <= 0) {
+            /** allocate the initial page */
+            allocatePage();
+        }
         ICachedPageInternal cachedPage = null;
         try {
-            if (numPages >= maxAllowedNumPages) {
-                cachedPage = findVictimByEviction();
-            } else {
+            cachedPage = findVictimByEviction();
+            if (cachedPage == null && numPages < maxAllowedNumPages) {
                 cachedPage = allocatePage();
             }
         } finally {
@@ -119,7 +122,7 @@ public class ClockPageReplacementStrategy implements IPageReplacementStrategy {
         numPages++;
         AtomicBoolean accessedFlag = getPerPageObject(cPage);
         if (!accessedFlag.compareAndSet(true, false)) {
-            if(cPage.pinIfGoodVictim()){
+            if (cPage.pinIfGoodVictim()) {
                 return cPage;
             }
         }
