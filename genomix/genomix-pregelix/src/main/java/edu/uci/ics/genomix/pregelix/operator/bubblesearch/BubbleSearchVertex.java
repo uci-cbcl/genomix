@@ -32,11 +32,12 @@ public class BubbleSearchVertex extends DeBruijnGraphCleanVertex<BubbleSearchVal
 	
 	private static final double MIN_SIMILARITY = .95;
 	private static final int MAX_BRANCH_LENGTH = 100;
-	private static final int MAX_ITERATIONS = 6;
+	private static final int MAX_ITERATIONS = 8;
+	private static final int MAX_BRANCHES = 100;
 
 	private boolean isStartSeed() {
 //		return getVertexId().equals(new VKmer("CCCCCCCCCCCGTCCGCCCCC"));
-//		return getVertexValue().degree(DIR.FORWARD) > 1 && new Random().nextFloat() < .0001;
+//		return getVertexValue().degree(DIR.FORWARD) > 1 && new Random().nextFloat() < .1;
 		return getVertexValue().degree(DIR.FORWARD) > 1;
 	}
 
@@ -45,14 +46,11 @@ public class BubbleSearchVertex extends DeBruijnGraphCleanVertex<BubbleSearchVal
 		BubbleSearchValue vertex = getVertexValue();
 		if (getSuperstep() == 1 && isStartSeed()) {
 			BubbleSearchMessage msg = new BubbleSearchMessage();
-			msg.type = MessageType.EXPAND_PATH;
+			msg.type = MessageType.EXPAND_PATH;	
 			msg.outgoingET = EDGETYPE.FF;
 			msg.seed = new VKmer(getVertexId());
 			msgIterator = Collections.singleton(msg).iterator();
 			LOG.info("Starting bubblesearch seed at " + getVertexId());
-		} else if (getSuperstep() > MAX_ITERATIONS + 5) {
-			voteToHalt();
-			return;
 		}
 		
 		ArrayList<BubbleSearchMessage> completePaths = new ArrayList<>();
@@ -104,13 +102,19 @@ public class BubbleSearchVertex extends DeBruijnGraphCleanVertex<BubbleSearchVal
 	
 	private void handleCompletePaths(ArrayList<BubbleSearchMessage> completePaths) {
 		BubbleSearchValue vertex = getVertexValue();
-		if (completePaths.size() < vertex.totalBranches) {
+		if (vertex.lastIterationSeen != getSuperstep()) {
+			vertex.numCompleteThisIteration = 0;
+			vertex.lastIterationSeen = (int) getSuperstep();
+		}
+		vertex.numCompleteThisIteration += completePaths.size();
+		boolean finishAnyway = getSuperstep() > MAX_ITERATIONS + 3 || vertex.numCompleteThisIteration > MAX_BRANCHES;
+		if (vertex.numCompleteThisIteration < vertex.totalBranches && !finishAnyway) {
 			// resend the paths messages to myself rather than storing them (circumvent node size limits)
 			for (BubbleSearchMessage msg : completePaths) {
 				sendMsg(getVertexId(), msg);
 			}
 			if (completePaths.size() > 0) {
-				LOG.info("Resent " + completePaths.size() + " waiting paths from " + getVertexId() + ". Need " + vertex.totalBranches + " to finish.");
+				LOG.info("Resent " + completePaths.size() + " waiting paths from " + getVertexId() + ". Need " + vertex.totalBranches + " to finish. Saw " + vertex.numCompleteThisIteration + " so far this iteration.");
 			}
 		} else if (vertex.totalBranches > 0) {
 			HashSet<Pair<EDGETYPE, VKmer>> edgesToRemove = new HashSet<>();
