@@ -737,6 +737,11 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
     private static int min(int a, int b) {
         return a <= b ? a : b;
     }
+    
+    private static int max(int a, int b) {
+        return a <= b ? b : a;
+    }
+
 
     public int editDistance(VKmer other) {
         return editDistance(this, other);
@@ -908,12 +913,12 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
     }
 
     /**
-     * return the fractional difference between the given kmers. This is the edit distance divided by the smaller length.
+     * return the fractional difference between the given kmers. This is the edit distance divided by the larger length.
      * Note: the fraction may be larger than 1 (when the edit distance is larger than the kmer)
-     * For example, two kmers AAAAA and AAAT have an edit distance of 2; the fracDissimilar will be 2/4 = .5
+     * For example, two kmers AAAAA and AAAT have an edit distance of 2; the fracDissimilar will be 2/5 = .4
      */
     public static float fracDissimilar(VKmer kmer1, VKmer kmer2) {
-        return editDistance(kmer1, kmer2) / (float) min(kmer1.getKmerLetterLength(), kmer2.getKmerLetterLength());
+        return editDistance(kmer1, kmer2) / (float) max(kmer1.getKmerLetterLength(), kmer2.getKmerLetterLength());
     }
 
     public float fracDissimilar(boolean sameOrientation, VKmer other) {

@@ -32,12 +32,13 @@ public class BubbleSearchVertex extends DeBruijnGraphCleanVertex<BubbleSearchVal
 	
 	private static final double MIN_SIMILARITY = .95;
 	private static final int MAX_BRANCH_LENGTH = 100;
-	private static final int MAX_ITERATIONS = 8;
-	private static final int MAX_BRANCHES = 100;
+	private static final int MAX_ITERATIONS = 25;
+	private static final int MAX_BRANCHES = 100000;
 
 	private boolean isStartSeed() {
 //		return getVertexId().equals(new VKmer("CCCCCCCCCCCGTCCGCCCCC"));
 //		return getVertexValue().degree(DIR.FORWARD) > 1 && new Random().nextFloat() < .1;
+//		return getVertexValue().degree(DIR.FORWARD) > 1 && getVertexValue().getKmerLength() > 35;
 		return getVertexValue().degree(DIR.FORWARD) > 1;
 	}
 
@@ -114,7 +115,7 @@ public class BubbleSearchVertex extends DeBruijnGraphCleanVertex<BubbleSearchVal
 				sendMsg(getVertexId(), msg);
 			}
 			if (completePaths.size() > 0) {
-				LOG.info("Resent " + completePaths.size() + " waiting paths from " + getVertexId() + ". Need " + vertex.totalBranches + " to finish. Saw " + vertex.numCompleteThisIteration + " so far this iteration.");
+//				LOG.info("Resent " + completePaths.size() + " waiting paths from " + getVertexId() + ". Need " + vertex.totalBranches + " to finish. Saw " + vertex.numCompleteThisIteration + " so far this iteration.");
 			}
 		} else if (vertex.totalBranches > 0) {
 			HashSet<Pair<EDGETYPE, VKmer>> edgesToRemove = new HashSet<>();
@@ -138,6 +139,7 @@ public class BubbleSearchVertex extends DeBruijnGraphCleanVertex<BubbleSearchVal
 						List<NodeInfo> uncommonI = pathI.subList(1, endpoints.getLeft());
 						List<NodeInfo> uncommonJ = pathJ.subList(1, endpoints.getRight());
 						if (uncommonI.size() > 0 && uncommonJ.size() > 0 && similarKmers(uncommonI, uncommonJ)) {
+//							LOG.info("Found similar kmers " + mergedKmer(uncommonI) + " vs " + mergedKmer(uncommonJ));
 							float coverageI = coverage(uncommonI);
 							float coverageJ = coverage(uncommonJ);
 							if (coverageI < coverageJ) {
