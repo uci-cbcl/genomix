@@ -224,6 +224,9 @@ public class GenomixDriver {
                 break; 
             case BUBBLE:
 //                pregelixJobs.add(SimpleBubbleMergeVertex.getConfiguredJob(conf, SimpleBubbleMergeVertex.class));
+            	conf.set(GenomixJobConf.SCAFFOLDING_INITIAL_DIRECTION, DIR.FORWARD.toString());
+            	pregelixJobs.add(BubbleSearchVertex.getConfiguredJob(conf, BubbleSearchVertex.class));
+            	conf.set(GenomixJobConf.SCAFFOLDING_INITIAL_DIRECTION, DIR.REVERSE.toString());
             	pregelixJobs.add(BubbleSearchVertex.getConfiguredJob(conf, BubbleSearchVertex.class));
                 break;
             /**    

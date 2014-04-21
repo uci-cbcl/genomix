@@ -34,12 +34,13 @@ public class BubbleSearchVertex extends DeBruijnGraphCleanVertex<BubbleSearchVal
 	private static final int MAX_BRANCH_LENGTH = 100;
 	private static final int MAX_ITERATIONS = 25;
 	private static final int MAX_BRANCHES = 100000;
+	private static DIR searchDirection;
 
 	private boolean isStartSeed() {
 //		return getVertexId().equals(new VKmer("CCCCCCCCCCCGTCCGCCCCC"));
 //		return getVertexValue().degree(DIR.FORWARD) > 1 && new Random().nextFloat() < .1;
 //		return getVertexValue().degree(DIR.FORWARD) > 1 && getVertexValue().getKmerLength() > 35;
-		return getVertexValue().degree(DIR.FORWARD) > 1;
+		return getVertexValue().degree(searchDirection) > 1;
 	}
 
 	@Override
@@ -48,7 +49,7 @@ public class BubbleSearchVertex extends DeBruijnGraphCleanVertex<BubbleSearchVal
 		if (getSuperstep() == 1 && isStartSeed()) {
 			BubbleSearchMessage msg = new BubbleSearchMessage();
 			msg.type = MessageType.EXPAND_PATH;	
-			msg.outgoingET = EDGETYPE.FF;
+			msg.outgoingET = searchDirection == DIR.FORWARD ? EDGETYPE.FF : EDGETYPE.RR;
 			msg.seed = new VKmer(getVertexId());
 			msgIterator = Collections.singleton(msg).iterator();
 			LOG.info("Starting bubblesearch seed at " + getVertexId());
@@ -222,6 +223,7 @@ public class BubbleSearchVertex extends DeBruijnGraphCleanVertex<BubbleSearchVal
 	public void configure(Configuration conf) {
 		super.configure(conf);
 		outgoingMsg = new BubbleSearchMessage();
+		searchDirection = DIR.valueOf(conf.get(GenomixJobConf.SCAFFOLDING_INITIAL_DIRECTION));
 	}
 	
     public static PregelixJob getConfiguredJob(
