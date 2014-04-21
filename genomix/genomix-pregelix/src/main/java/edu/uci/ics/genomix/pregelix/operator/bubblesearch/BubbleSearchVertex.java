@@ -108,27 +108,18 @@ public class BubbleSearchVertex extends DeBruijnGraphCleanVertex<BubbleSearchVal
 			vertex.lastIterationSeen = (int) getSuperstep();
 		}
 		vertex.numCompleteThisIteration += completePaths.size();
-		boolean finishAnyway = getSuperstep() > MAX_ITERATIONS + 3 || vertex.numCompleteThisIteration > MAX_BRANCHES;
-		if (vertex.numCompleteThisIteration < vertex.totalBranches && !finishAnyway) {
-			// resend the paths messages to myself rather than storing them (circumvent node size limits)
-			for (BubbleSearchMessage msg : completePaths) {
-				sendMsg(getVertexId(), msg);
-			}
-			if (completePaths.size() > 0) {
-//				LOG.info("Resent " + completePaths.size() + " waiting paths from " + getVertexId() + ". Need " + vertex.totalBranches + " to finish. Saw " + vertex.numCompleteThisIteration + " so far this iteration.");
-			}
-		} else if (vertex.totalBranches > 0) {
+		if (vertex.totalBranches >= 2) {
 			HashSet<Pair<EDGETYPE, VKmer>> edgesToRemove = new HashSet<>();
 			// we have a complete set of possible bubbles. For similar bubbles that don't share the first edge, remove the edge with less average coverage
 			// TODO: care about coverage in conflicting cases
 			for (int i=0; i < completePaths.size(); i++) {
 				List<NodeInfo> pathI = completePaths.get(i).path;
-				if (pathI.size() < 2) {
+				if (pathI.size() < 2 || !vertex.getEdges(pathI.get(1).incomingET).contains(pathI.get(1).nodeId)) {
 					continue;
 				}
 				for (int j=i + 1; j < completePaths.size(); j++) {
 					List<NodeInfo> pathJ = completePaths.get(j).path;
-					if (pathJ.size() < 2) {
+					if (pathJ.size() < 2 || !vertex.getEdges(pathJ.get(1).incomingET).contains(pathJ.get(1).nodeId)) {
 						continue;
 					}
 					if (pathI.get(1).nodeId.equals(pathJ.get(1).nodeId)) {
@@ -165,6 +156,20 @@ public class BubbleSearchVertex extends DeBruijnGraphCleanVertex<BubbleSearchVal
 			}
 //			vertex.edgesToRemove.clear();
 			edgesToRemove.clear();
+		}
+		
+		// resend any msgs for nodes that weren't removed
+		boolean finishAnyway = getSuperstep() > MAX_ITERATIONS + 5 || vertex.numCompleteThisIteration > MAX_BRANCHES;
+		if (vertex.numCompleteThisIteration < vertex.totalBranches && !finishAnyway) {
+			// resend the paths messages to myself rather than storing them (circumvent node size limits)
+			for (BubbleSearchMessage msg : completePaths) {
+				if (vertex.getEdges(msg.path.get(1).incomingET).contains(msg.path.get(1).nodeId)) {
+					sendMsg(getVertexId(), msg);
+				}
+			}
+			if (completePaths.size() > 0) {
+	//					LOG.info("Resent " + completePaths.size() + " waiting paths from " + getVertexId() + ". Need " + vertex.totalBranches + " to finish. Saw " + vertex.numCompleteThisIteration + " so far this iteration.");
+			}
 		}
 	}
 	
