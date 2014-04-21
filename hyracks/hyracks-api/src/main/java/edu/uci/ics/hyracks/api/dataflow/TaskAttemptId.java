@@ -14,14 +14,23 @@
  */
 package edu.uci.ics.hyracks.api.dataflow;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 import java.io.Serializable;
 
-public final class TaskAttemptId implements Serializable {
+import edu.uci.ics.hyracks.api.io.IWritable;
+
+public final class TaskAttemptId implements IWritable, Serializable {
     private static final long serialVersionUID = 1L;
 
-    private final TaskId taskId;
+    private TaskId taskId;
 
-    private final int attempt;
+    private int attempt;
+
+    public TaskAttemptId() {
+
+    }
 
     public TaskAttemptId(TaskId taskId, int attempt) {
         this.taskId = taskId;
@@ -62,5 +71,18 @@ public final class TaskAttemptId implements Serializable {
             return new TaskAttemptId(TaskId.parse(str.substring(0, idIdx)), Integer.parseInt(str.substring(idIdx + 1)));
         }
         throw new IllegalArgumentException("Unable to parse: " + str);
+    }
+
+    @Override
+    public void write(DataOutput output) throws IOException {
+        taskId.write(output);
+        output.writeInt(attempt);
+    }
+
+    @Override
+    public void readFields(DataInput input) throws IOException {
+        taskId = new TaskId();
+        taskId.readFields(input);
+        attempt = input.readInt();
     }
 }

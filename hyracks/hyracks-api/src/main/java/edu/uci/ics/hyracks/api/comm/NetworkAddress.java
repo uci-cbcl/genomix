@@ -14,15 +14,24 @@
  */
 package edu.uci.ics.hyracks.api.comm;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.Arrays;
 
-public final class NetworkAddress implements Serializable {
+import edu.uci.ics.hyracks.api.io.IWritable;
+
+public final class NetworkAddress implements IWritable, Serializable {
     private static final long serialVersionUID = 1L;
 
-    private final byte[] ipAddress;
+    private byte[] ipAddress;
 
-    private final int port;
+    private int port;
+
+    public NetworkAddress() {
+
+    }
 
     public NetworkAddress(byte[] ipAddress, int port) {
         this.ipAddress = ipAddress;
@@ -54,5 +63,20 @@ public final class NetworkAddress implements Serializable {
         }
         NetworkAddress on = (NetworkAddress) o;
         return on.port == port && Arrays.equals(on.ipAddress, ipAddress);
+    }
+
+    @Override
+    public void write(DataOutput output) throws IOException {
+        output.writeInt(ipAddress.length);
+        output.write(ipAddress);
+        output.writeInt(port);
+    }
+
+    @Override
+    public void readFields(DataInput input) throws IOException {
+        int size = input.readInt();
+        ipAddress = new byte[size];
+        input.readFully(ipAddress);
+        port = input.readInt();
     }
 }
