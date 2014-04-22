@@ -56,6 +56,7 @@ public class BubbleSearchVertex extends DeBruijnGraphCleanVertex<BubbleSearchVal
 			LOG.info("Starting bubblesearch seed at " + getVertexId());
 		}
 		
+		boolean deleted = false;
 		ArrayList<BubbleSearchMessage> completePaths = new ArrayList<>();
 		while(msgIterator.hasNext()) {
 			BubbleSearchMessage msg = msgIterator.next();
@@ -97,6 +98,9 @@ public class BubbleSearchVertex extends DeBruijnGraphCleanVertex<BubbleSearchVal
 				LOG.info("Removing reciprocal bubble start " + msg.path.get(0));
 				break;
 			case PRUNE_NODE:
+				if (deleted) {
+					continue;
+				}
 				for (EDGETYPE et : EDGETYPE.values) {
 					for (VKmer neighbor : vertex.getEdges(et)) {
 						outgoingMsg.reset();
@@ -108,6 +112,7 @@ public class BubbleSearchVertex extends DeBruijnGraphCleanVertex<BubbleSearchVal
 				}
 				deleteVertex(getVertexId());
 				LOG.info("Removing bubble path node " + getVertexId());
+				deleted = true;
 				break;
 			default:
 				break;
