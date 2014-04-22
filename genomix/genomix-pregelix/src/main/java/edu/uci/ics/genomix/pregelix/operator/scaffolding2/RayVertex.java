@@ -841,6 +841,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
             VKmer candidateKmer = singleEnd ? msg.getToScoreKmer() : msg.getToScoreKmer().reverse();
             int ruleATotal = 0, ruleBTotal = 0, ruleCTotal = 0;
             for (ReadHeadInfo read : readSubsetOrientedWithSearch) {
+            	boolean readMatch = false;
                 for (int kmerIndex = 0; kmerIndex < msgKmerLength; kmerIndex++) {
                     boolean match = false;
                     // TODO we currently keep the score separately for each kmer we're considering
@@ -891,8 +892,11 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
                         //ruleATotal += walkLength - nodeOffset - read.getOffset();
                         ruleATotal += walkLength - nodeOffset - tmp;
                         ruleBTotal++;
-                        ruleCTotal++;
+                        readMatch = true;
                     }
+                }
+                if (readMatch) {
+                	ruleCTotal++;
                 }
             }
             // TODO use the max over messages for each item
