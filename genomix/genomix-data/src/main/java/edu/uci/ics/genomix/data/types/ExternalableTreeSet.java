@@ -250,7 +250,7 @@ public abstract class ExternalableTreeSet<T extends WritableComparable<T> & Seri
                 writeNonGenericElement(out, t);
             }
             if (path != null) {
-                FileManager.getManager().deleteFile(path, writeToLocal);
+//                FileManager.getManager().deleteFile(path, writeToLocal);
                 path = null;
             }
         } else {
