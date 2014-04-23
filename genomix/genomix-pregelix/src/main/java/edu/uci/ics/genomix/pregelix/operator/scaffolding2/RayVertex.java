@@ -1,26 +1,35 @@
 package edu.uci.ics.genomix.pregelix.operator.scaffolding2;
 
 import java.io.BufferedWriter;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
+import java.security.SecureRandom;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Random;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.logging.Logger;
 
 import org.apache.commons.collections.SetUtils;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapred.Counters;
 import org.apache.hadoop.mapred.Counters.Counter;
@@ -38,8 +47,11 @@ import edu.uci.ics.genomix.pregelix.base.DeBruijnGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.base.MessageWritable;
 import edu.uci.ics.genomix.pregelix.base.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.operator.scaffolding2.RayMessage.RayMessageType;
+import edu.uci.ics.genomix.pregelix.operator.scaffolding2.RayScores.Rules;
 import edu.uci.ics.genomix.pregelix.operator.walkprocessor.WalkHandler;
+import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
+import edu.uci.ics.pregelix.api.util.BspUtils;
 
 public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
     private static DIR INITIAL_DIRECTION;
@@ -212,7 +224,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
     private HashMap<VKmer, ArrayList<RayMessage>> requestScoreMsgs = new HashMap<>();
     private HashMap<VKmer, ArrayList<RayMessage>> aggregateScoreMsgs = new HashMap<>();
 
-    private void scaffold(Iterator<RayMessage> msgIterator) throws FileNotFoundException, UnsupportedEncodingException {
+    private void scaffold(Iterator<RayMessage> msgIterator) throws IOException {
         // TODO since the messages aren't synchronized by iteration, we might want to  
         // manually order our messages to make the process a little more deterministic
         // for example, one node could receive both a "continue" message and a "request kmer"
@@ -281,6 +293,12 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
                     tmp.remove(msg.getSeed());
                     vertex.setVisitedList(new ArrayList(tmp));
                     break;
+                case ADD_EDGE:
+                	// TODO add a delay option here?
+                	if (!vertex.getEdges(msg.getEdgeTypeBackToFrontier()).contains(msg.getSourceVertexId())) {
+                		vertex.getEdges(msg.getEdgeTypeBackToFrontier()).append(msg.getSourceVertexId());
+                	}
+                	break;
                 case STOP:
                     // I am a frontier node but one of my neighbors was already included in a different walk.
                     // that neighbor is marked "intersection" and I need to remember the stopped state.  No path
@@ -983,10 +1001,9 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
      * possibly pruning the walk I just came from!
      * // TODO it seems that tandem repeats are prunable but if they dominate, the walk should stop here completely.
      * // Need to think about this a bit more.
-     * @throws UnsupportedEncodingException 
-     * @throws FileNotFoundException 
+     * @throws IOException 
      */
-    private void compareScoresAndPrune(ArrayList<RayMessage> msgs) throws FileNotFoundException, UnsupportedEncodingException {
+    private void compareScoresAndPrune(ArrayList<RayMessage> msgs) throws IOException {
         VKmer id = getVertexId();
         RayValue vertex = getVertexValue();
         int walkLength = 0;
@@ -1203,20 +1220,129 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         		outgoingMsg.setAccumulatedWalkKmer(new VKmer(msgs.get(0).getAccumulatedWalkKmer()));
         		outgoingMsg.setFrontierFlipped(vertex.getFlippedFromInitDir().get(seed)); // TODO make sure this is correct
         		outgoingMsg.setCandidateFlipped(vertex.getFlippedFromInitDir().get(seed) ^ dominantEdgeType.causesFlip());
-        		outgoingMsg.setVisitCounter(new HashMap(visitCounter));
+        		outgoingMsg.setVisitCounter(new HashMap<>(visitCounter));
         		sendMsg(dominantKmer, outgoingMsg);
         		// WriteToLog("dominantedgefound" ,msgs.get(0).getAccumulatedWalkKmer().toString() , getVertexId().toString());
         		LOG.info("dominant edge found: " + dominantEdgeType + ":" + dominantKmer);
         	} else {
-        		if (STORE_WALK){
-        			storeWalk(walkIds, msgs.get(0).getAccumulatedWalkKmer(), seed);
+        		HashSet<Entry<EDGETYPE, VKmer>> highNeighbors = getHighNeighbors(vertex, pairedEndScores, singleEndScores);
+        		if (highNeighbors.size() >= 2) {
+        			LOG.info("Going to do a split!");
+        			List<Entry<Entry<EDGETYPE, VKmer>, VKmer>> newNodes = splitFrontier(getVertexId(), vertex, highNeighbors);
+        			
+        			// pass the walk along to all the high neighbors
+        			for (Entry<Entry<EDGETYPE, VKmer>, VKmer> entry : newNodes) {
+        				Entry<EDGETYPE, VKmer> highNeighbor = entry.getKey();
+        				VKmer newId = entry.getValue();
+        				outgoingMsg.reset();
+                		outgoingMsg.setSeed(new VKmer(seed));
+                		outgoingMsg.setMessageType(RayMessageType.CONTINUE_WALK);
+                		outgoingMsg.setEdgeTypeBackToFrontier(highNeighbor.getKey().mirror());
+                		outgoingMsg.setWalkIds(new VKmerList(walkIds));  // use previous walk except for the last item, which is now the newly created node attached to this candidate
+                		outgoingMsg.getWalkIds().remove(outgoingMsg.getWalkIds().size() - 1);
+                		outgoingMsg.getWalkIds().append(newId);
+                		outgoingMsg.setWalkOffsets(walkOffsets);
+                		outgoingMsg.setWalkLength(walkLength);
+                		outgoingMsg.setAccumulatedWalkKmer(new VKmer(msgs.get(0).getAccumulatedWalkKmer()));
+                		outgoingMsg.setFrontierFlipped(vertex.getFlippedFromInitDir().get(seed)); // TODO make sure this is correct
+                		outgoingMsg.setCandidateFlipped(vertex.getFlippedFromInitDir().get(seed) ^ highNeighbor.getKey().causesFlip());
+                		outgoingMsg.setVisitCounter(new HashMap<>(visitCounter));
+                		sendMsg(highNeighbor.getValue(), outgoingMsg);
+                		LOG.info("After splitting " + getVertexId() + " into " + newId + ", passing CONTINUE_WALK along to " + highNeighbor);
+        			}
+        		} else {
+	        		if (STORE_WALK){
+	        			storeWalk(walkIds, msgs.get(0).getAccumulatedWalkKmer(), seed);
+	        		}
+	        		//vertex.stopSearch = true;
+	        		LOG.info("failed to find a dominant edge. Started at " + msgs.get(0).getSourceVertexId()
+	        				+ " and will stop at " + id + " with total length: " + msgs.get(0).getWalkLength() + "\n>id " + id
+	        				+ "\n" + msgs.get(0).getAccumulatedWalkKmer());
         		}
-        		//vertex.stopSearch = true;
-        		LOG.info("failed to find a dominant edge. Started at " + msgs.get(0).getSourceVertexId()
-        				+ " and will stop at " + id + " with total length: " + msgs.get(0).getWalkLength() + "\n>id " + id
-        				+ "\n" + msgs.get(0).getAccumulatedWalkKmer());
         	}       
     }
+
+	private static HashSet<Entry<EDGETYPE, VKmer>> getHighNeighbors(RayValue frontier, ArrayList<RayScores> pairedEndScores, ArrayList<RayScores> singleEndScores) {
+		HashSet<Entry<EDGETYPE, VKmer>> countHighNeighbors = new HashSet<>();
+		if (frontier.getKmerLength() > MAX_DISTANCE) {
+			for (List<RayScores> list : Arrays.asList(pairedEndScores, singleEndScores)) {
+				for (RayScores score: list) {
+					Entry<EDGETYPE, VKmer> scoreKey = score.getSingleKey();
+					Rules r = score.getRules(scoreKey);
+					if (r.ruleA > 15 && r.ruleB > 10 && r.ruleC >= 5) {
+						countHighNeighbors.add(scoreKey);
+					}
+				}
+			}
+		}
+		return countHighNeighbors;
+	}
+	
+	private List<Entry<Entry<EDGETYPE, VKmer>, VKmer>> splitFrontier(VKmer frontierKmer, RayValue frontier, HashSet<Entry<EDGETYPE, VKmer>> highNeighbors) throws IOException {
+		// duplicate the frontier node into one version per "high neighbor", rewiring s.t. the neighbor is only connected to one of the duplicated frontiers
+		ArrayList<Entry<Entry<EDGETYPE, VKmer>, VKmer>> newNodes = new ArrayList<>();
+		
+		// remove all connections from this node to its neighbors, then delete it
+		for (EDGETYPE et : EDGETYPE.values) {
+			for (VKmer neighbor : frontier.getEdges(et)) {
+                outgoingMsg.reset();
+                outgoingMsg.setMessageType(RayMessageType.PRUNE_EDGE);
+                outgoingMsg.setEdgeTypeBackToFrontier(et.mirror());
+                outgoingMsg.setSourceVertexId(new VKmer(frontierKmer));
+                sendMsg(neighbor, outgoingMsg);
+                LOG.info("Splitting node... sending message to remove reciprocal edge back to " + frontierKmer + " from " + neighbor);
+			}
+		}
+		deleteVertex(frontierKmer);
+		LOG.info("Splitting node... deleting " + frontierKmer);
+		
+		Random rng = new SecureRandom();
+		for (Entry<EDGETYPE, VKmer> highNeighbor : highNeighbors) {
+			// create a copy of myself for each neighbor. Use an almost certainly unique random id
+//			StringBuilder b = new StringBuilder();
+//			for (int i=0; i < creationCount; i++) {
+//				b.append("A");
+//			}
+//			VKmer newId = new VKmer("ATGCTGTGCTGCTGATCGATCGTAGCTAGCTAGTCGATCGTAG" + b.toString());
+//			creationCount++;
+			VKmer newId = new VKmer(kmerSize + 5);
+			rng.nextBytes(newId.getLetterBytes());
+			newId = new VKmer(newId); // this fixes some crazy bug in rng...
+			
+			// deep copy using the stream read/write methods.  Thanks, Java.  That's a lot of wrappers.
+			RayValue newValue = new RayValue();
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			frontier.write(new DataOutputStream(baos));
+			newValue.readFields(new DataInputStream(new ByteArrayInputStream(baos.toByteArray())));
+			
+			// remove all edges in the neighbor direction except the neighbor
+			for (EDGETYPE et : highNeighbor.getKey().dir().edgeTypes()) {
+				newValue.getEdges(et).clear();
+			}
+			newValue.getEdges(highNeighbor.getKey()).append(highNeighbor.getValue());
+			newNodes.add(new ImmutablePair<>(highNeighbor, newId));
+			
+			// tell pregelix about the new vertex
+			Vertex newVertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());
+			newVertex.setVertexId(newId);
+			newVertex.setVertexValue(newValue);
+            addVertex(newId, newVertex);
+			
+			// tell all neighbors to be connected to this node
+			for (EDGETYPE et : EDGETYPE.values) {
+				for (VKmer neighbor : newValue.getEdges(et)) {
+					outgoingMsg.reset();
+					outgoingMsg.setMessageType(RayMessageType.ADD_EDGE);
+					outgoingMsg.setEdgeTypeBackToFrontier(et.mirror());
+					outgoingMsg.setSourceVertexId(new VKmer(newId));
+					sendMsg(neighbor, outgoingMsg);
+					LOG.info("Splitting node... sending message to add reciprocal edge back to " + newId + ", which is a copy of " + frontierKmer + " from " + neighbor);
+				}
+			}
+		}
+		return newNodes;
+	}
+
 
 	public void storeWalk(VKmerList walk, VKmer accumulatedWalk, VKmer seed) throws FileNotFoundException,
 			UnsupportedEncodingException {

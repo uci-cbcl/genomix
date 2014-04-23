@@ -287,6 +287,17 @@ public class VKmerList implements Writable, Iterable<VKmer>, Serializable {
     public void remove(VKmer toRemove) {
         remove(toRemove, false);
     }
+    
+    public void remove(int index) {
+        if (index >= size() || index < 0) {
+        	throw new ArrayIndexOutOfBoundsException("saw " + index + " but max was " + size());
+        }
+    	Iterator<VKmer> posIterator = this.iterator();
+        for (int i=0; i <= index; i++) {
+        	posIterator.next();
+        }
+        posIterator.remove();
+    }
 
     @Override
     public void readFields(DataInput in) throws IOException {

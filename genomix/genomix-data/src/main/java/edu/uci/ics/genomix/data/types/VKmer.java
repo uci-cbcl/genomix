@@ -308,6 +308,10 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
     public byte[] getBlockBytes() {
         return bytes;
     }
+    
+    public byte[] getLetterBytes() {
+        return ByteBuffer.wrap(bytes, getKmerOffset(), getKmerByteLength()).array();
+    }
 
     /**
      * Return the (hyracks-specific) data block offset. This includes the header.

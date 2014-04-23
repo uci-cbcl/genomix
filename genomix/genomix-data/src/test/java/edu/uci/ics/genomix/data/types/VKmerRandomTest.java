@@ -15,6 +15,9 @@
 
 package edu.uci.ics.genomix.data.types;
 
+import java.security.SecureRandom;
+import java.util.Random;
+
 import junit.framework.Assert;
 
 import org.junit.Before;
@@ -254,5 +257,16 @@ public class VKmerRandomTest {
             VKmer testKmer4 = new VKmer(testStr4);
             Assert.assertEquals(-1, testKmer3.indexOf(testKmer4));
         }
+    }
+    
+    @Test
+    public void TestRandomFillOfKmer() {
+    	VKmer testKmer = new VKmer(20);
+    	Assert.assertEquals("AAAAAAAAAAAAAAAAAAAA", testKmer.toString());
+    	Random rng = new SecureRandom();
+    	rng.nextBytes(testKmer.getLetterBytes());
+    	Assert.assertEquals(20, testKmer.getKmerLetterLength());
+    	Assert.assertNotSame(testKmer.toString(), "AAAAAAAAAAAAAAAAAAAA");
+//    	System.out.println(testKmer.toString());
     }
 }

@@ -26,7 +26,7 @@ public class RayScores implements Writable {
         addAll(other);
     }
 
-    private class Rules {
+    public class Rules {
         public int ruleA = 0; // the overlap-weighted score (reads that overlap the walk better receive higher ruleA values)
         public int ruleB = 0; // the raw score
         public int ruleC = Integer.MAX_VALUE; // the smallest score seen in a single node
@@ -56,6 +56,10 @@ public class RayScores implements Writable {
         public String toString() {
             return "A:" + ruleA + " B:" + ruleB + " C:" + ruleC;
         }
+    }
+    
+    public Rules getRules(Entry<EDGETYPE, VKmer> key) {
+    	return scores.get(key);
     }
 
     public void addRuleCounts(EDGETYPE et, VKmer kmer, int ruleA, int ruleB, int ruleC) {

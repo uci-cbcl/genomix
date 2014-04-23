@@ -25,6 +25,7 @@ public class RayMessage extends MessageWritable {
         REQUEST_SCORE,
         AGGREGATE_SCORE,
         PRUNE_EDGE,
+        ADD_EDGE,
         CONTINUE_WALK,
         STOP,
         UPDATE_FORK_COUNT;
