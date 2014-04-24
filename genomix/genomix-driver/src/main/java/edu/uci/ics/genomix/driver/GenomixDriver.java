@@ -97,8 +97,8 @@ public class GenomixDriver {
     private static final Logger LOG = Logger.getLogger(GenomixDriver.class.getName());
     private String tmpPrevOutput;
     private String tmpCurOutput;
-    private Boolean aggressivePrune;
-    private Boolean tmpOutput;
+    private Boolean aggressivePrune = false;
+    private Boolean tmpOutput = false;
     private String prevOutput;
     private String curOutput;
     private int stepNum;
@@ -251,8 +251,10 @@ public class GenomixDriver {
             case REMOVE_BAD_COVERAGE:
             	if(!aggressivePrune){
             		pregelixJobs.add(RemoveBadCoverageVertex.getConfiguredJob(conf, RemoveBadCoverageVertex.class)); 
-            		aggressivePrune = true;
-            		tmpOutput = true;
+            		if(Boolean.parseBoolean(conf.get(GenomixJobConf.SCAFFOLDING_CONFIDENT_SEEDS))){
+            			aggressivePrune = true;
+            			tmpOutput = true;
+            		}		
             	}
             	else {
             		conf.set(GenomixJobConf.REMOVE_BAD_COVERAGE_MIN_COVERAGE, conf.
@@ -603,9 +605,11 @@ public class GenomixDriver {
                 }
                 if (Boolean.parseBoolean(conf.get(GenomixJobConf.SCAFFOLDING_CONFIDENT_SEEDS))){
                 	allPatterns.add(i, Patterns.LOAD_CONFIDENT_SEEDS);
-                	allPatterns.add(i + 1, Patterns.RAY_SCAFFOLD_FORWARD);
+                	allPatterns.add(i + 1, Patterns.TIP);
+                	allPatterns.add(i + 2, Patterns.MERGE);
+                	allPatterns.add(i + 3, Patterns.RAY_SCAFFOLD_FORWARD);
                 	if (RayVertex.DELAY_PRUNE) {
-                    	allPatterns.add(i + 2, Patterns.RAY_SCAFFOLD_PRUNE);
+                    	allPatterns.add(i + 4, Patterns.RAY_SCAFFOLD_PRUNE);
                     }
                 } 
                 else{
