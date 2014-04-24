@@ -68,7 +68,7 @@ public class RayScores implements Writable {
             Rules r = scores.get(key);
             r.ruleA += ruleA;
             r.ruleB += ruleB;
-            r.ruleC = ruleC > 0 ? (r.ruleC > 0 ? Math.min(r.ruleC, ruleC) : ruleC) : r.ruleC; // min of non-zero values
+            r.ruleC += ruleC;
         } else {
             scores.put(key, new Rules(ruleA, ruleB, ruleC));
         }
@@ -152,9 +152,8 @@ public class RayScores implements Writable {
         Rules targetRule = scores.get(targetKey);
         return (((queryRule.ruleA) > targetRule.ruleA * factor) // overlap-weighted score  
                 && ((queryRule.ruleB) > targetRule.ruleB * factor) // raw score 
-//        && ((queryRule.ruleC) > targetRule.ruleC * factor)
-        ); // smallest non-zero element of the walk
-        // TODO ruleC again doesn't make much sense in our case-- the min is over nodes currently which may represent long kmers  
+                && ((queryRule.ruleC) > targetRule.ruleC * factor) // number of reads
+        );
     }
 
     private double getMFactor(float frontierCoverage) {
