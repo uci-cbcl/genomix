@@ -30,6 +30,11 @@ public class ConfidentVertex extends DeBruijnGraphCleanVertex<VertexValueWritabl
         }
 	}	
 	
+	/**
+	 * The nodes longer than the confident seed length threshold,
+	 * are saved as the confident seeds. 
+	 */
+	
 	public void compute(Iterator<MessageWritable> msgIterator) throws Exception {
 		// TODO Auto-generated method stub
 		if (getSuperstep() == 1) {

@@ -258,8 +258,6 @@ public class GenomixJobConf extends JobConf {
         BRIDGE_ADD,
         BUBBLE_ADD,
         BFS, 
-        LOAD_CONFIDENT_SEEDS,
-        SAVE_CONFIDENT_SEEDS,
         FIND_CONFIDENT_SEEDS;
         
         /** the jobs that actually mutate the graph */

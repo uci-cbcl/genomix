@@ -75,7 +75,7 @@ import edu.uci.ics.genomix.pregelix.operator.removebadcoverage.RemoveBadCoverage
 //import edu.uci.ics.genomix.pregelix.operator.removelowcoverage.ShiftLowCoverageReadSetVertex;
 import edu.uci.ics.genomix.pregelix.operator.scaffolding2.RayVertex;
 import edu.uci.ics.genomix.pregelix.operator.seeddetection.ConfidentVertex;
-import edu.uci.ics.genomix.pregelix.operator.seeddetection.SeedRetrievalVertex;
+import edu.uci.ics.genomix.pregelix.operator.seeddetection.PruneSeedVertex;
 import edu.uci.ics.genomix.pregelix.operator.simplebubblemerge.SimpleBubbleMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.symmetrychecker.SymmetryCheckerVertex;
 import edu.uci.ics.genomix.pregelix.operator.test.BridgeAddVertex;
@@ -308,18 +308,16 @@ public class GenomixDriver {
             case RAY_SCAFFOLD_PRUNE:
             	pregelixJobs.add(PruneVertex.getConfiguredJob(conf, PruneVertex.class));
             	break;
-            case LOAD_CONFIDENT_SEEDS:
-            	pregelixJobs.add(SeedRetrievalVertex.getConfiguredJob(conf, SeedRetrievalVertex.class));
-            	break;
-            case SAVE_CONFIDENT_SEEDS:
-            	pregelixJobs.add(ConfidentVertex.getConfiguredJob(conf, ConfidentVertex.class));
-            	break;
             case FIND_CONFIDENT_SEEDS:
+            	
             	int jobNumber = 0;
             	tmpPrevOutput = prevOutput;
+            	String removeBadCoverageMin = conf.get(GenomixJobConf.REMOVE_BAD_COVERAGE_MIN_COVERAGE);
             	conf.set(GenomixJobConf.REMOVE_BAD_COVERAGE_MIN_COVERAGE, conf.
             			get(GenomixJobConf.SCAFFOLDING_CONFIDENT_SEEDS_MIN_COVERAGE));
             	pregelixJobs.add(RemoveBadCoverageVertex.getConfiguredJob(conf, RemoveBadCoverageVertex.class));
+            	
+            	conf.set(GenomixJobConf.REMOVE_BAD_COVERAGE_MIN_COVERAGE, removeBadCoverageMin );
             	
             	prevOutput =curOutput;
             	curOutput = conf.get(GenomixJobConf.HDFS_WORK_PATH) + File.separator
@@ -345,16 +343,7 @@ public class GenomixDriver {
             	FileInputFormat.setInputPaths(conf, new Path(prevOutput));
                 FileOutputFormat.setOutputPath(conf, new Path(curOutput));
                 
-                pregelixJobs.add(SeedRetrievalVertex.getConfiguredJob(conf, SeedRetrievalVertex.class));
-            	
-                jobNumber++;
-            	prevOutput =curOutput;
-            	curOutput = conf.get(GenomixJobConf.HDFS_WORK_PATH) + File.separator
-                        + String.format("%02d-", stepNum) + step + "-job-" + jobNumber;
-            	FileInputFormat.setInputPaths(conf, new Path(prevOutput));
-                FileOutputFormat.setOutputPath(conf, new Path(curOutput));
-                
-                pregelixJobs.add(P4ForPathMergeVertex.getConfiguredJob(conf, P4ForPathMergeVertex.class));
+                pregelixJobs.add(PruneSeedVertex.getConfiguredJob(conf, PruneSeedVertex.class));           	
             	
             	break;
             case DUMP_FASTA:

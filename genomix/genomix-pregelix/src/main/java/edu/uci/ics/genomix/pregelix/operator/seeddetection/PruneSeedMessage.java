@@ -6,7 +6,7 @@ import java.io.IOException;
 import edu.uci.ics.genomix.data.types.EDGETYPE;
 import edu.uci.ics.genomix.pregelix.base.MessageWritable;
 
-public class SeedRetrievalMessage extends MessageWritable {
+public class PruneSeedMessage extends MessageWritable {
 	private EDGETYPE toPruneEdgeType = null;
 	
 	protected class FIELDS extends MESSAGE_FIELDS {
