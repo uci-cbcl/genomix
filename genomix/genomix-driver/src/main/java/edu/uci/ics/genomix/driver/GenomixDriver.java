@@ -74,6 +74,8 @@ import edu.uci.ics.genomix.pregelix.operator.scaffolding2.PruneVertex;
 import edu.uci.ics.genomix.pregelix.operator.removebadcoverage.RemoveBadCoverageVertex;
 //import edu.uci.ics.genomix.pregelix.operator.removelowcoverage.ShiftLowCoverageReadSetVertex;
 import edu.uci.ics.genomix.pregelix.operator.scaffolding2.RayVertex;
+import edu.uci.ics.genomix.pregelix.operator.seeddetection.ConfidentVertex;
+import edu.uci.ics.genomix.pregelix.operator.seeddetection.SeedRetrievalVertex;
 import edu.uci.ics.genomix.pregelix.operator.simplebubblemerge.SimpleBubbleMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.symmetrychecker.SymmetryCheckerVertex;
 import edu.uci.ics.genomix.pregelix.operator.test.BridgeAddVertex;
@@ -93,6 +95,10 @@ public class GenomixDriver {
 
     public static final Logger GENOMIX_ROOT_LOG = Logger.getLogger("edu.uci.ics.genomix"); // here only so we can control children loggers 
     private static final Logger LOG = Logger.getLogger(GenomixDriver.class.getName());
+    private String tmpPrevOutput;
+    private String tmpCurOutput;
+    private Boolean aggressivePrune;
+    private Boolean tmpOutput;
     private String prevOutput;
     private String curOutput;
     private int stepNum;
@@ -108,10 +114,17 @@ public class GenomixDriver {
 
     @SuppressWarnings("deprecation")
     private void setOutput(GenomixJobConf conf, Patterns step) {
+    	if (tmpOutput){
+        	tmpPrevOutput = curOutput;
+        	tmpCurOutput = conf.get(GenomixJobConf.HDFS_WORK_PATH) + File.separator + String.format("%02d-", stepNum) + step;
+        	FileInputFormat.setInputPaths(conf, new Path(tmpPrevOutput));
+            FileOutputFormat.setOutputPath(conf, new Path(tmpCurOutput));
+        } else {
         prevOutput = curOutput;
         curOutput = conf.get(GenomixJobConf.HDFS_WORK_PATH) + File.separator + String.format("%02d-", stepNum) + step;
         FileInputFormat.setInputPaths(conf, new Path(prevOutput));
         FileOutputFormat.setOutputPath(conf, new Path(curOutput));
+        }
     }
 
     public static double cur_expMean = -1;
@@ -236,7 +249,16 @@ public class GenomixDriver {
                 break;
                 **/
             case REMOVE_BAD_COVERAGE:
-                pregelixJobs.add(RemoveBadCoverageVertex.getConfiguredJob(conf, RemoveBadCoverageVertex.class));
+            	if(!aggressivePrune){
+            		pregelixJobs.add(RemoveBadCoverageVertex.getConfiguredJob(conf, RemoveBadCoverageVertex.class)); 
+            		aggressivePrune = true;
+            	}
+            	else {
+            		conf.set(GenomixJobConf.REMOVE_BAD_COVERAGE_MIN_COVERAGE, "10");
+            		pregelixJobs.add(RemoveBadCoverageVertex.getConfiguredJob(conf, RemoveBadCoverageVertex.class));
+            		tmpOutput = true;
+            		tmpPrevOutput = prevOutput;
+            	}
                 break;
             case BRIDGE:
                 pregelixJobs.add(BridgeRemoveVertex.getConfiguredJob(conf, BridgeRemoveVertex.class));
@@ -279,24 +301,6 @@ public class GenomixDriver {
                         }
                     }
                 } 
-                /**
-                    jobNumber++;
-                    //FileInputFormat.setInputPaths(conf, new Path(prevOutput));
-                    //FileOutputFormat.setOutputPath(conf, new Path(curOutput));
-                    conf.set(GenomixJobConf.SCAFFOLD_SEED_ID,"GATAAGACGCGCCAGCGTCGC");
-                    pregelixJobs.add(RayVertex.getConfiguredJob(conf, RayVertex.class));
-                    jobNumber++;
-                    conf.set(GenomixJobConf.SCAFFOLD_SEED_ID, "CGACGCTGGCGCGTCTTATCA");
-                    pregelixJobs.add(RayVertex.getConfiguredJob(conf, RayVertex.class));
-                    jobNumber++;
-                    conf.set(GenomixJobConf.SCAFFOLD_SEED_ID, "ATGCGACGCTGGCGCGTCTTA");
-                    pregelixJobs.add(RayVertex.getConfiguredJob(conf, RayVertex.class));
-                    jobNumber++;
-                    conf.set(GenomixJobConf.SCAFFOLD_SEED_ID, "CGCGTCTTATCAGGCCTACAA");
-                    pregelixJobs.add(RayVertex.getConfiguredJob(conf, RayVertex.class));
-                    
-                    
-                }**/
                     else {
                     Float scorePercentile = conf.getFloat(GenomixJobConf.SCAFFOLD_SEED_SCORE_PERCENTILE, -1);
                     Float lengthPercentile = conf.getFloat(GenomixJobConf.SCAFFOLD_SEED_LENGTH_PERCENTILE, -1);
@@ -318,6 +322,13 @@ public class GenomixDriver {
                 break;
             case RAY_SCAFFOLD_PRUNE:
             	pregelixJobs.add(PruneVertex.getConfiguredJob(conf, PruneVertex.class));
+            	break;
+            case LOAD_CONFIDENT_SEEDS:
+            	pregelixJobs.add(SeedRetrievalVertex.getConfiguredJob(conf, SeedRetrievalVertex.class));
+            	break;
+            case SAVE_CONFIDENT_SEEDS:
+            	pregelixJobs.add(ConfidentVertex.getConfiguredJob(conf, ConfidentVertex.class));
+            	tmpOutput = false;
             	break;
             case DUMP_FASTA:
                 flushPendingJobs(conf);
@@ -539,6 +550,7 @@ public class GenomixDriver {
         numMachines = DriverUtils.getSlaveList(conf).length;
         pregelixJobs = new ArrayList<PregelixJob>();
         stepNum = 0;
+        aggressivePrune = false;
         runLocal = Boolean.parseBoolean(conf.get(GenomixJobConf.RUN_LOCAL));
 
         // clear anything in our HDFS work path and local output directory
@@ -573,6 +585,14 @@ public class GenomixDriver {
 
         // break up SCAFFOLD into FORWARD and REVERSE steps and insert STATS and MERGE between jobs
         for (int i = 0; i < allPatterns.size(); i++) {
+        	if (allPatterns.get(i) == Patterns.REMOVE_BAD_COVERAGE){
+        		if (Boolean.parseBoolean(conf.get(GenomixJobConf.SCAFFOLDING_CONFIDENT_SEEDS))){
+        			allPatterns.add(i, Patterns.REMOVE_BAD_COVERAGE);
+        			allPatterns.add(i, Patterns.SAVE_CONFIDENT_SEEDS);
+        			allPatterns.add(i, Patterns.REMOVE_BAD_COVERAGE);
+        		}
+        		
+        	}
             if (allPatterns.get(i) == Patterns.RAY_SCAFFOLD) {
                 if (i == 0 || allPatterns.get(i - 1) != Patterns.STATS) {
                     allPatterns.set(i, Patterns.STATS);
@@ -580,10 +600,18 @@ public class GenomixDriver {
                 } else {
                     allPatterns.remove(i);
                 }
-                // replace
-                allPatterns.add(i, Patterns.RAY_SCAFFOLD_FORWARD);
-                if (RayVertex.DELAY_PRUNE) {
-                	allPatterns.add(i + 1, Patterns.RAY_SCAFFOLD_PRUNE);
+                if (Boolean.parseBoolean(conf.get(GenomixJobConf.SCAFFOLDING_CONFIDENT_SEEDS))){
+                	allPatterns.add(i, Patterns.LOAD_CONFIDENT_SEEDS);
+                	allPatterns.add(i + 1, Patterns.RAY_SCAFFOLD_FORWARD);
+                	if (RayVertex.DELAY_PRUNE) {
+                    	allPatterns.add(i + 2, Patterns.RAY_SCAFFOLD_PRUNE);
+                    }
+                } 
+                else{
+                	allPatterns.add(i, Patterns.RAY_SCAFFOLD_FORWARD);
+                	if (RayVertex.DELAY_PRUNE) {
+                    	allPatterns.add(i + 1, Patterns.RAY_SCAFFOLD_PRUNE);
+                    }
                 }
                 //allPatterns.add(i + 1, Patterns.MERGE);
                 //allPatterns.add(i + 1, Patterns.STATS);
