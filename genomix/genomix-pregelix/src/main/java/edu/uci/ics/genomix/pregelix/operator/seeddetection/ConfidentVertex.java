@@ -18,20 +18,16 @@ import edu.uci.ics.genomix.pregelix.base.VertexValueWritable;
 public class ConfidentVertex extends DeBruijnGraphCleanVertex<VertexValueWritable, MessageWritable>{
 	
 	private String workPath;
-    private Integer SEED_SCORE_THRESHOLD;
-    private Integer SEED_LENGTH_THRESHOLD;
+    private Integer CONFIDENT_SEED_LENGTH_THRESHOLD = -1;
 	@Override
 	
 	public void configure(Configuration conf) {
         super.configure(conf);
         initVertex();
         workPath = conf.get(GenomixJobConf.HDFS_WORK_PATH) + File.separator + String.format("CONFIDENT_SEEDS");
-        try {
-            SEED_SCORE_THRESHOLD = Integer.parseInt(conf.get(GenomixJobConf.SCAFFOLDING_SEED_SCORE_THRESHOLD));
-        } catch (NumberFormatException e) {
-            SEED_LENGTH_THRESHOLD = Integer.parseInt(conf.get(GenomixJobConf.SCAFFOLDING_SEED_LENGTH_THRESHOLD));
+        if (CONFIDENT_SEED_LENGTH_THRESHOLD == -1){
+        CONFIDENT_SEED_LENGTH_THRESHOLD = Integer.parseInt(conf.get(GenomixJobConf.SCAFFOLDING_CONFIDENT_SEED_LENGTH_THRESHOLD));
         }
-   
 	}	
 	
 	public void compute(Iterator<MessageWritable> msgIterator) throws Exception {
@@ -47,11 +43,7 @@ public class ConfidentVertex extends DeBruijnGraphCleanVertex<VertexValueWritabl
 	}
 	
 	private boolean isSeed(){
-        if (SEED_SCORE_THRESHOLD != null) {
-             return ( (getVertexValue().calculateSeedScore() >= SEED_SCORE_THRESHOLD));
-        } else {
-             return getVertexValue().getKmerLength() >= SEED_LENGTH_THRESHOLD;
-        }
+             return getVertexValue().getKmerLength() >= CONFIDENT_SEED_LENGTH_THRESHOLD;
 	}
 	
 	public void saveSeed(VKmer seed) throws Exception{
