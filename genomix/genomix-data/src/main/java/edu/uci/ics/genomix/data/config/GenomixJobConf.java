@@ -334,7 +334,7 @@ public class GenomixJobConf extends JobConf {
     
     public static final String SCAFFOLDING_INITIAL_DIRECTION = "genomix.scaffolding.initialDirection";
     public static final String SCAFFOLDING_SERIAL_RUN_MIN_LENGTH_THRESHOLD = "genomix.scaffolding.serialRunMinLengthThreshold";
-    public static final String SCAFFOLD_SEED_ID = "genomix.scaffolding.seedId";
+    public static final String SCAFFOLD_SEED_IDS = "genomix.scaffolding.seedId";
     public static final String SCAFFOLD_SEED_SCORE_PERCENTILE = "genomix.scaffolding.seedScorePercentile";
     public static final String SCAFFOLD_SEED_LENGTH_PERCENTILE = "genomix.scaffolding.seedLengthPercentile";
     public static final String SCAFFOLDING_SEED_SCORE_THRESHOLD = "genomix.scaffolding.seedScoreThreshold";

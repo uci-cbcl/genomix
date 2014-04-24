@@ -55,7 +55,7 @@ import edu.uci.ics.pregelix.api.util.BspUtils;
 
 public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
     private static DIR INITIAL_DIRECTION;
-    private static String SEED_ID;
+    private static HashSet<String> SEED_IDS;
     private Integer SEED_SCORE_THRESHOLD;
     private Integer SEED_LENGTH_THRESHOLD;
     private int COVERAGE_DIST_NORMAL_MEAN;
@@ -104,8 +104,8 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         COVERAGE_DIST_NORMAL_MEAN = 0; // TODO set properly once merged
         COVERAGE_DIST_NORMAL_STD = 1000;
 
-        if (conf.get(GenomixJobConf.SCAFFOLD_SEED_ID) != null) {
-            SEED_ID = conf.get(GenomixJobConf.SCAFFOLD_SEED_ID);
+        if (conf.get(GenomixJobConf.SCAFFOLD_SEED_IDS) != null) {
+            SEED_IDS = new HashSet<>(Arrays.asList(conf.get(GenomixJobConf.SCAFFOLD_SEED_IDS).split(",")));
         } else {
             try {
                 SEED_SCORE_THRESHOLD = Integer.parseInt(conf.get(GenomixJobConf.SCAFFOLDING_SEED_SCORE_THRESHOLD));
@@ -175,8 +175,8 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
     	if (getVertexValue().degree(INITIAL_DIRECTION) == 0) {
     		return false;
     	}
-        if (SEED_ID != null) {
-            return SEED_ID.equals(getVertexId().toString());
+        if (SEED_IDS != null) {
+            return SEED_IDS.contains(getVertexId().toString());
         } else {
             if (SEED_SCORE_THRESHOLD != null) {
                 float coverage = getVertexValue().getAverageCoverage();
@@ -677,7 +677,8 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         	ArrayList<RayMessage> msgs = new ArrayList<>(Arrays.asList(new RayMessage[unsortedMsgs.size()]));
         	for (RayMessage msg : unsortedMsgs) {
         		if (msgs.get(msg.getPathIndex()) != null) {
-        			throw new IllegalArgumentException("should only have one msg for each path!");
+//        			throw new IllegalArgumentException("should only have one msg for each path!  Original list: " + Arrays.deepToString(unsortedMsgs.toArray()));
+        			continue;
         		}
         		msgs.set(msg.getPathIndex(), msg);
         	}
@@ -851,6 +852,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
 
         // my contribution to each path's final score
         ArrayList<RayScores> pathScores = new ArrayList<>();
+//        printReads(readSubsetOrientedWithSearch);
         for (RayMessage msg : candidateMsgs) {
             RayScores scores = new RayScores();
             // nothing like nested for loops 4 levels deep (!)
@@ -859,6 +861,9 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
             VKmer candidateKmer = singleEnd ? msg.getToScoreKmer() : msg.getToScoreKmer().reverse();
             int ruleATotal = 0, ruleBTotal = 0, ruleCTotal = 0;
             for (ReadHeadInfo read : readSubsetOrientedWithSearch) {
+            	if (read.getThisReadSequence().toString().contains("GGCTCTTGTGGATCGGCGGCAGGTCCTTGACCACCCCG")) {
+            		System.err.println("Found it");
+            	}
                 for (int kmerIndex = 0; kmerIndex < msgKmerLength; kmerIndex++) {
                     boolean match = false;
                     // TODO we currently keep the score separately for each kmer we're considering
@@ -922,10 +927,29 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
                 pathScores.add(null);
             }
         }
+        if (pathScores.size() > 0) {
+//        	printReads(readSubsetOrientedWithSearch);
+        	StringBuilder b = new StringBuilder();
+        	for (RayMessage msg : candidateMsgs) {
+        		b.append(msg.getToScoreKmer()).append('\n');
+        	}
+        	LOG.info("branches seen were:\n" + b.toString());
+        }
         return pathScores;
     }
 
-    // local variables for getReadSubsetOrientedWithSearch
+    private static void printReads(SortedSet<ReadHeadInfo> readSubsetOrientedWithSearch) {
+    	StringBuilder b = new StringBuilder();
+    	for (ReadHeadInfo read : readSubsetOrientedWithSearch) {
+    		for (int i=0; i < read.getOffset(); i++) {
+    			b.append(" ");
+    		}
+    		b.append(read.getThisReadSequence()).append('\n');
+    	}
+    	LOG.info("All reads oriented with search:\n" + b.toString());
+	}
+
+	// local variables for getReadSubsetOrientedWithSearch
     @SuppressWarnings("unchecked")
     private static final SortedSet<ReadHeadInfo> EMPTY_SORTED_SET = SetUtils.EMPTY_SORTED_SET;
 	
@@ -1235,19 +1259,21 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         				Entry<EDGETYPE, VKmer> highNeighbor = entry.getKey();
         				VKmer newId = entry.getValue();
         				outgoingMsg.reset();
-                		outgoingMsg.setSeed(new VKmer(seed));
                 		outgoingMsg.setMessageType(RayMessageType.CONTINUE_WALK);
                 		outgoingMsg.setEdgeTypeBackToFrontier(highNeighbor.getKey().mirror());
-                		outgoingMsg.setWalkIds(new VKmerList(walkIds));  // use previous walk except for the last item, which is now the newly created node attached to this candidate
-                		outgoingMsg.getWalkIds().remove(outgoingMsg.getWalkIds().size() - 1);
-                		outgoingMsg.getWalkIds().append(newId);
                 		outgoingMsg.setWalkOffsets(walkOffsets);
                 		outgoingMsg.setWalkLength(walkLength);
                 		outgoingMsg.setAccumulatedWalkKmer(new VKmer(msgs.get(0).getAccumulatedWalkKmer()));
                 		outgoingMsg.setFrontierFlipped(vertex.getFlippedFromInitDir().get(seed)); // TODO make sure this is correct
                 		outgoingMsg.setCandidateFlipped(vertex.getFlippedFromInitDir().get(seed) ^ highNeighbor.getKey().causesFlip());
                 		outgoingMsg.setVisitCounter(new HashMap<>(visitCounter));
-                		sendMsg(highNeighbor.getValue(), outgoingMsg);
+                		// use previous walk except for the last item, which is now the newly created node attached to this candidate
+                		outgoingMsg.setWalkIds(new VKmerList(walkIds));
+                		outgoingMsg.getWalkIds().remove(outgoingMsg.getWalkIds().size() - 1);
+                		outgoingMsg.getWalkIds().append(newId);
+                		// use new node id as seed since the original seed will conflict in these two different walks
+                		outgoingMsg.setSeed(newId); // TODO
+//                		sendMsg(highNeighbor.getValue(), outgoingMsg);
                 		LOG.info("After splitting " + getVertexId() + " into " + newId + ", passing CONTINUE_WALK along to " + highNeighbor);
         			}
         		} else {

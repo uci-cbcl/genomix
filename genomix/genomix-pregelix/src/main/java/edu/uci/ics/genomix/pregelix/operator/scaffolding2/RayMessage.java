@@ -6,6 +6,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map.Entry;
+import java.util.logging.Logger;
+
+import com.sun.org.apache.commons.logging.Log;
 
 import edu.uci.ics.genomix.data.types.DIR;
 import edu.uci.ics.genomix.data.types.EDGETYPE;
@@ -71,6 +74,8 @@ public class RayMessage extends MessageWritable {
     /** for early stop **/
     private HashMap<VKmer, Integer> visitCounter = null;
     
+    public static Logger LOG = Logger.getLogger(RayMessage.class.getName());
+    
     public RayMessage() {
 
     }
@@ -90,6 +95,11 @@ public class RayMessage extends MessageWritable {
         getWalkIds().append(id);
         getWalkOffsets().add(getWalkLength());
         setWalkLength(getWalkLength() + vertex.getKmerLength() - Kmer.getKmerLength() + 1);
+        if (getWalkLength() > 100) {
+        	LOG.info("found a long node: " + getWalkLength());
+        } else {
+        	LOG.info("found a short node: " + getWalkLength());
+        }
 
         if (accumulatedWalkKmer == null || accumulatedWalkKmer.getKmerLetterLength() == 0) {
             // kmer oriented st always merge in an F dir (seed's offset always 0)

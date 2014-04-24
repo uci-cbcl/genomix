@@ -28,9 +28,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
@@ -260,23 +262,47 @@ public class GenomixDriver {
 
                     int jobNumber = 0;
                     
-                    for (Entry<Integer, ArrayList<String>> lengthEntry : nodeLengths.descendingMap().entrySet()) {
-                        if (lengthEntry.getKey() > minLength) {
-                            for (String seedId : lengthEntry.getValue()) {
-                                //                                for (DIR d : EnumSet.of(DIR.FORWARD, DIR.REVERSE)) {
-                                for (DIR d : EnumSet.of(DIR.FORWARD)) {
-                                    jobNumber++;
-                                    LOG.info("adding job " + jobNumber + " for " + seedId);
-                                    curOutput = conf.get(GenomixJobConf.HDFS_WORK_PATH) + File.separator
-                                            + String.format("%02d-", stepNum) + step + "-job-" + jobNumber;
-                                    FileInputFormat.setInputPaths(conf, new Path(prevOutput));
-                                    FileOutputFormat.setOutputPath(conf, new Path(curOutput));
-                                    conf.set(GenomixJobConf.SCAFFOLD_SEED_ID, seedId);
-                                    pregelixJobs.add(RayVertex.getConfiguredJob(conf, RayVertex.class));
-                                    prevOutput = curOutput;
-                                }
-                            }
-                        }
+                    Iterator<Entry<Integer, ArrayList<String>>> fromTop = nodeLengths.descendingMap().entrySet().iterator();
+                    StringBuilder curSeeds = new StringBuilder();
+                    int curCount = 0;
+                    String delim = "";
+                    while (fromTop.hasNext()) {
+                    	Entry<Integer, ArrayList<String>> curEntry = fromTop.next();
+                    	if (curEntry.getKey() < minLength) {
+                    		break;
+                    	}
+                    	for (String seed : curEntry.getValue()) {
+                    		curSeeds.append(delim).append(seed);
+                    		curCount++;
+                    		delim = ",";
+                    	}
+                    	if (curCount >= 500) {
+                    		for (DIR d : EnumSet.of(DIR.FORWARD, DIR.REVERSE)) {
+	                    		jobNumber++;
+	                            LOG.info("adding job " + jobNumber + " for " + d + ", seeds: " + curSeeds.toString());
+	                            curOutput = conf.get(GenomixJobConf.HDFS_WORK_PATH) + File.separator
+	                                    + String.format("%02d-", stepNum) + step + "-job-" + jobNumber;
+	                            FileInputFormat.setInputPaths(conf, new Path(prevOutput));
+	                            FileOutputFormat.setOutputPath(conf, new Path(curOutput));
+	                            conf.set(GenomixJobConf.SCAFFOLD_SEED_IDS, curSeeds.toString());
+	                            conf.set(GenomixJobConf.SCAFFOLDING_INITIAL_DIRECTION, d.toString());
+	                            pregelixJobs.add(RayVertex.getConfiguredJob(conf, RayVertex.class));
+	                            prevOutput = curOutput;
+	                            
+	                            if (RayVertex.DELAY_PRUNE) {
+	                            	curOutput = conf.get(GenomixJobConf.HDFS_WORK_PATH) + File.separator
+		                                    + String.format("%02d-", stepNum) + step + "-job-" + jobNumber + "-prune";
+		                            FileInputFormat.setInputPaths(conf, new Path(prevOutput));
+		                            FileOutputFormat.setOutputPath(conf, new Path(curOutput));
+		                            pregelixJobs.add(PruneVertex.getConfiguredJob(conf, PruneVertex.class));
+		                            prevOutput = curOutput;
+	                            }
+                    		}
+                            
+                            curSeeds = new StringBuilder();
+                            curCount = 0;
+                            delim = "";
+                    	}
                     }
                 } 
                 /**
@@ -585,9 +611,12 @@ public class GenomixDriver {
                 if (RayVertex.DELAY_PRUNE) {
                 	allPatterns.add(i + 1, Patterns.RAY_SCAFFOLD_PRUNE);
                 }
-                //allPatterns.add(i + 1, Patterns.MERGE);
-                //allPatterns.add(i + 1, Patterns.STATS);
-                //allPatterns.add(i, Patterns.RAY_SCAFFOLD_REVERSE);
+//                allPatterns.add(i + 2, Patterns.MERGE);
+//                allPatterns.add(i + 3, Patterns.STATS);
+                allPatterns.add(i + 2, Patterns.RAY_SCAFFOLD_REVERSE);
+                if (RayVertex.DELAY_PRUNE) {
+                	allPatterns.add(i + 3, Patterns.RAY_SCAFFOLD_PRUNE);
+                }
             }
         }
 

@@ -2,8 +2,11 @@ package edu.uci.ics.genomix.pregelix.operator.removebadcoverage;
 
 import java.util.Iterator;
 
+import org.apache.hadoop.conf.Configuration;
+
 import edu.uci.ics.genomix.data.config.GenomixJobConf;
 import edu.uci.ics.genomix.data.types.EDGETYPE;
+import edu.uci.ics.genomix.data.types.VKmer;
 import edu.uci.ics.genomix.pregelix.base.DeBruijnGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.base.MessageWritable;
 import edu.uci.ics.genomix.pregelix.base.VertexValueWritable;
@@ -18,65 +21,44 @@ import edu.uci.ics.genomix.pregelix.base.VertexValueWritable.State;
  * 
  */
 public class RemoveBadCoverageVertex extends DeBruijnGraphCleanVertex<VertexValueWritable, MessageWritable> {
-    protected static float minAverageCoverage = -1;
-    protected static float maxAverageCoverage = -1;
+    private static float minAverageCoverage = -1;
+    private static float maxAverageCoverage = -1;
 
-    /**
-     * initiate kmerSize, length
-     */
     @Override
-    public void initVertex() {
-        super.initVertex();
-        if (minAverageCoverage < 0)
-            minAverageCoverage = Float.parseFloat(getContext().getConfiguration().get(
-                    GenomixJobConf.REMOVE_BAD_COVERAGE_MIN_COVERAGE));
-        if(maxAverageCoverage < 0)
-        	maxAverageCoverage = Float.parseFloat(getContext().getConfiguration().get(
-                    GenomixJobConf.REMOVE_BAD_COVERAGE_MAX_COVERAGE));
-        if (outgoingMsg == null)
+    public void configure(Configuration conf) {
+    	if (minAverageCoverage < 0) {
+            minAverageCoverage = Float.parseFloat(getContext().getConfiguration().get(GenomixJobConf.REMOVE_BAD_COVERAGE_MIN_COVERAGE));
+    	}
+        if(maxAverageCoverage < 0) {
+        	maxAverageCoverage = Float.parseFloat(getContext().getConfiguration().get(GenomixJobConf.REMOVE_BAD_COVERAGE_MAX_COVERAGE));
+        }
+        if (outgoingMsg == null) {
             outgoingMsg = new MessageWritable();
-    }
-
-    public void detectLowCoverageVertex() {
-        VertexValueWritable vertex = getVertexValue();
-        if (vertex.getAverageCoverage() < minAverageCoverage || vertex.getAverageCoverage() > maxAverageCoverage) {
-            //broadcase kill self
-            broadcastKillself();
-            vertex.setState(State.DEAD_NODE);
-            activate();
-        } else
-            voteToHalt();
-    }
-
-    public void cleanupDeadVertex() {
-        deleteVertex(getVertexId());
-    }
-
-    public void responseToDeadVertex(Iterator<MessageWritable> msgIterator) {
-        MessageWritable incomingMsg;
-        while (msgIterator.hasNext()) {
-            incomingMsg = msgIterator.next();
-            //response to dead node
-            EDGETYPE deadToMeEdgetype = EDGETYPE.fromByte(incomingMsg.getFlag());
-            getVertexValue().getEdges(deadToMeEdgetype).remove(incomingMsg.getSourceVertexId());
         }
     }
 
     @Override
     public void compute(Iterator<MessageWritable> msgIterator) {
-        initVertex();
-        if (verbose)
-            LOG.fine("Iteration " + getSuperstep() + " for key " + getVertexId());
+    	VertexValueWritable vertex = getVertexValue();
         if (getSuperstep() == 1) {
-            detectLowCoverageVertex();
-        } else if (getSuperstep() == 2) {
-            if (getVertexValue().getState() == State.DEAD_NODE) {
-                cleanupDeadVertex();
-            } else {
-                responseToDeadVertex(msgIterator);
+            if (vertex.getAverageCoverage() < minAverageCoverage || vertex.getAverageCoverage() > maxAverageCoverage) {
+            	for (EDGETYPE et : EDGETYPE.values) {
+                    for (VKmer dest : vertex.getEdges(et)) {
+                        outgoingMsg.reset();
+                        outgoingMsg.setFlag(et.mirror().get());
+                        outgoingMsg.setSourceVertexId(getVertexId());
+                        sendMsg(dest, outgoingMsg);
+                    }
+            	}
+                deleteVertex(getVertexId());
             }
-            voteToHalt();
+        } else {
+            MessageWritable incomingMsg;
+            while (msgIterator.hasNext()) {
+                incomingMsg = msgIterator.next();
+                vertex.getEdges(EDGETYPE.fromByte(incomingMsg.getFlag())).remove(incomingMsg.getSourceVertexId());
+            }
         }
+        voteToHalt();
     }
-
 }
