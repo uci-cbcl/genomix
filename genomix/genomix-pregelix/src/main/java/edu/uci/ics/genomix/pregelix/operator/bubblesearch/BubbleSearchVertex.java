@@ -35,6 +35,7 @@ public class BubbleSearchVertex extends DeBruijnGraphCleanVertex<BubbleSearchVal
 	private static final int MAX_ITERATIONS = 25;
 	private static final int MAX_BRANCHES = 100000;
 	private static DIR searchDirection;
+	private static final boolean REMOVE_BUBBLE_PATH = true;
 
 	private boolean isStartSeed() {
 //		return getVertexId().equals(new VKmer("CCCCCCCCCCCGTCCGCCCCC"));
@@ -55,6 +56,7 @@ public class BubbleSearchVertex extends DeBruijnGraphCleanVertex<BubbleSearchVal
 			LOG.info("Starting bubblesearch seed at " + getVertexId());
 		}
 		
+		boolean deleted = false;
 		ArrayList<BubbleSearchMessage> completePaths = new ArrayList<>();
 		while(msgIterator.hasNext()) {
 			BubbleSearchMessage msg = msgIterator.next();
@@ -95,6 +97,25 @@ public class BubbleSearchVertex extends DeBruijnGraphCleanVertex<BubbleSearchVal
 				vertex.getEdges(msg.path.get(0).incomingET).remove(msg.path.get(0).nodeId, true);
 				LOG.info("Removing reciprocal bubble start " + msg.path.get(0));
 				break;
+			case PRUNE_NODE:
+				if (deleted) {
+					continue;
+				}
+				for (EDGETYPE et : EDGETYPE.values) {
+					for (VKmer neighbor : vertex.getEdges(et)) {
+						outgoingMsg.reset();
+						outgoingMsg.type = MessageType.PRUNE_EDGE;
+						outgoingMsg.path.add(new NodeInfo(getVertexId(), new VKmer(), et.mirror(), 0));
+						sendMsg(neighbor, outgoingMsg);
+						LOG.info("Removing bubble node neighbor " + neighbor);
+					}
+				}
+				deleteVertex(getVertexId());
+				LOG.info("Removing bubble path node " + getVertexId());
+				deleted = true;
+				break;
+			default:
+				break;
 			}
 		}
 		
@@ -111,6 +132,7 @@ public class BubbleSearchVertex extends DeBruijnGraphCleanVertex<BubbleSearchVal
 		vertex.numCompleteThisIteration += completePaths.size();
 		if (vertex.totalBranches >= 2) {
 			HashSet<Pair<EDGETYPE, VKmer>> edgesToRemove = new HashSet<>();
+			HashSet<VKmer> nodesToRemove = new HashSet<>();
 			// we have a complete set of possible bubbles. For similar bubbles that don't share the first edge, remove the edge with less average coverage
 			// TODO: care about coverage in conflicting cases
 			for (int i=0; i < completePaths.size(); i++) {
@@ -134,12 +156,13 @@ public class BubbleSearchVertex extends DeBruijnGraphCleanVertex<BubbleSearchVal
 //							LOG.info("Found similar kmers " + mergedKmer(uncommonI) + " vs " + mergedKmer(uncommonJ));
 							float coverageI = coverage(uncommonI);
 							float coverageJ = coverage(uncommonJ);
-							if (coverageI < coverageJ) {
-//								vertex.edgesToRemove.add(new ImmutablePair<>(uncommonI.get(0).incomingET, uncommonI.get(0).nodeId));
-								edgesToRemove.add(new ImmutablePair<>(uncommonI.get(0).incomingET, uncommonI.get(0).nodeId));
+							List<NodeInfo> listToRemove = coverageI < coverageJ ? uncommonI : uncommonJ; 
+							if (REMOVE_BUBBLE_PATH) {
+								for (NodeInfo n : listToRemove) {
+									nodesToRemove.add(new VKmer(n.nodeId));
+								}
 							} else {
-//								vertex.edgesToRemove.add(new ImmutablePair<>(uncommonJ.get(0).incomingET, uncommonJ.get(0).nodeId));
-								edgesToRemove.add(new ImmutablePair<>(uncommonJ.get(0).incomingET, uncommonJ.get(0).nodeId));
+								edgesToRemove.add(new ImmutablePair<>(listToRemove.get(0).incomingET, listToRemove.get(0).nodeId));
 							}
 						}
 					}
@@ -147,16 +170,26 @@ public class BubbleSearchVertex extends DeBruijnGraphCleanVertex<BubbleSearchVal
 			}
 			// remove the requested edges
 //			for (Pair<EDGETYPE, VKmer> toRemove : vertex.edgesToRemove) {
-			for (Pair<EDGETYPE, VKmer> toRemove : edgesToRemove) {
-				vertex.getEdges(toRemove.getLeft()).remove(toRemove.getRight(), true);
-				outgoingMsg.reset();
-				outgoingMsg.type = MessageType.PRUNE_EDGE;
-				outgoingMsg.path.add(new NodeInfo(getVertexId(), new VKmer(), toRemove.getLeft().mirror(), 0));
-				sendMsg(toRemove.getRight(), outgoingMsg);
-				LOG.info("Removing bubble start " + toRemove);
+			if (REMOVE_BUBBLE_PATH) {
+				for (VKmer kmer : nodesToRemove) {
+					outgoingMsg.reset();
+					outgoingMsg.type = MessageType.PRUNE_NODE;
+					sendMsg(kmer, outgoingMsg);
+					LOG.info("Removing bubble path " + kmer);
+				}
+			} else {
+				for (Pair<EDGETYPE, VKmer> toRemove : edgesToRemove) {
+					vertex.getEdges(toRemove.getLeft()).remove(toRemove.getRight(), true);
+					outgoingMsg.reset();
+					outgoingMsg.type = MessageType.PRUNE_EDGE;
+					outgoingMsg.path.add(new NodeInfo(getVertexId(), new VKmer(), toRemove.getLeft().mirror(), 0));
+					sendMsg(toRemove.getRight(), outgoingMsg);
+					LOG.info("Removing bubble start " + toRemove);
+				}
 			}
 //			vertex.edgesToRemove.clear();
 			edgesToRemove.clear();
+			nodesToRemove.clear();
 		}
 		
 		// resend any msgs for nodes that weren't removed

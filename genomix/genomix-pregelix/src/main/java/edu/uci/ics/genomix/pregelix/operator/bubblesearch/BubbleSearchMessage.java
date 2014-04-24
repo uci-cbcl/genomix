@@ -43,7 +43,8 @@ public class BubbleSearchMessage extends MessageWritable {
 		EXPAND_PATH(0),
 		COMPLETE_PATH(1),
 		ADDITIONAL_BRANCHES(2),
-		PRUNE_EDGE(3);
+		PRUNE_EDGE(3), 
+		PRUNE_NODE(4);
 		private byte value;
 		private MessageType(int value) {
 			this.value = (byte) value;
@@ -54,6 +55,7 @@ public class BubbleSearchMessage extends MessageWritable {
 			case 1: return COMPLETE_PATH;
 			case 2: return ADDITIONAL_BRANCHES;
 			case 3: return PRUNE_EDGE;
+			case 4: return PRUNE_NODE;
 			default: throw new IllegalArgumentException("Unknown byte value: " + value);
 			}
 		}
