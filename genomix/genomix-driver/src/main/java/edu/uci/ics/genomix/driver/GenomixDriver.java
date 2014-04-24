@@ -252,12 +252,12 @@ public class GenomixDriver {
             	if(!aggressivePrune){
             		pregelixJobs.add(RemoveBadCoverageVertex.getConfiguredJob(conf, RemoveBadCoverageVertex.class)); 
             		aggressivePrune = true;
+            		tmpOutput = true;
             	}
             	else {
-            		conf.set(GenomixJobConf.REMOVE_BAD_COVERAGE_MIN_COVERAGE, "10");
-            		pregelixJobs.add(RemoveBadCoverageVertex.getConfiguredJob(conf, RemoveBadCoverageVertex.class));
-            		tmpOutput = true;
-            		tmpPrevOutput = prevOutput;
+            		conf.set(GenomixJobConf.REMOVE_BAD_COVERAGE_MIN_COVERAGE, conf.
+            				get(GenomixJobConf.SCAFFOLDING_CONFIDENT_SEEDS_MIN_COVERAGE));
+            		pregelixJobs.add(RemoveBadCoverageVertex.getConfiguredJob(conf, RemoveBadCoverageVertex.class));		
             	}
                 break;
             case BRIDGE:
@@ -588,8 +588,9 @@ public class GenomixDriver {
         	if (allPatterns.get(i) == Patterns.REMOVE_BAD_COVERAGE){
         		if (Boolean.parseBoolean(conf.get(GenomixJobConf.SCAFFOLDING_CONFIDENT_SEEDS))){
         			allPatterns.add(i, Patterns.REMOVE_BAD_COVERAGE);
-        			allPatterns.add(i, Patterns.SAVE_CONFIDENT_SEEDS);
         			allPatterns.add(i, Patterns.REMOVE_BAD_COVERAGE);
+        			allPatterns.add(i, Patterns.MERGE);
+        			allPatterns.add(i, Patterns.SAVE_CONFIDENT_SEEDS);
         		}
         		
         	}

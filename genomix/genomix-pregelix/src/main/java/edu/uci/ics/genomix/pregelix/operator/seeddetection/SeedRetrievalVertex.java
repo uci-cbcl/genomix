@@ -3,6 +3,7 @@ package edu.uci.ics.genomix.pregelix.operator.seeddetection;
 import java.util.Iterator;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectOutputStream;
@@ -25,8 +26,22 @@ import edu.uci.ics.genomix.pregelix.operator.scaffolding2.RayVertexToNodeOutputF
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 
 public class SeedRetrievalVertex extends DeBruijnGraphCleanVertex<VertexValueWritable, SeedRetrievalMessage>{
-
-	private static final Integer COVERAGE_THRESHOLD = 50;
+	
+	private String workPath;
+	private float SEED_COVERAGE_THRESHOLD = -1;
+	
+	public void configure(Configuration conf) {
+        super.configure(conf);
+        initVertex();
+        workPath = conf.get(GenomixJobConf.HDFS_WORK_PATH) + File.separator + String.format("CONFIDENT_SEEDS");
+        if(SEED_COVERAGE_THRESHOLD == -1){
+        	SEED_COVERAGE_THRESHOLD = Float.parseFloat(conf.get(GenomixJobConf.SCAFFOLDING_CONFIDENT_SEEDS_MIN_COVERAGE));
+        }
+        
+	}
+	
+	
+	
 	@Override
 	public void compute(Iterator<SeedRetrievalMessage> msgIterator) throws Exception {
 		VertexValueWritable vertex = getVertexValue();
@@ -46,7 +61,7 @@ public class SeedRetrievalVertex extends DeBruijnGraphCleanVertex<VertexValueWri
 			}
 		}
 		else if (getSuperstep() == 2){
-			if (vertex.getAverageCoverage() < COVERAGE_THRESHOLD){
+			if (vertex.getAverageCoverage() < SEED_COVERAGE_THRESHOLD){
 				while (msgIterator.hasNext()) {
 					SeedRetrievalMessage msg = msgIterator.next();
 		            vertex.getEdges(msg.getToPruneEdgeType().mirror()).remove(msg.getSourceVertexId());
@@ -69,10 +84,11 @@ public class SeedRetrievalVertex extends DeBruijnGraphCleanVertex<VertexValueWri
 	}
 	
 	private boolean isPartOfSeed() throws Exception{
+		
 		String kmer = getVertexId().toString();
 		String reversed = getVertexId().reverse().toString();
         try{
-                Path pt=new Path("/home/elmira/work/seeds.txt");
+                Path pt=new Path(workPath);
                 FileSystem fs = FileSystem.get(new Configuration());
                 BufferedReader br=new BufferedReader(new InputStreamReader(fs.open(pt)));
                 String line;

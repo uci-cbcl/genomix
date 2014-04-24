@@ -184,6 +184,9 @@ public class GenomixJobConf extends JobConf {
         
         @Option(name = "-scaffold_confidentSeeds", usage = "Whether or not to choose seeds based on confident graph", handler=ExplicitBooleanOptionHandler.class)
 		private boolean scaffold_confidentSeeds = false;
+        
+        @Option(name = "-scaffold_confidentSeedsMinCoverage", usage = "Minimum coverage for a confident seed", handler=ExplicitBooleanOptionHandler.class)
+		private float scaffold_confidentSeedsMinCoverage = -1;
 
         // Hyracks/Pregelix Setup
         @Option(name = "-profile", usage = "Whether or not to do runtime profifling", required = false)
@@ -219,6 +222,7 @@ public class GenomixJobConf extends JobConf {
 
         @Option(name = "-setCutoffCoverageByFittingMixture", usage = "Whether or not to automatically set cutoff coverage based on fitting mixture")
         private boolean setCutoffCoverageByFittingMixture = false;
+
     }
 
     /**
@@ -353,6 +357,7 @@ public class GenomixJobConf extends JobConf {
 	public static final String SCAFFOLDING_DELAY_PRUNE = "genomix.scaffolding.delayPrune";
 	public static final String SCAFFOLDING_EARLY_STOP = "genomix.scaffolding.earlyStop";
 	public static final String SCAFFOLDING_CONFIDENT_SEEDS = "genomix.scaffolding.confidentSeeds";
+	public static final String SCAFFOLDING_CONFIDENT_SEEDS_MIN_COVERAGE = "genomix.scaffolding.confidentSeedsMinCoverage";
 	
     public static final String PLOT_SUBGRAPH_START_SEEDS = "genomix.plotSubgraph.startSeeds";
     public static final String PLOT_SUBGRAPH_NUM_HOPS = "genomix.plotSubgraph.numHops";
@@ -656,6 +661,7 @@ public class GenomixJobConf extends JobConf {
         setBoolean(SCAFFOLDING_DELAY_PRUNE, opts.scaffold_delayPrune);
         setBoolean(SCAFFOLDING_EARLY_STOP, opts.scaffold_earlyStop);
         setBoolean(SCAFFOLDING_CONFIDENT_SEEDS, opts.scaffold_confidentSeeds);
+        setFloat(SCAFFOLDING_CONFIDENT_SEEDS_MIN_COVERAGE, opts.scaffold_confidentSeedsMinCoverage);
         
         setInt(STATS_EXPECTED_GENOMESIZE, opts.stats_expectedGenomeSize);
         setInt(STATS_MIN_CONTIGLENGTH, opts.stats_minContigLength);
