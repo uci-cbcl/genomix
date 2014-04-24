@@ -183,10 +183,7 @@ public class GenomixJobConf extends JobConf {
 		private boolean scaffold_delayPrune = true;
 
         @Option(name = "-scaffold_earlyStop", usage = "Whether or not to stop walks that cross paths.", handler=ExplicitBooleanOptionHandler.class)
-		private boolean scaffold_earlyStop = false;
-        
-        @Option(name = "-scaffold_confidentSeeds", usage = "Whether or not to choose seeds based on confident graph", handler=ExplicitBooleanOptionHandler.class)
-		private boolean scaffold_confidentSeeds = false;
+		private boolean scaffold_earlyStop = false;       
         
         @Option(name = "-scaffold_confidentSeedsMinCoverage", usage = "Minimum coverage for a confident seed", required = false)
 		private float scaffold_confidentSeedsMinCoverage = -1;
@@ -262,7 +259,8 @@ public class GenomixJobConf extends JobConf {
         BUBBLE_ADD,
         BFS, 
         LOAD_CONFIDENT_SEEDS,
-        SAVE_CONFIDENT_SEEDS;
+        SAVE_CONFIDENT_SEEDS,
+        FIND_CONFIDENT_SEEDS;
         
         /** the jobs that actually mutate the graph */
         public static final EnumSet<Patterns> mutatingJobs = EnumSet.complementOf(EnumSet.of(Patterns.DUMP_FASTA,
@@ -664,7 +662,6 @@ public class GenomixJobConf extends JobConf {
         setBoolean(SCAFFOLDING_EXPAND_CANDIDATE_BRANCHES, opts.scaffold_expandCandidateBranches);
         setBoolean(SCAFFOLDING_DELAY_PRUNE, opts.scaffold_delayPrune);
         setBoolean(SCAFFOLDING_EARLY_STOP, opts.scaffold_earlyStop);
-        setBoolean(SCAFFOLDING_CONFIDENT_SEEDS, opts.scaffold_confidentSeeds);
         setFloat(SCAFFOLDING_CONFIDENT_SEEDS_MIN_COVERAGE, opts.scaffold_confidentSeedsMinCoverage);
         setFloat(SCAFFOLDING_CONFIDENT_SEED_LENGTH_THRESHOLD, opts.scaffold_confidentSeedLengthThreshold);
         

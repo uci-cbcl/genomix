@@ -114,17 +114,11 @@ public class GenomixDriver {
 
     @SuppressWarnings("deprecation")
     private void setOutput(GenomixJobConf conf, Patterns step) {
-    	if (tmpOutput){
-        	tmpPrevOutput = curOutput;
-        	tmpCurOutput = conf.get(GenomixJobConf.HDFS_WORK_PATH) + File.separator + String.format("%02d-", stepNum) + step;
-        	FileInputFormat.setInputPaths(conf, new Path(tmpPrevOutput));
-            FileOutputFormat.setOutputPath(conf, new Path(tmpCurOutput));
-        } else {
         prevOutput = curOutput;
         curOutput = conf.get(GenomixJobConf.HDFS_WORK_PATH) + File.separator + String.format("%02d-", stepNum) + step;
         FileInputFormat.setInputPaths(conf, new Path(prevOutput));
         FileOutputFormat.setOutputPath(conf, new Path(curOutput));
-        }
+
     }
 
     public static double cur_expMean = -1;
@@ -249,18 +243,7 @@ public class GenomixDriver {
                 break;
                 **/
             case REMOVE_BAD_COVERAGE:
-            	if(!aggressivePrune){
             		pregelixJobs.add(RemoveBadCoverageVertex.getConfiguredJob(conf, RemoveBadCoverageVertex.class)); 
-            		if(Boolean.parseBoolean(conf.get(GenomixJobConf.SCAFFOLDING_CONFIDENT_SEEDS))){
-            			aggressivePrune = true;
-            			tmpOutput = true;
-            		}		
-            	}
-            	else {
-            		conf.set(GenomixJobConf.REMOVE_BAD_COVERAGE_MIN_COVERAGE, conf.
-            				get(GenomixJobConf.SCAFFOLDING_CONFIDENT_SEEDS_MIN_COVERAGE));
-            		pregelixJobs.add(RemoveBadCoverageVertex.getConfiguredJob(conf, RemoveBadCoverageVertex.class));		
-            	}
                 break;
             case BRIDGE:
                 pregelixJobs.add(BridgeRemoveVertex.getConfiguredJob(conf, BridgeRemoveVertex.class));
@@ -330,7 +313,49 @@ public class GenomixDriver {
             	break;
             case SAVE_CONFIDENT_SEEDS:
             	pregelixJobs.add(ConfidentVertex.getConfiguredJob(conf, ConfidentVertex.class));
-            	tmpOutput = false;
+            	break;
+            case FIND_CONFIDENT_SEEDS:
+            	int jobNumber = 0;
+            	tmpPrevOutput = prevOutput;
+            	conf.set(GenomixJobConf.REMOVE_BAD_COVERAGE_MIN_COVERAGE, conf.
+            			get(GenomixJobConf.SCAFFOLDING_CONFIDENT_SEEDS_MIN_COVERAGE));
+            	pregelixJobs.add(RemoveBadCoverageVertex.getConfiguredJob(conf, RemoveBadCoverageVertex.class));
+            	
+            	prevOutput =curOutput;
+            	curOutput = conf.get(GenomixJobConf.HDFS_WORK_PATH) + File.separator
+                        + String.format("%02d-", stepNum) + step + "-job-" + jobNumber;
+            	FileInputFormat.setInputPaths(conf, new Path(prevOutput));
+                FileOutputFormat.setOutputPath(conf, new Path(curOutput));
+                
+                pregelixJobs.add(P4ForPathMergeVertex.getConfiguredJob(conf, P4ForPathMergeVertex.class));
+                
+            	jobNumber++;
+            	prevOutput =curOutput;
+            	curOutput = conf.get(GenomixJobConf.HDFS_WORK_PATH) + File.separator
+                        + String.format("%02d-", stepNum) + step + "-job-" + jobNumber;
+            	FileInputFormat.setInputPaths(conf, new Path(prevOutput));
+                FileOutputFormat.setOutputPath(conf, new Path(curOutput));
+                
+            	pregelixJobs.add(ConfidentVertex.getConfiguredJob(conf, ConfidentVertex.class));
+            	
+            	jobNumber++;
+            	prevOutput =tmpPrevOutput;
+            	curOutput = conf.get(GenomixJobConf.HDFS_WORK_PATH) + File.separator
+                        + String.format("%02d-", stepNum) + step + "-job-" + jobNumber;
+            	FileInputFormat.setInputPaths(conf, new Path(prevOutput));
+                FileOutputFormat.setOutputPath(conf, new Path(curOutput));
+                
+                pregelixJobs.add(SeedRetrievalVertex.getConfiguredJob(conf, SeedRetrievalVertex.class));
+            	
+                jobNumber++;
+            	prevOutput =curOutput;
+            	curOutput = conf.get(GenomixJobConf.HDFS_WORK_PATH) + File.separator
+                        + String.format("%02d-", stepNum) + step + "-job-" + jobNumber;
+            	FileInputFormat.setInputPaths(conf, new Path(prevOutput));
+                FileOutputFormat.setOutputPath(conf, new Path(curOutput));
+                
+                pregelixJobs.add(P4ForPathMergeVertex.getConfiguredJob(conf, P4ForPathMergeVertex.class));
+            	
             	break;
             case DUMP_FASTA:
                 flushPendingJobs(conf);
@@ -587,15 +612,6 @@ public class GenomixDriver {
 
         // break up SCAFFOLD into FORWARD and REVERSE steps and insert STATS and MERGE between jobs
         for (int i = 0; i < allPatterns.size(); i++) {
-        	if (allPatterns.get(i) == Patterns.REMOVE_BAD_COVERAGE){
-        		if (Boolean.parseBoolean(conf.get(GenomixJobConf.SCAFFOLDING_CONFIDENT_SEEDS))){
-        			allPatterns.add(i, Patterns.REMOVE_BAD_COVERAGE);
-        			allPatterns.add(i, Patterns.REMOVE_BAD_COVERAGE);
-        			allPatterns.add(i, Patterns.MERGE);
-        			allPatterns.add(i, Patterns.SAVE_CONFIDENT_SEEDS);
-        		}
-        		
-        	}
             if (allPatterns.get(i) == Patterns.RAY_SCAFFOLD) {
                 if (i == 0 || allPatterns.get(i - 1) != Patterns.STATS) {
                     allPatterns.set(i, Patterns.STATS);
@@ -603,21 +619,12 @@ public class GenomixDriver {
                 } else {
                     allPatterns.remove(i);
                 }
-                if (Boolean.parseBoolean(conf.get(GenomixJobConf.SCAFFOLDING_CONFIDENT_SEEDS))){
-                	allPatterns.add(i, Patterns.LOAD_CONFIDENT_SEEDS);
-                	allPatterns.add(i + 1, Patterns.TIP);
-                	allPatterns.add(i + 2, Patterns.MERGE);
-                	allPatterns.add(i + 3, Patterns.RAY_SCAFFOLD_FORWARD);
-                	if (RayVertex.DELAY_PRUNE) {
-                    	allPatterns.add(i + 4, Patterns.RAY_SCAFFOLD_PRUNE);
-                    }
-                } 
-                else{
-                	allPatterns.add(i, Patterns.RAY_SCAFFOLD_FORWARD);
-                	if (RayVertex.DELAY_PRUNE) {
+                
+                allPatterns.add(i, Patterns.RAY_SCAFFOLD_FORWARD);
+                if (RayVertex.DELAY_PRUNE) {
                     	allPatterns.add(i + 1, Patterns.RAY_SCAFFOLD_PRUNE);
-                    }
                 }
+                
                 //allPatterns.add(i + 1, Patterns.MERGE);
                 //allPatterns.add(i + 1, Patterns.STATS);
                 //allPatterns.add(i, Patterns.RAY_SCAFFOLD_REVERSE);

@@ -1,5 +1,7 @@
 package edu.uci.ics.genomix.pregelix.operator.seeddetection;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -29,6 +31,7 @@ public class SeedRetrievalVertex extends DeBruijnGraphCleanVertex<VertexValueWri
 	
 	private String workPath;
 	private float SEED_COVERAGE_THRESHOLD = -1;
+	private ArrayList<String> seedInfo = new ArrayList<>();
 	
 	public void configure(Configuration conf) {
         super.configure(conf);
@@ -36,6 +39,21 @@ public class SeedRetrievalVertex extends DeBruijnGraphCleanVertex<VertexValueWri
         workPath = conf.get(GenomixJobConf.HDFS_WORK_PATH) + File.separator + String.format("CONFIDENT_SEEDS");
         if(SEED_COVERAGE_THRESHOLD == -1){
         	SEED_COVERAGE_THRESHOLD = Float.parseFloat(conf.get(GenomixJobConf.SCAFFOLDING_CONFIDENT_SEEDS_MIN_COVERAGE));
+        }
+        
+        try{
+            Path pt=new Path(workPath);
+            FileSystem fs = FileSystem.get(new Configuration());
+            BufferedReader br=new BufferedReader(new InputStreamReader(fs.open(pt)));
+            String line;
+            line=br.readLine();
+            while (line != null){
+            	for(int i = 0; i < line.length() - kmerSize +1 ; i++){
+            		seedInfo.add(line.substring(i, i + kmerSize));
+            	}
+                line=br.readLine();        
+            }
+        }catch(Exception e){
         }
         
 	}
@@ -87,19 +105,8 @@ public class SeedRetrievalVertex extends DeBruijnGraphCleanVertex<VertexValueWri
 		
 		String kmer = getVertexId().toString();
 		String reversed = getVertexId().reverse().toString();
-        try{
-                Path pt=new Path(workPath);
-                FileSystem fs = FileSystem.get(new Configuration());
-                BufferedReader br=new BufferedReader(new InputStreamReader(fs.open(pt)));
-                String line;
-                line=br.readLine();
-                while (line != null){
-                	if (line.contains(kmer) || line.contains(reversed.toString())){
-                		return true;
-                	}
-                    line=br.readLine();        
-                }
-        }catch(Exception e){
+        if (seedInfo.contains(kmer) || seedInfo.contains(reversed.toString())){
+        	return true;
         }
 		return false;
 	}
