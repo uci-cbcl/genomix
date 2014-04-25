@@ -2,6 +2,7 @@ package edu.uci.ics.genomix.pregelix.operator.seeddetection;
 
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.Iterator;
 
@@ -18,7 +19,8 @@ import edu.uci.ics.genomix.pregelix.base.VertexValueWritable;
 public class ConfidentVertex extends DeBruijnGraphCleanVertex<VertexValueWritable, MessageWritable>{
 	
 	private String workPath;
-    private Integer CONFIDENT_SEED_LENGTH_THRESHOLD = -1;
+    private float CONFIDENT_SEED_LENGTH_THRESHOLD = -1;
+    private BufferedWriter br;
 	@Override
 	
 	public void configure(Configuration conf) {
@@ -26,8 +28,19 @@ public class ConfidentVertex extends DeBruijnGraphCleanVertex<VertexValueWritabl
         initVertex();
         workPath = conf.get(GenomixJobConf.HDFS_WORK_PATH) + File.separator + String.format("CONFIDENT_SEEDS");
         if (CONFIDENT_SEED_LENGTH_THRESHOLD == -1){
-        CONFIDENT_SEED_LENGTH_THRESHOLD = Integer.parseInt(conf.get(GenomixJobConf.SCAFFOLDING_CONFIDENT_SEED_LENGTH_THRESHOLD));
+        CONFIDENT_SEED_LENGTH_THRESHOLD = Float.parseFloat(conf.get(GenomixJobConf.SCAFFOLDING_CONFIDENT_SEED_LENGTH_THRESHOLD));
         }
+        
+        Path pt=new Path(workPath);
+        FileSystem fs;
+		try {
+			fs = FileSystem.get(new Configuration());
+			br=new BufferedWriter(new OutputStreamWriter(fs.create(pt,true)));
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        
 	}	
 	
 	/**
@@ -35,7 +48,7 @@ public class ConfidentVertex extends DeBruijnGraphCleanVertex<VertexValueWritabl
 	 * are saved as the confident seeds. 
 	 */
 	
-	public void compute(Iterator<MessageWritable> msgIterator) throws Exception {
+	public void compute(Iterator<MessageWritable> msgIterator) {
 		// TODO Auto-generated method stub
 		if (getSuperstep() == 1) {
 			if (isSeed()){
@@ -47,21 +60,21 @@ public class ConfidentVertex extends DeBruijnGraphCleanVertex<VertexValueWritabl
 		
 	}
 	
+	@Override
+	public void close() {
+		
+	}
+	
 	private boolean isSeed(){
              return getVertexValue().getKmerLength() >= CONFIDENT_SEED_LENGTH_THRESHOLD;
 	}
 	
-	public void saveSeed(VKmer seed) throws Exception{
-        try{
-                Path pt=new Path(workPath);
-                FileSystem fs = FileSystem.get(new Configuration());
-                BufferedWriter br=new BufferedWriter(new OutputStreamWriter(fs.create(pt,true)));
-                fs.append(pt);
-                br.write(seed.toString() + "\n");
-                br.close();
-        }catch(Exception e){
-                System.out.println("File not found");
-        }
+	public void saveSeed(VKmer seed){
+		try {
+			br.write(seed.toString() + "\n");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 }
 
 }
