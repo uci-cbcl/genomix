@@ -682,6 +682,13 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         		}
         		msgs.set(msg.getPathIndex(), msg);
         	}
+        	// remove any leftover nulls to hide our shame :(
+        	for (int i=0; i < msgs.size(); i++) {
+        		if (msgs.get(i) == null) {
+        			msgs.remove(i--);
+        		}
+        	}
+        	
         	VKmer id = getVertexId();
         	RayValue vertex = getVertexValue();
         	// all msgs should have the same total length and describe me as being at the same offset
