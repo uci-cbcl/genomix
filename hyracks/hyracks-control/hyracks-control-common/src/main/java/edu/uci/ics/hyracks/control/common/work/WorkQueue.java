@@ -106,13 +106,13 @@ public class WorkQueue {
                         continue;
                     }
                     dequeueCount.incrementAndGet();
-                    if (LOGGER.isLoggable(Level.FINEST)) {
-                        LOGGER.finest("Dequeue: " + dequeueCount + "/" + enqueueCount);
-                    }
+                    //if (LOGGER.isLoggable(Level.FINEST)) {
+                    //    LOGGER.finest("Dequeue: " + dequeueCount + "/" + enqueueCount);
+                    //}
                     try {
-                        if (LOGGER.isLoggable(r.logLevel())) {
-                            LOGGER.log(r.logLevel(), "Executing: " + r);
-                        }
+                        //if (LOGGER.isLoggable(r.logLevel())) {
+                        //    LOGGER.log(r.logLevel(), "Executing: " + r);
+                        //}
                         r.run();
                     } catch (Exception e) {
                         e.printStackTrace();

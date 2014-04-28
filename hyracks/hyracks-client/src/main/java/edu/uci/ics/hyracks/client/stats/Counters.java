@@ -21,6 +21,8 @@ public class Counters {
     public static final String SYSTEM_LOAD = "system-load-averages";
 
     public static final String MEMORY_USAGE = "heap-used-sizes";
+    
+    public static final String MEMORY_MAX = "heap-max-sizes";
 
     public static final String NETWORK_IO_READ = "net-payload-bytes-read";
 

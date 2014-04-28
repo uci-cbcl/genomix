@@ -15,8 +15,6 @@
 package edu.uci.ics.hyracks.control.nc;
 
 import java.nio.ByteBuffer;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
@@ -24,14 +22,11 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.application.INCApplicationContext;
-import edu.uci.ics.hyracks.api.comm.IPartitionCollector;
-import edu.uci.ics.hyracks.api.comm.PartitionChannel;
 import edu.uci.ics.hyracks.api.context.IHyracksJobletContext;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.dataflow.state.IStateObject;
 import edu.uci.ics.hyracks.api.deployment.DeploymentId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.api.io.IWorkspaceFileFactory;
@@ -47,8 +42,6 @@ import edu.uci.ics.hyracks.api.job.profiling.counters.ICounterContext;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
 import edu.uci.ics.hyracks.api.resources.IDeallocatable;
 import edu.uci.ics.hyracks.control.common.deployment.DeploymentUtils;
-import edu.uci.ics.hyracks.control.common.job.PartitionRequest;
-import edu.uci.ics.hyracks.control.common.job.PartitionState;
 import edu.uci.ics.hyracks.control.common.job.profiling.counters.Counter;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.JobletProfile;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.PartitionProfile;
@@ -69,8 +62,6 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
     private final JobId jobId;
 
     private final ActivityClusterGraph acg;
-
-    private final Map<PartitionId, IPartitionCollector> partitionRequestMap;
 
     private final IOperatorEnvironment env;
 
@@ -105,7 +96,6 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         this.frameSize = acg.getFrameSize();
         memoryAllocation = new AtomicLong();
         this.acg = acg;
-        partitionRequestMap = new HashMap<PartitionId, IPartitionCollector>();
         env = new OperatorEnvironmentImpl(nodeController.getId());
         stateObjectMap = new HashMap<Object, IStateObject>();
         taskMap = new HashMap<TaskAttemptId, Task>();
@@ -265,22 +255,6 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
     @Override
     public Object getGlobalJobData() {
         return globalJobData;
-    }
-
-    public synchronized void advertisePartitionRequest(TaskAttemptId taId, Collection<PartitionId> pids,
-            IPartitionCollector collector, PartitionState minState) throws Exception {
-        for (PartitionId pid : pids) {
-            partitionRequestMap.put(pid, collector);
-            PartitionRequest req = new PartitionRequest(pid, nodeController.getId(), taId, minState);
-            nodeController.getClusterController().registerPartitionRequest(req);
-        }
-    }
-
-    public synchronized void reportPartitionAvailability(PartitionChannel channel) throws HyracksException {
-        IPartitionCollector collector = partitionRequestMap.get(channel.getPartitionId());
-        if (collector != null) {
-            collector.addPartitions(Collections.singleton(channel));
-        }
     }
 
     public IJobletEventListener getJobletEventListener() {

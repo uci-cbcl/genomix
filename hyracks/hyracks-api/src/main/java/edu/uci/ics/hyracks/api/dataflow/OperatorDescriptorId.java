@@ -14,12 +14,21 @@
  */
 package edu.uci.ics.hyracks.api.dataflow;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 import java.io.Serializable;
 
-public final class OperatorDescriptorId implements Serializable {
+import edu.uci.ics.hyracks.api.io.IWritable;
+
+public final class OperatorDescriptorId implements IWritable, Serializable {
     private static final long serialVersionUID = 1L;
 
-    private final int id;
+    private int id;
+
+    public OperatorDescriptorId() {
+
+    }
 
     public OperatorDescriptorId(int id) {
         this.id = id;
@@ -56,5 +65,15 @@ public final class OperatorDescriptorId implements Serializable {
             return new OperatorDescriptorId(Integer.parseInt(str));
         }
         throw new IllegalArgumentException("Unable to parse: " + str);
+    }
+
+    @Override
+    public void write(DataOutput output) throws IOException {
+        output.writeInt(id);
+    }
+
+    @Override
+    public void readFields(DataInput input) throws IOException {
+        id = input.readInt();
     }
 }

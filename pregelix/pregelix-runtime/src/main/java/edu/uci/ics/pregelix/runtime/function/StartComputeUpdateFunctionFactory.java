@@ -42,7 +42,7 @@ import edu.uci.ics.pregelix.api.util.FrameTupleUtils;
 import edu.uci.ics.pregelix.dataflow.base.IConfigurationFactory;
 import edu.uci.ics.pregelix.dataflow.std.base.IUpdateFunction;
 import edu.uci.ics.pregelix.dataflow.std.base.IUpdateFunctionFactory;
-import edu.uci.ics.pregelix.dataflow.util.ResetableByteArrayOutputStream;
+import edu.uci.ics.pregelix.dataflow.std.util.ResetableByteArrayOutputStream;
 
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class StartComputeUpdateFunctionFactory implements IUpdateFunctionFactory {
@@ -128,7 +128,7 @@ public class StartComputeUpdateFunctionFactory implements IUpdateFunctionFactory
 
                 this.writerMsg = writers[0];
                 this.bufferMsg = ctx.allocateFrame();
-                this.appenderMsg = new FrameTupleAppender(ctx.getFrameSize());
+                this.appenderMsg = new FrameTupleAppender(ctx.getFrameSize(), 2);
                 this.appenderMsg.reset(bufferMsg, true);
                 this.writers.add(writerMsg);
                 this.appenders.add(appenderMsg);
@@ -160,7 +160,7 @@ public class StartComputeUpdateFunctionFactory implements IUpdateFunctionFactory
                 if (writers.length > 5) {
                     this.writerAlive = writers[5];
                     this.bufferAlive = ctx.allocateFrame();
-                    this.appenderAlive = new FrameTupleAppender(ctx.getFrameSize());
+                    this.appenderAlive = new FrameTupleAppender(ctx.getFrameSize(), 2);
                     this.appenderAlive.reset(bufferAlive, true);
                     this.pushAlive = true;
                     this.writers.add(writerAlive);
@@ -250,7 +250,7 @@ public class StartComputeUpdateFunctionFactory implements IUpdateFunctionFactory
                     if (!appenderGlobalAggregate.append(tbGlobalAggregate.getFieldEndOffsets(),
                             tbGlobalAggregate.getByteArray(), 0, tbGlobalAggregate.getSize())) {
                         // aggregate state exceed the page size, write to HDFS
-                        FrameTupleUtils.flushTupleToHDFS(tbGlobalAggregate, conf, Vertex.getSuperstep());
+                        FrameTupleUtils.flushTupleToHDFS(tbGlobalAggregate, conf, vertex.getSuperstep());
                         appenderGlobalAggregate.reset(bufferGlobalAggregate, true);
                     }
                     FrameTupleUtils.flushTuplesFinal(appenderGlobalAggregate, writerGlobalAggregate);
