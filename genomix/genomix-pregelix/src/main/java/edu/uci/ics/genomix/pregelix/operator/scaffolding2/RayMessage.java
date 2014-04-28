@@ -95,10 +95,10 @@ public class RayMessage extends MessageWritable {
         getWalkIds().append(id);
         getWalkOffsets().add(getWalkLength());
         setWalkLength(getWalkLength() + vertex.getKmerLength() - Kmer.getKmerLength() + 1);
-        if (getWalkLength() > 100) {
-        	LOG.info("found a long node: " + getWalkLength());
+        if (vertex.getKmerLength() >= 100) {
+        	LOG.info("found a long node: " + id + ", length: " + vertex.getKmerLength() + ", total walk length: " + getWalkLength());
         } else {
-        	LOG.info("found a short node: " + getWalkLength());
+        	LOG.info("found a short node: " + id + ", length: " + vertex.getKmerLength() + ", total walk length: " + getWalkLength());
         }
 
         if (accumulatedWalkKmer == null || accumulatedWalkKmer.getKmerLetterLength() == 0) {

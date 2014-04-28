@@ -258,7 +258,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
             		HashMap <VKmer, Integer> tempMap = vertex.getPendingCandiateBranchesMap();
             		tempMap.put(new VKmer(msg.getSeed()), temp - 1);
             		vertex.setPendingCandidateBranchesMap(new HashMap(tempMap));
-            		LOG.info("recieved complete candidate. total pending searches:" + vertex.pendingCandidateBranchesMap.size());
+//            		LOG.info("recieved complete candidate. total pending searches:" + vertex.pendingCandidateBranchesMap.size());
 
                     break;
                 case REQUEST_SCORE:
@@ -351,8 +351,8 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
     }
 
     private void sendCandidateKmersToWalkNodes(ArrayList<RayMessage> candidateMsgs) {
-        LOG.info("sending " + candidateMsgs.size() + " candidates to " + candidateMsgs.get(0).getWalkIds().size()
-                + " walk nodes");
+//        LOG.info("sending " + candidateMsgs.size() + " candidates to " + candidateMsgs.get(0).getWalkIds().size()
+//                + " walk nodes");
         for (int candIndex = 0; candIndex < candidateMsgs.size(); candIndex++) {
             RayMessage msg = candidateMsgs.get(candIndex);
             for (int walkIndex = 0; walkIndex < msg.getWalkIds().size(); walkIndex++) {
@@ -397,7 +397,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         	if (STORE_WALK){
         		storeWalk(msg.getWalkIds(),msg.getAccumulatedWalkKmer(), realSeed);
         	}
-            LOG.info("reached dead end at " + id + " with total length: " + msg.getWalkLength() + "\n>id " + id + "\n"
+            LOG.info("reached dead end as a cycle at " + id + " with total length: " + msg.getWalkLength() + "\n>id " + id + "\n"
                     + msg.getAccumulatedWalkKmer());
             //vertex.stopSearch = true;
             return;
@@ -711,14 +711,14 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         			outgoingMsg.getWalkOffsets().add(myOffset);
         			outgoingMsg.getWalkIds().append(new VKmer(id));
         			outgoingMsg.setAccumulatedWalkKmer(new VKmer(accumulatedWalk));
-        			outgoingMsg.setVisitCounter(new HashMap(visitCounter));
+        			outgoingMsg.setVisitCounter(new HashMap<>(visitCounter));
         			// include scores from each candidate path
         			for (RayMessage msg : msgs) {
         				if (msg.getSingleEndScores().size() > 0) {
-        					outgoingMsg.getSingleEndScores().addAll(new ArrayList(msg.getSingleEndScores()));
+        					outgoingMsg.getSingleEndScores().addAll(new ArrayList<>(msg.getSingleEndScores()));
         				}
         				if (msg.getPairedEndScores().size() > 0) {
-        					outgoingMsg.getPairedEndScores().addAll(new ArrayList(msg.getPairedEndScores()));
+        					outgoingMsg.getPairedEndScores().addAll(new ArrayList<>(msg.getPairedEndScores()));
         				}
         			} // TODO possible that NO scores come back from the candidates?
         			sendMsg(frontierNode, outgoingMsg);
@@ -776,8 +776,8 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         	outgoingMsg.setAccumulatedWalkKmer(new VKmer(accumulatedWalk));
         	outgoingMsg.setVisitCounter(new HashMap(visitCounter));
         	sendMsg(frontierNode, outgoingMsg);
-        	LOG.info("sending to frontier node: minLength: " + minLength + ", s-e: " + singleEndScores + ", p-e: "
-        			+ pairedEndScores);
+//        	LOG.info("sending to frontier node: minLength: " + minLength + ", s-e: " + singleEndScores + ", p-e: "
+//        			+ pairedEndScores);
         	//msgs.clear();
     
     }
@@ -941,7 +941,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         	for (RayMessage msg : candidateMsgs) {
         		b.append(msg.getToScoreKmer()).append('\n');
         	}
-        	LOG.info("branches seen were:\n" + b.toString());
+//        	LOG.info("branches seen were:\n" + b.toString());
         }
         return pathScores;
     }
@@ -1290,7 +1290,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
 	        		}
 	        		//vertex.stopSearch = true;
 	        		LOG.info("failed to find a dominant edge. Started at " + msgs.get(0).getSourceVertexId()
-	        				+ " and will stop at " + id + " with total length: " + msgs.get(0).getWalkLength() + "\n>id " + id
+	        				+ " and will stop at " + id + " with total length: " + msgs.get(0).getWalkLength() + " and curNode length: " + vertex.getKmerLength() + "\n>id " + id
 	        				+ "\n" + msgs.get(0).getAccumulatedWalkKmer());
         		}
         	}       
@@ -1324,7 +1324,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
                 outgoingMsg.setEdgeTypeBackToFrontier(et.mirror());
                 outgoingMsg.setSourceVertexId(new VKmer(frontierKmer));
                 sendMsg(neighbor, outgoingMsg);
-                LOG.info("Splitting node... sending message to remove reciprocal edge back to " + frontierKmer + " from " + neighbor);
+//                LOG.info("Splitting node... sending message to remove reciprocal edge back to " + frontierKmer + " from " + neighbor);
 			}
 		}
 		deleteVertex(frontierKmer);
