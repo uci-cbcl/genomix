@@ -289,7 +289,7 @@ public class GenomixDriver {
 	                            pregelixJobs.add(RayVertex.getConfiguredJob(conf, RayVertex.class));
 	                            prevOutput = curOutput;
 	                            
-	                            if (RayVertex.DELAY_PRUNE) {
+	                            if (Boolean.parseBoolean(conf.get(GenomixJobConf.SCAFFOLDING_DELAY_PRUNE))) {
 	                            	curOutput = conf.get(GenomixJobConf.HDFS_WORK_PATH) + File.separator
 		                                    + String.format("%02d-", stepNum) + step + "-job-" + jobNumber + "-prune";
 		                            FileInputFormat.setInputPaths(conf, new Path(prevOutput));
@@ -607,15 +607,15 @@ public class GenomixDriver {
                     allPatterns.remove(i);
                 }
                 // replace
-                allPatterns.add(i, Patterns.RAY_SCAFFOLD_FORWARD);
-                if (RayVertex.DELAY_PRUNE) {
-                	allPatterns.add(i + 1, Patterns.RAY_SCAFFOLD_PRUNE);
+                allPatterns.add(i++, Patterns.RAY_SCAFFOLD_FORWARD);
+                if (Boolean.parseBoolean(conf.get(GenomixJobConf.SCAFFOLDING_DELAY_PRUNE))) {
+                	allPatterns.add(i++, Patterns.RAY_SCAFFOLD_PRUNE);
                 }
-//                allPatterns.add(i + 2, Patterns.MERGE);
-//                allPatterns.add(i + 3, Patterns.STATS);
-                allPatterns.add(i + 2, Patterns.RAY_SCAFFOLD_REVERSE);
-                if (RayVertex.DELAY_PRUNE) {
-                	allPatterns.add(i + 3, Patterns.RAY_SCAFFOLD_PRUNE);
+//                allPatterns.add(i++, Patterns.MERGE);
+//                allPatterns.add(i++, Patterns.STATS);
+                allPatterns.add(i++, Patterns.RAY_SCAFFOLD_REVERSE);
+                if (Boolean.parseBoolean(conf.get(GenomixJobConf.SCAFFOLDING_DELAY_PRUNE))) {
+                	allPatterns.add(i++, Patterns.RAY_SCAFFOLD_PRUNE);
                 }
             }
         }
