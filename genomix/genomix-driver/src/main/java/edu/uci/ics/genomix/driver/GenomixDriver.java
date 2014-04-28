@@ -610,10 +610,8 @@ public class GenomixDriver {
                 }
                 
                 allPatterns.add(i, Patterns.RAY_SCAFFOLD_FORWARD);
-                if (RayVertex.DELAY_PRUNE) {
-                    	allPatterns.add(i + 1, Patterns.RAY_SCAFFOLD_PRUNE);
-                }
-                
+                allPatterns.add(i + 1, Patterns.MERGE);
+                allPatterns.add(i + 2, Patterns.RAY_SCAFFOLD_REVERSE);
                 //allPatterns.add(i + 1, Patterns.MERGE);
                 //allPatterns.add(i + 1, Patterns.STATS);
                 //allPatterns.add(i, Patterns.RAY_SCAFFOLD_REVERSE);
