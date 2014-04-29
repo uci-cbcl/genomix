@@ -225,7 +225,7 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
         outstream = fileSys.create(new Path(outputDir + File.separator + "kmerLengths.txt"), true);
         writer = new PrintWriter(outstream);
         for (Counter c : jobCounters.getGroup("kmerLength-bins")) {
-            writer.println(c);
+            writer.println(c.getDisplayName() + "=" + c.getCounter());
         }
         writer.close();
     }
