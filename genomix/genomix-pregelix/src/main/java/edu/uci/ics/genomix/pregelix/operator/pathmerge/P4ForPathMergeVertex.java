@@ -237,10 +237,6 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
         }
         if (verbose)
             LOG.fine("Iteration " + getSuperstep() + " for key " + getVertexId());
-        if (getSuperstep() > maxIteration) { // TODO should we make sure the graph is complete or allow interruptions that will cause an asymmetric graph?
-            voteToHalt();
-            return;
-        }
 
         if (getSuperstep() == 1) {
             restrictNeighbors();
@@ -249,6 +245,10 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
                 recieveRestrictions(msgIterator);
             } else {
                 receiveMerges(msgIterator);
+            }
+            if (getSuperstep() > maxIteration) { // TODO should we make sure the graph is complete or allow interruptions that will cause an asymmetric graph?
+                voteToHalt();
+                return;
             }
             chooseMergeDir();
             updateNeighbors();
