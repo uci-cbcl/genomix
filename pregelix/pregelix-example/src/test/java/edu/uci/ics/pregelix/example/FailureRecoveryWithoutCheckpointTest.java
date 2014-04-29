@@ -53,24 +53,10 @@ public class FailureRecoveryWithoutCheckpointTest {
             FileOutputFormat.setOutputPath(job, new Path(OUTPUTPAH));
             job.getConfiguration().setLong(PregelixJob.NUM_VERTICE, 20);
             job.setFixedVertexValueSize(true);
+            job.setIterationCompleteReporterHook(FailureInjectionIterationCompleteHook.class);
 
             testCluster.setUp();
             Driver driver = new Driver(PageRankVertex.class);
-            Thread thread = new Thread(new Runnable() {
-
-                @Override
-                public void run() {
-                    try {
-                        synchronized (this) {
-                            this.wait(3000);
-                            PregelixHyracksIntegrationUtil.shutdownNC1();
-                        }
-                    } catch (Exception e) {
-                        throw new IllegalStateException(e);
-                    }
-                }
-            });
-            thread.start();
             driver.runJob(job, "127.0.0.1", PregelixHyracksIntegrationUtil.TEST_HYRACKS_CC_CLIENT_PORT);
 
             TestUtils.compareWithResultDir(new File(EXPECTEDPATH), new File(OUTPUTPAH));

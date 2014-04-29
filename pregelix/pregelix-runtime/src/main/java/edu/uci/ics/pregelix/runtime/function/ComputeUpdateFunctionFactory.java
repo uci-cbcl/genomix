@@ -245,6 +245,11 @@ public class ComputeUpdateFunctionFactory implements IUpdateFunctionFactory {
 
                 /** write out global aggregate value */
                 writeOutGlobalAggregate();
+
+                /** end of a superstep, for vertices to release resources */
+                if (userConfigured) {
+                    vertex.endSuperstep(conf);
+                }
             }
 
             private void writeOutGlobalAggregate() throws HyracksDataException {
