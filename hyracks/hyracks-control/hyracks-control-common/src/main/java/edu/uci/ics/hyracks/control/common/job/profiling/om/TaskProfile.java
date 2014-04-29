@@ -14,8 +14,12 @@
  */
 package edu.uci.ics.hyracks.control.common.job.profiling.om;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -28,9 +32,13 @@ import edu.uci.ics.hyracks.control.common.job.profiling.counters.MultiResolution
 public class TaskProfile extends AbstractProfile {
     private static final long serialVersionUID = 1L;
 
-    private final TaskAttemptId taskAttemptId;
+    private TaskAttemptId taskAttemptId;
 
-    private final Map<PartitionId, PartitionProfile> partitionSendProfile;
+    private Map<PartitionId, PartitionProfile> partitionSendProfile;
+
+    public TaskProfile() {
+
+    }
 
     public TaskProfile(TaskAttemptId taskAttemptId, Map<PartitionId, PartitionProfile> partitionSendProfile) {
         this.taskAttemptId = taskAttemptId;
@@ -83,5 +91,31 @@ public class TaskProfile extends AbstractProfile {
         populateCounters(json);
 
         return json;
+    }
+
+    @Override
+    public void readFields(DataInput input) throws IOException {
+        super.readFields(input);
+        taskAttemptId = new TaskAttemptId();
+        taskAttemptId.readFields(input);
+        int size = input.readInt();
+        partitionSendProfile = new HashMap<PartitionId, PartitionProfile>();
+        for (int i = 0; i < size; i++) {
+            PartitionId key = new PartitionId();
+            PartitionProfile value = new PartitionProfile();
+            key.readFields(input);
+            value.readFields(input);
+            partitionSendProfile.put(key, value);
+        }
+    }
+
+    public void write(DataOutput output) throws IOException {
+        super.write(output);
+        taskAttemptId.write(output);
+        output.writeInt(partitionSendProfile.size());
+        for (Entry<PartitionId, PartitionProfile> entry : partitionSendProfile.entrySet()) {
+            entry.getKey().write(output);
+            entry.getValue().write(output);
+        }
     }
 }

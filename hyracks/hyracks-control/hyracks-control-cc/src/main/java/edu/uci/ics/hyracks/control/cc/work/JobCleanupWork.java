@@ -105,11 +105,11 @@ public class JobCleanupWork extends AbstractWork {
         ccs.getActiveRunMap().remove(jobId);
         ccs.getRunMapArchive().put(jobId, run);
         ccs.getRunHistory().put(jobId, run.getExceptions());
-        try {
-            ccs.getJobLogFile().log(createJobLogObject(run));
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        //try {
+        //    ccs.getJobLogFile().log(createJobLogObject(run));
+        //} catch (Exception e) {
+        //    throw new RuntimeException(e);
+        //}
     }
 
     private JSONObject createJobLogObject(final JobRun run) {

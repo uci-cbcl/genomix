@@ -14,12 +14,20 @@
  */
 package edu.uci.ics.hyracks.api.job;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 import java.io.Serializable;
 
-public final class JobId implements Serializable {
-    private static final long serialVersionUID = 1L;
+import edu.uci.ics.hyracks.api.io.IWritable;
 
-    private final long id;
+public final class JobId implements IWritable, Serializable {
+    private static final long serialVersionUID = 1L;
+    private long id;
+
+    public JobId() {
+
+    }
 
     public JobId(long id) {
         this.id = id;
@@ -56,5 +64,15 @@ public final class JobId implements Serializable {
             return new JobId(Long.parseLong(str));
         }
         throw new IllegalArgumentException();
+    }
+
+    @Override
+    public void write(DataOutput output) throws IOException {
+        output.writeLong(id);
+    }
+
+    @Override
+    public void readFields(DataInput input) throws IOException {
+        id = input.readLong();
     }
 }

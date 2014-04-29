@@ -14,12 +14,17 @@
  */
 package edu.uci.ics.hyracks.control.common.job.profiling.counters;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 import java.io.Serializable;
 
-public class MultiResolutionEventProfiler implements Serializable {
+import edu.uci.ics.hyracks.api.io.IWritable;
+
+public class MultiResolutionEventProfiler implements IWritable, Serializable {
     private static final long serialVersionUID = 1L;
 
-    private final int[] times;
+    private int[] times;
 
     private long offset;
 
@@ -28,6 +33,10 @@ public class MultiResolutionEventProfiler implements Serializable {
     private int resolution;
 
     private int eventCounter;
+
+    public MultiResolutionEventProfiler() {
+
+    }
 
     public MultiResolutionEventProfiler(int nSamples) {
         times = new int[nSamples];
@@ -77,5 +86,30 @@ public class MultiResolutionEventProfiler implements Serializable {
 
     public long getOffset() {
         return offset;
+    }
+
+    @Override
+    public void write(DataOutput output) throws IOException {
+        output.writeInt(eventCounter);
+        output.writeLong(offset);
+        output.writeInt(ptr);
+        output.writeInt(resolution);
+        output.writeInt(times.length);
+        for (int i = 0; i < times.length; i++) {
+            output.writeInt(times[i]);
+        }
+    }
+
+    @Override
+    public void readFields(DataInput input) throws IOException {
+        eventCounter = input.readInt();
+        offset = input.readLong();
+        ptr = input.readInt();
+        resolution = input.readInt();
+        int nSamples = input.readInt();
+        times = new int[nSamples];
+        for (int i = 0; i < times.length; i++) {
+            times[i] = input.readInt();
+        }
     }
 }
