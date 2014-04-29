@@ -63,7 +63,7 @@ public class FilterCount {
             FileInputFormat.addInputPath(job, new Path(args[i]));
         }
         FileOutputFormat.setOutputPath(job, new Path(args[args.length - 1]));
-        job.setNumReduceTasks(1);
+        job.setNumReduceTasks(0);
         JobClient.runJob(job);
     }
 }
