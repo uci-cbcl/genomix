@@ -600,7 +600,7 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
      * Users can override this method to configure the pregelix job
      * and vertex state.
      */
-    public void endIteration(Configuration conf) {
+    public void endSuperstep(Configuration conf) {
 
     }
 

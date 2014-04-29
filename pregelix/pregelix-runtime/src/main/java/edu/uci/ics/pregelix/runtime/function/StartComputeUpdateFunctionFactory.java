@@ -236,7 +236,9 @@ public class StartComputeUpdateFunctionFactory implements IUpdateFunctionFactory
                 writeOutGlobalAggregate();
 
                 /** end of a superstep, for vertices to release resources */
-                vertex.endIteration(conf);
+                if (userConfigured) {
+                    vertex.endSuperstep(conf);
+                }
             }
 
             private void writeOutGlobalAggregate() throws HyracksDataException {
