@@ -136,7 +136,10 @@ public class GenomixJobConf extends JobConf {
 
         @Option(name = "-tipRemove_maxLength", usage = "Tips (dead ends in the graph) whose length is less than this threshold are removed from the graph", required = false)
         private int tipRemove_maxLength = -1;
-
+        
+        @Option(name = "-tipRemove_minAdditionalCoverage", usage = "Tips (dead ends in the graph) whose coverage is less than (removeBadCoverage_minCoverage + tipRemove_minAdditionalCoverage) are removed from graph", required = false)
+        private float tipRemove_minAdditionalCoverage = -1; 
+        
         @Option(name = "-scaffolding_serialRunMinLength", usage = "Rather than processing all the nodes in parallel, run separate scaffolding jobs serially, running with a seed of all nodes longer than this threshold", required = false)
         private int scaffolding_serialRunMinLength = -1;
 
@@ -339,6 +342,7 @@ public class GenomixJobConf extends JobConf {
     public static final String REMOVE_BAD_COVERAGE_MIN_COVERAGE = "genomix.removeBadCoverage.minCoverage";
     public static final String REMOVE_BAD_COVERAGE_MAX_COVERAGE = "genomix.removeBadCoverage.maxCoverage";
     public static final String TIP_REMOVE_MAX_LENGTH = "genomix.tipRemove.maxLength";
+    public static final String TIP_REMOVE_MIN_ADDITIONAL_COVERAGE ="genomix.tipRemove.minAdiitionalCoverage";
     public static final String MAX_READIDS_PER_EDGE = "genomix.maxReadidsPerEdge";
     
     public static final String SCAFFOLDING_INITIAL_DIRECTION = "genomix.scaffolding.initialDirection";
@@ -516,7 +520,8 @@ public class GenomixJobConf extends JobConf {
 
         if (getInt(TIP_REMOVE_MAX_LENGTH, -1) == -1 && kmerLength != -1)
             setInt(TIP_REMOVE_MAX_LENGTH, kmerLength);
-
+        
+        
         if (getInt(MAX_READIDS_PER_EDGE, -1) == -1)
             setInt(MAX_READIDS_PER_EDGE, 250);
 
@@ -641,6 +646,7 @@ public class GenomixJobConf extends JobConf {
         setFloat(REMOVE_BAD_COVERAGE_MIN_COVERAGE, opts.removeBadCoverage_minCoverage);
         setFloat(REMOVE_BAD_COVERAGE_MAX_COVERAGE, opts.removeBadCoverage_maxCoverage);
         setInt(TIP_REMOVE_MAX_LENGTH, opts.tipRemove_maxLength);
+        setFloat(TIP_REMOVE_MIN_ADDITIONAL_COVERAGE, opts.tipRemove_minAdditionalCoverage);
         if (opts.scaffolding_serialRunMinLength != -1)
             setInt(SCAFFOLDING_SERIAL_RUN_MIN_LENGTH_THRESHOLD, opts.scaffolding_serialRunMinLength);
         if (opts.scaffold_seedScorePercentile != -1) {
