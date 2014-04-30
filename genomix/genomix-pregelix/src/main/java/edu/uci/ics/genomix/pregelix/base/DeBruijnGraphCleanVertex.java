@@ -119,6 +119,7 @@ public abstract class DeBruijnGraphCleanVertex<V extends VertexValueWritable, M 
                 verbose |= (getVertexValue().findEdge(debugKmer) != null || getVertexId().equals(debugKmer));
             }
         }
+        verbose |= getSuperstep() > 30;
     }
 
     /**
