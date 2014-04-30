@@ -386,10 +386,10 @@ public class BTreeSet implements Serializable {
         public IBufferCache getBufferCache() throws HyracksException {
             if (bufferCache == null) {
                 ICacheMemoryAllocator allocator = new HeapBufferAllocator();
-                IPageReplacementStrategy prs = new ClockPageReplacementStrategy();
+                IPageReplacementStrategy prs = new ClockPageReplacementStrategy(allocator, PAGE_SIZE, PAGE_NUM);
                 IFileMapProvider fileMapProvider = getFileMapProvider();
-                bufferCache = new BufferCache(getIOManager(), allocator, prs, new DelayPageCleanerPolicy(1000),
-                        (IFileMapManager) fileMapProvider, PAGE_SIZE, PAGE_NUM, MAX_FILE_NUM, threadFactory);
+                bufferCache = new BufferCache(getIOManager(), prs, new DelayPageCleanerPolicy(1000),
+                        (IFileMapManager) fileMapProvider, MAX_FILE_NUM, threadFactory);
             }
             return bufferCache;
         }

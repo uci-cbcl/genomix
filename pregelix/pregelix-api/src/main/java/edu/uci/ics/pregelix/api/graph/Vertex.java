@@ -594,16 +594,6 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
     public void configure(Configuration conf) {
 
     }
-
-    /**
-     * called *once* per partition at the start of each iteration,
-     * before calls to open() or compute()
-     * Users can override this method to configure the pregelix job
-     * and vertex state.
-     */
-    public void configure(Configuration conf) {
-
-    }
     
     /**
      * called *once* per partition at the end of each iteration,
