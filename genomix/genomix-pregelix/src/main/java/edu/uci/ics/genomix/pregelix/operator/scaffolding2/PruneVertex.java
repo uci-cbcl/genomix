@@ -92,29 +92,14 @@ public class PruneVertex extends DeBruijnGraphCleanVertex<RayValue, MessageWrita
 		VKmer kmer;
 		SimpleEntry<EDGETYPE, VKmer> entry;
 		HashSet<Entry<EDGETYPE, VKmer>> prunedEdges = new HashSet<>();
-		if (RayVertex.REMOVE_OTHER_OUTGOING && vertex.getOutgoingEdgesToKeep().size() > 0) {
-			for (EDGETYPE et : EDGETYPE.values) {
-				Iterator<VKmer> edges = vertex.getEdges(et).iterator();
-				while(edges.hasNext()) {
-					kmer = edges.next();
-					entry = new SimpleEntry<>(et, new VKmer(kmer));
-					if (!neighborEdgesToKeep.contains(entry) && !vertex.getOutgoingEdgesToKeep().contains(entry)) {
-						prunedEdges.add(entry);
-						edges.remove();
-					}
-				}
-			}
-		}
-		if (RayVertex.REMOVE_OTHER_INCOMING && vertex.getIncomingEdgesToKeep().size() > 0) {
-			for (EDGETYPE et : EDGETYPE.values) {
-				Iterator<VKmer> edges = vertex.getEdges(et).iterator();
-				while(edges.hasNext()) {
-					kmer = edges.next();
-					entry = new SimpleEntry<>(et, new VKmer(kmer));
-					if (!neighborEdgesToKeep.contains(entry) && !vertex.getIncomingEdgesToKeep().contains(entry)) {
-						prunedEdges.add(entry);
-						edges.remove();
-					}
+		for (EDGETYPE et : EDGETYPE.values) {
+			Iterator<VKmer> edges = vertex.getEdges(et).iterator();
+			while(edges.hasNext()) {
+				kmer = edges.next();
+				entry = new SimpleEntry<>(et, new VKmer(kmer));
+				if (!neighborEdgesToKeep.contains(entry) && !vertex.getOutgoingEdgesToKeep().contains(entry) && !vertex.getIncomingEdgesToKeep().contains(entry)) {
+					prunedEdges.add(entry);
+					edges.remove();
 				}
 			}
 		}
