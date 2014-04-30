@@ -215,8 +215,8 @@ public class VKmerList implements Writable, Iterable<VKmer>, Serializable {
 
             @Override
             public VKmer next() {
-//                posIter.setAsReference(storage, currentOffset);
-            	posIter.setAsCopy(storage, currentOffset);
+                posIter.setAsReference(storage, currentOffset);
+//            	posIter.setAsCopy(storage, currentOffset);
                 currentOffset += KmerUtil.getByteNumFromK(Marshal.getInt(storage, currentOffset)) + VKmer.HEADER_SIZE;
                 currentIndex++;
                 return posIter;
