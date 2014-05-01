@@ -162,9 +162,8 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
                         + ", score: " + getVertexValue().calculateSeedScore());
             }
         }
-        if (getSuperstep() < maxIteration) {
-        	scaffold(msgIterator);
-        }
+        
+        scaffold(msgIterator);
         voteToHalt();
     }
 
@@ -239,7 +238,9 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
             RayMessage msg = msgIterator.next();
             switch (msg.getMessageType()) {
                 case CONTINUE_WALK:
-                	startBranchComparison(msg);
+                	if (getSuperstep() < maxIteration) {
+                		startBranchComparison(msg);
+                	}
                     break;
                 case REQUEST_CANDIDATE_KMER:
                     sendCandidatesToFrontier(msg);
