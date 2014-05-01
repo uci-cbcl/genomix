@@ -73,6 +73,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
     public static boolean EXPAND_CANDIDATE_BRANCHES; // whether to get kmer from all possible candidate branches
     public static boolean DELAY_PRUNE; // Whether we should perform the prune as a separate job, after all the walks have completed their march.
     public static boolean EARLY_STOP;	// whether to stop early if there is large overlap with other walks
+    public static boolean SAVE_BEST_PATH;
     
     public static final boolean STORE_WALK = false; // whether to save the walks - just for test 
     private static int OVERLAP_THRESHOLD = 500;
@@ -135,7 +136,8 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         CANDIDATES_SCORE_WALK = Boolean.parseBoolean(conf.get(GenomixJobConf.SCAFFOLDING_CANDIDATES_SCORE_WALK));
         EXPAND_CANDIDATE_BRANCHES = Boolean.parseBoolean(conf.get(GenomixJobConf.SCAFFOLDING_EXPAND_CANDIDATE_BRANCHES));
         DELAY_PRUNE = Boolean.parseBoolean(conf.get(GenomixJobConf.SCAFFOLDING_DELAY_PRUNE));
-        EARLY_STOP = Boolean.parseBoolean(conf.get(GenomixJobConf.SCAFFOLDING_EARLY_STOP));         
+        EARLY_STOP = Boolean.parseBoolean(conf.get(GenomixJobConf.SCAFFOLDING_EARLY_STOP));
+        SAVE_BEST_PATH = Boolean.parseBoolean(conf.get(GenomixJobConf.SCAFFOLDING_SAVE_BEST_PATH));
 
         if (getSuperstep() == 1) {
             // manually clear state
@@ -482,19 +484,14 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
     private void removeOtherIncomingEdges(RayMessage msg, VKmer id, RayValue vertex) {
         // remove all other "incoming" nodes except the walk we just came from. on first iteration, we haven't really "hopped" from anywhere 
         // find the most recent node in the walk-- this was the frontier last iteration
-        int lastOffset = Integer.MIN_VALUE;
-        int lastIndex = -1;
-        for (int i = 0; i < msg.getWalkIds().size(); i++) {
-            if (msg.getWalkOffsets().get(i) > lastOffset) {
-                lastOffset = msg.getWalkOffsets().get(i);
-                lastIndex = i;
-            }
-        }
+        int lastIndex = getLastNodeIndex(msg);
         VKmer lastId = msg.getWalkIds().getPosition(lastIndex);
         DIR prevDir = msg.getEdgeTypeBackToFrontier().dir();
 
-        if (DELAY_PRUNE) {
-			vertex.getIncomingEdgesToKeep().add(new SimpleEntry<>(msg.getEdgeTypeBackToFrontier(), lastId));
+        if (DELAY_PRUNE || SAVE_BEST_PATH) {
+        	Pair<Entry<EDGETYPE, VKmer>, Rules> p = new ImmutablePair<Entry<EDGETYPE, VKmer>, Rules>(new SimpleEntry<EDGETYPE, VKmer>(msg.getEdgeTypeBackToFrontier(), lastId), msg.previousRules);
+        	LOG.info("incoming edge I'm saving: " + p);
+			vertex.getIncomingEdgesToKeep().add(p);
 		} else {
 	        for (EDGETYPE et : prevDir.edgeTypes()) {
 	            Iterator<VKmer> it = vertex.getEdges(et).iterator();
@@ -514,6 +511,19 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
 	        }
         }
     }
+
+
+	private static int getLastNodeIndex(RayMessage msg) {
+		int lastOffset = Integer.MIN_VALUE;
+        int lastIndex = -1;
+        for (int i = 0; i < msg.getWalkIds().size(); i++) {
+            if (msg.getWalkOffsets().get(i) > lastOffset) {
+                lastOffset = msg.getWalkOffsets().get(i);
+                lastIndex = i;
+            }
+        }
+		return lastIndex;
+	}
 
     // local variables for sendCandidatesToFrontier
     private transient RayMessage tmpCandidate = new RayMessage();
@@ -1149,7 +1159,8 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         	// look for a path that dominates all others.
         	// actually, some paths may share the same starting nodes; we don't have to dominate those ones
 
-        	// look for a paired-end dominator
+        	Rules dominantRules = null;
+			// look for a paired-end dominator
         	if (pairedEndScores.size() > 0) {
         		for (int queryI = 0; queryI < numPaths; queryI++) {
         			equalPairedEdgeFound = false;
@@ -1176,6 +1187,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         				SimpleEntry<EDGETYPE, VKmer> queryBranch = pairedEndScores.get(queryI).getSingleKey();
         				dominantKmer = queryBranch.getValue();
         				dominantEdgeType = queryBranch.getKey();
+        				dominantRules = pairedEndScores.get(queryI).getRules(queryBranch);
         				dominantEdgeFound = true;
         				break;
         			}
@@ -1215,6 +1227,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         				if (queryBranch !=  null){
         					dominantKmer = queryBranch.getValue();
         					dominantEdgeType = queryBranch.getKey();
+        					dominantRules = singleEndScores.get(queryI).getRules(queryBranch);
         					dominantEdgeFound = true;
         					break;
         				}
@@ -1223,8 +1236,9 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         	}
         	if (dominantEdgeFound) {
         		// if a dominant edge is found, all the others must be removed.
-        		if (DELAY_PRUNE) {
-        			vertex.getOutgoingEdgesToKeep().add(new SimpleEntry<>(dominantEdgeType, dominantKmer));
+        		if (DELAY_PRUNE || SAVE_BEST_PATH) {
+        			Pair<Entry<EDGETYPE, VKmer>, Rules> p = new ImmutablePair<Entry<EDGETYPE, VKmer>, Rules>(new SimpleEntry<EDGETYPE, VKmer>(dominantEdgeType, dominantKmer), dominantRules);
+        			vertex.getOutgoingEdgesToKeep().add(p);
         		} else if (REMOVE_OTHER_OUTGOING) {
         			for (EDGETYPE et : dominantEdgeType.dir().edgeTypes()) {
         				for (VKmer kmer : vertex.getEdges(et)) {
@@ -1246,6 +1260,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         		outgoingMsg.reset();
         		outgoingMsg.setSeed(new VKmer(seed));
         		outgoingMsg.setMessageType(RayMessageType.CONTINUE_WALK);
+        		outgoingMsg.previousRules = dominantRules;
         		outgoingMsg.setEdgeTypeBackToFrontier(dominantEdgeType.mirror());
         		outgoingMsg.setWalkIds(new VKmerList(walkIds));
         		outgoingMsg.setWalkOffsets(walkOffsets);

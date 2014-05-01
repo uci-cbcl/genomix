@@ -26,7 +26,7 @@ public class RayScores implements Writable {
         addAll(other);
     }
 
-    public class Rules {
+    public static class Rules {
         public int ruleA = 0; // the overlap-weighted score (reads that overlap the walk better receive higher ruleA values)
         public int ruleB = 0; // the raw score
         public int ruleC = Integer.MAX_VALUE; // the smallest score seen in a single node

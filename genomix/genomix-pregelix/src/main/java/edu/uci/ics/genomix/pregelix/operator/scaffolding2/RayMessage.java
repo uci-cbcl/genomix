@@ -16,6 +16,7 @@ import edu.uci.ics.genomix.data.types.Kmer;
 import edu.uci.ics.genomix.data.types.VKmer;
 import edu.uci.ics.genomix.data.types.VKmerList;
 import edu.uci.ics.genomix.pregelix.base.MessageWritable;
+import edu.uci.ics.genomix.pregelix.operator.scaffolding2.RayScores.Rules;
 import edu.uci.ics.genomix.pregelix.operator.scaffolding2.RayValue.FIELDS;
 
 public class RayMessage extends MessageWritable {
@@ -73,6 +74,7 @@ public class RayMessage extends MessageWritable {
 
     /** for early stop **/
     private HashMap<VKmer, Integer> visitCounter = null;
+	public Rules previousRules = null;
     
     public static Logger LOG = Logger.getLogger(RayMessage.class.getName());
     
@@ -161,6 +163,8 @@ public class RayMessage extends MessageWritable {
     			getVisitCounter().put(entry.getKey(), entry.getValue());
     		}
         }
+        
+        this.previousRules = other.previousRules;
     }
 
     @Override
@@ -232,6 +236,12 @@ public class RayMessage extends MessageWritable {
             	
             }   
         }
+        if (in.readBoolean()) {
+        	previousRules = new Rules();
+        	previousRules.readFields(in);
+        } else {
+        	previousRules = null;
+        }
     }
 
     @Override
@@ -296,6 +306,10 @@ public class RayMessage extends MessageWritable {
     		}
         }
         
+        out.writeBoolean(previousRules != null);
+        if (previousRules != null) {
+        	previousRules.write(out);
+        }
     }
 
     @Override
@@ -539,5 +553,6 @@ public class RayMessage extends MessageWritable {
         candidatePathIds.clear();
         seed = null;
         visitCounter = null;
+        previousRules = null;
     }
 }

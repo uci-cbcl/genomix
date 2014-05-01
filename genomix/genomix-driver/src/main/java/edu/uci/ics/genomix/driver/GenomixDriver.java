@@ -608,13 +608,10 @@ public class GenomixDriver {
                 }
                 // replace
                 allPatterns.add(i++, Patterns.RAY_SCAFFOLD_FORWARD);
-                if (Boolean.parseBoolean(conf.get(GenomixJobConf.SCAFFOLDING_DELAY_PRUNE))) {
-                	allPatterns.add(i++, Patterns.RAY_SCAFFOLD_PRUNE);
-                }
 //                allPatterns.add(i++, Patterns.MERGE);
 //                allPatterns.add(i++, Patterns.STATS);
                 allPatterns.add(i++, Patterns.RAY_SCAFFOLD_REVERSE);
-                if (Boolean.parseBoolean(conf.get(GenomixJobConf.SCAFFOLDING_DELAY_PRUNE))) {
+                if (Boolean.parseBoolean(conf.get(GenomixJobConf.SCAFFOLDING_DELAY_PRUNE)) || Boolean.parseBoolean(conf.get(GenomixJobConf.SCAFFOLDING_SAVE_BEST_PATH))) {
                 	allPatterns.add(i++, Patterns.RAY_SCAFFOLD_PRUNE);
                 }
             }
