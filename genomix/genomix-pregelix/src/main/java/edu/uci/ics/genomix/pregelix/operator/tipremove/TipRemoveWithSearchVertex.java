@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.logging.Logger;
 
+import org.eclipse.jdt.core.dom.InfixExpression;
+
 import edu.uci.ics.genomix.data.config.GenomixJobConf;
 import edu.uci.ics.genomix.data.types.DIR;
 import edu.uci.ics.genomix.data.types.EDGETYPE;
@@ -27,6 +29,8 @@ public class TipRemoveWithSearchVertex extends
     private static final Logger LOG = Logger.getLogger(TipRemoveWithSearchVertex.class.getName());
 
     private static int MIN_LENGTH_TO_KEEP = -1;
+    private static float MIN_COVERAGE_TO_KEEP = -1;
+    private static float delta;
 
     @Override
     public void compute(Iterator<TipRemoveWithSearchMessage> msgIterator) {
@@ -45,6 +49,16 @@ public class TipRemoveWithSearchVertex extends
             MIN_LENGTH_TO_KEEP = Integer.parseInt(getContext().getConfiguration().get(
                     GenomixJobConf.TIP_REMOVE_MAX_LENGTH));
         }
+        if(MIN_COVERAGE_TO_KEEP == -1){
+        	delta = Float.parseFloat(getContext().getConfiguration().get(
+                    GenomixJobConf.TIP_REMOVE_MIN_ADDITIONAL_COVERAGE));
+        	if (delta != -1){
+        		MIN_COVERAGE_TO_KEEP = Float.parseFloat(getContext().getConfiguration().get(
+        				GenomixJobConf.REMOVE_BAD_COVERAGE_MIN_COVERAGE)) + delta;
+        	}else {
+        		MIN_COVERAGE_TO_KEEP = Float.POSITIVE_INFINITY;
+        	}
+        }
     }
 
     /**
@@ -53,15 +67,19 @@ public class TipRemoveWithSearchVertex extends
     public Iterator<TipRemoveWithSearchMessage> initiateTipSearch() {
         Node node = getVertexValue();
         ArrayList<TipRemoveWithSearchMessage> tipMsgs = new ArrayList<TipRemoveWithSearchMessage>();
-        if (node.degree(DIR.FORWARD) == 0) {
-            TipRemoveWithSearchMessage tipMsg = new TipRemoveWithSearchMessage();
-            tipMsg.setFlag(EDGETYPE.RR.get());
-            tipMsgs.add(tipMsg);
-        } else if (node.degree(DIR.REVERSE) == 0) {
-            TipRemoveWithSearchMessage tipMsg = new TipRemoveWithSearchMessage();
-            tipMsg.setFlag(EDGETYPE.FF.get());
-            tipMsgs.add(tipMsg);
-        }
+	    if (node.degree(DIR.FORWARD) == 0) {
+	        if (node.getAverageCoverage() <= MIN_COVERAGE_TO_KEEP){
+		       TipRemoveWithSearchMessage tipMsg = new TipRemoveWithSearchMessage();
+		       tipMsg.setFlag(EDGETYPE.RR.get());
+		       tipMsgs.add(tipMsg);
+	        }
+	    } else if (node.degree(DIR.REVERSE) == 0) {
+	         if (node.getAverageCoverage() <= MIN_COVERAGE_TO_KEEP){
+		        TipRemoveWithSearchMessage tipMsg = new TipRemoveWithSearchMessage();
+		        tipMsg.setFlag(EDGETYPE.FF.get());
+		        tipMsgs.add(tipMsg);
+	        }
+	    }
         return tipMsgs.iterator();
     }
 
@@ -91,8 +109,12 @@ public class TipRemoveWithSearchVertex extends
                 incomingMsg.visitNode(getVertexId(), node);
             } else {
                 // a simple path node; continue the search
-                stop = false;
-                incomingMsg.visitNode(getVertexId(), node);
+            	if(node.getAverageCoverage() > MIN_COVERAGE_TO_KEEP){
+            		stop = true;
+            	} else {
+            		stop = false;
+            		incomingMsg.visitNode(getVertexId(), node);
+            	}
             }
 
             if (incomingMsg.getVisitedLength() < MIN_LENGTH_TO_KEEP) {

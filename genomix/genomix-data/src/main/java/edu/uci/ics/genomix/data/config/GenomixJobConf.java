@@ -136,7 +136,10 @@ public class GenomixJobConf extends JobConf {
 
         @Option(name = "-tipRemove_maxLength", usage = "Tips (dead ends in the graph) whose length is less than this threshold are removed from the graph", required = false)
         private int tipRemove_maxLength = -1;
-
+        
+        @Option(name = "-tipRemove_minAdditionalCoverage", usage = "Tips (dead ends in the graph) whose coverage is less than (removeBadCoverage_minCoverage + tipRemove_minAdditionalCoverage) are removed from graph", required = false)
+        private float tipRemove_minAdditionalCoverage = -1; 
+        
         @Option(name = "-scaffolding_serialRunMinLength", usage = "Rather than processing all the nodes in parallel, run separate scaffolding jobs serially, running with a seed of all nodes longer than this threshold", required = false)
         private int scaffolding_serialRunMinLength = -1;
 
@@ -161,6 +164,9 @@ public class GenomixJobConf extends JobConf {
         @Option(name = "-scaffold_seedLengthPercentile", usage = "Choose scaffolding seeds as the nodes with longest kmer length.  If this is 0 < percentile < 1, this value will be interpreted as a fraction of the graph (so .01 will mean 1% of the graph will be a seed).  For fraction >= 1, it will be interpreted as the (approximate) *number* of seeds to include. Mutually exclusive with -scaffold_seedScorePercentile.", required = false)
         private float scaffold_seedLengthPercentile = -1;
         
+        @Option(name = "-scaffold_confidentSeedLengthThreshold", usage = "Choose confident scaffolding seeds as the nodes with longest kmer length.", required = false)
+        private float scaffold_confidentSeedLengthThreshold = -1;
+        
         @Option(name = "-scaffold_removeOtherOutgoing", usage = "Whether or not to remove all non-walk edges in the direction of the walk during scaffold.", handler=ExplicitBooleanOptionHandler.class)
 		private boolean scaffold_removeOtherOutgoing = true;
 
@@ -180,7 +186,10 @@ public class GenomixJobConf extends JobConf {
 		private boolean scaffold_delayPrune = true;
 
         @Option(name = "-scaffold_earlyStop", usage = "Whether or not to stop walks that cross paths.", handler=ExplicitBooleanOptionHandler.class)
-		private boolean scaffold_earlyStop = false;
+		private boolean scaffold_earlyStop = false;       
+        
+        @Option(name = "-scaffold_confidentSeedsMinCoverage", usage = "Minimum coverage for a confident seed", required = false)
+		private float scaffold_confidentSeedsMinCoverage = -1;
 
         // Hyracks/Pregelix Setup
         @Option(name = "-profile", usage = "Whether or not to do runtime profifling", required = false)
@@ -216,6 +225,7 @@ public class GenomixJobConf extends JobConf {
 
         @Option(name = "-setCutoffCoverageByFittingMixture", usage = "Whether or not to automatically set cutoff coverage based on fitting mixture")
         private boolean setCutoffCoverageByFittingMixture = false;
+
     }
 
     /**
@@ -250,7 +260,9 @@ public class GenomixJobConf extends JobConf {
         TIP_ADD,
         BRIDGE_ADD,
         BUBBLE_ADD,
-        BFS;
+        BFS, 
+        FIND_CONFIDENT_SEEDS;
+        
         /** the jobs that actually mutate the graph */
         public static final EnumSet<Patterns> mutatingJobs = EnumSet.complementOf(EnumSet.of(Patterns.DUMP_FASTA,
                 Patterns.CHECK_SYMMETRY, Patterns.PLOT_SUBGRAPH, Patterns.STATS, Patterns.TIP_ADD, Patterns.BRIDGE_ADD,
@@ -330,6 +342,7 @@ public class GenomixJobConf extends JobConf {
     public static final String REMOVE_BAD_COVERAGE_MIN_COVERAGE = "genomix.removeBadCoverage.minCoverage";
     public static final String REMOVE_BAD_COVERAGE_MAX_COVERAGE = "genomix.removeBadCoverage.maxCoverage";
     public static final String TIP_REMOVE_MAX_LENGTH = "genomix.tipRemove.maxLength";
+    public static final String TIP_REMOVE_MIN_ADDITIONAL_COVERAGE ="genomix.tipRemove.minAdiitionalCoverage";
     public static final String MAX_READIDS_PER_EDGE = "genomix.maxReadidsPerEdge";
     
     public static final String SCAFFOLDING_INITIAL_DIRECTION = "genomix.scaffolding.initialDirection";
@@ -346,6 +359,9 @@ public class GenomixJobConf extends JobConf {
 	public static final String SCAFFOLDING_EXPAND_CANDIDATE_BRANCHES = "genomix.scaffolding.expandCandidateBranches";
 	public static final String SCAFFOLDING_DELAY_PRUNE = "genomix.scaffolding.delayPrune";
 	public static final String SCAFFOLDING_EARLY_STOP = "genomix.scaffolding.earlyStop";
+	public static final String SCAFFOLDING_CONFIDENT_SEEDS = "genomix.scaffolding.confidentSeeds";
+	public static final String SCAFFOLDING_CONFIDENT_SEEDS_MIN_COVERAGE = "genomix.scaffolding.confidentSeedsMinCoverage";
+	public static final String SCAFFOLDING_CONFIDENT_SEED_LENGTH_THRESHOLD = "genomix.scaffolding.confidentSeedLengthThreshold";
 	
     public static final String PLOT_SUBGRAPH_START_SEEDS = "genomix.plotSubgraph.startSeeds";
     public static final String PLOT_SUBGRAPH_NUM_HOPS = "genomix.plotSubgraph.numHops";
@@ -504,7 +520,8 @@ public class GenomixJobConf extends JobConf {
 
         if (getInt(TIP_REMOVE_MAX_LENGTH, -1) == -1 && kmerLength != -1)
             setInt(TIP_REMOVE_MAX_LENGTH, kmerLength);
-
+        
+        
         if (getInt(MAX_READIDS_PER_EDGE, -1) == -1)
             setInt(MAX_READIDS_PER_EDGE, 250);
 
@@ -629,6 +646,7 @@ public class GenomixJobConf extends JobConf {
         setFloat(REMOVE_BAD_COVERAGE_MIN_COVERAGE, opts.removeBadCoverage_minCoverage);
         setFloat(REMOVE_BAD_COVERAGE_MAX_COVERAGE, opts.removeBadCoverage_maxCoverage);
         setInt(TIP_REMOVE_MAX_LENGTH, opts.tipRemove_maxLength);
+        setFloat(TIP_REMOVE_MIN_ADDITIONAL_COVERAGE, opts.tipRemove_minAdditionalCoverage);
         if (opts.scaffolding_serialRunMinLength != -1)
             setInt(SCAFFOLDING_SERIAL_RUN_MIN_LENGTH_THRESHOLD, opts.scaffolding_serialRunMinLength);
         if (opts.scaffold_seedScorePercentile != -1) {
@@ -648,6 +666,8 @@ public class GenomixJobConf extends JobConf {
         setBoolean(SCAFFOLDING_EXPAND_CANDIDATE_BRANCHES, opts.scaffold_expandCandidateBranches);
         setBoolean(SCAFFOLDING_DELAY_PRUNE, opts.scaffold_delayPrune);
         setBoolean(SCAFFOLDING_EARLY_STOP, opts.scaffold_earlyStop);
+        setFloat(SCAFFOLDING_CONFIDENT_SEEDS_MIN_COVERAGE, opts.scaffold_confidentSeedsMinCoverage);
+        setFloat(SCAFFOLDING_CONFIDENT_SEED_LENGTH_THRESHOLD, opts.scaffold_confidentSeedLengthThreshold);
         
         setInt(STATS_EXPECTED_GENOMESIZE, opts.stats_expectedGenomeSize);
         setInt(STATS_MIN_CONTIGLENGTH, opts.stats_minContigLength);

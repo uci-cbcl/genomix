@@ -76,6 +76,8 @@ import edu.uci.ics.genomix.pregelix.operator.scaffolding2.PruneVertex;
 import edu.uci.ics.genomix.pregelix.operator.removebadcoverage.RemoveBadCoverageVertex;
 //import edu.uci.ics.genomix.pregelix.operator.removelowcoverage.ShiftLowCoverageReadSetVertex;
 import edu.uci.ics.genomix.pregelix.operator.scaffolding2.RayVertex;
+import edu.uci.ics.genomix.pregelix.operator.seeddetection.ConfidentVertex;
+import edu.uci.ics.genomix.pregelix.operator.seeddetection.PruneSeedVertex;
 import edu.uci.ics.genomix.pregelix.operator.simplebubblemerge.SimpleBubbleMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.symmetrychecker.SymmetryCheckerVertex;
 import edu.uci.ics.genomix.pregelix.operator.test.BridgeAddVertex;
@@ -95,6 +97,10 @@ public class GenomixDriver {
 
     public static final Logger GENOMIX_ROOT_LOG = Logger.getLogger("edu.uci.ics.genomix"); // here only so we can control children loggers 
     private static final Logger LOG = Logger.getLogger(GenomixDriver.class.getName());
+    private String tmpPrevOutput;
+    private String tmpCurOutput;
+    private Boolean aggressivePrune = false;
+    private Boolean tmpOutput = false;
     private String prevOutput;
     private String curOutput;
     private int stepNum;
@@ -114,6 +120,7 @@ public class GenomixDriver {
         curOutput = conf.get(GenomixJobConf.HDFS_WORK_PATH) + File.separator + String.format("%02d-", stepNum) + step;
         FileInputFormat.setInputPaths(conf, new Path(prevOutput));
         FileOutputFormat.setOutputPath(conf, new Path(curOutput));
+
     }
 
     public static double cur_expMean = -1;
@@ -238,7 +245,7 @@ public class GenomixDriver {
                 break;
                 **/
             case REMOVE_BAD_COVERAGE:
-                pregelixJobs.add(RemoveBadCoverageVertex.getConfiguredJob(conf, RemoveBadCoverageVertex.class));
+            		pregelixJobs.add(RemoveBadCoverageVertex.getConfiguredJob(conf, RemoveBadCoverageVertex.class)); 
                 break;
             case BRIDGE:
                 pregelixJobs.add(BridgeRemoveVertex.getConfiguredJob(conf, BridgeRemoveVertex.class));
@@ -305,24 +312,6 @@ public class GenomixDriver {
                     	}
                     }
                 } 
-                /**
-                    jobNumber++;
-                    //FileInputFormat.setInputPaths(conf, new Path(prevOutput));
-                    //FileOutputFormat.setOutputPath(conf, new Path(curOutput));
-                    conf.set(GenomixJobConf.SCAFFOLD_SEED_ID,"GATAAGACGCGCCAGCGTCGC");
-                    pregelixJobs.add(RayVertex.getConfiguredJob(conf, RayVertex.class));
-                    jobNumber++;
-                    conf.set(GenomixJobConf.SCAFFOLD_SEED_ID, "CGACGCTGGCGCGTCTTATCA");
-                    pregelixJobs.add(RayVertex.getConfiguredJob(conf, RayVertex.class));
-                    jobNumber++;
-                    conf.set(GenomixJobConf.SCAFFOLD_SEED_ID, "ATGCGACGCTGGCGCGTCTTA");
-                    pregelixJobs.add(RayVertex.getConfiguredJob(conf, RayVertex.class));
-                    jobNumber++;
-                    conf.set(GenomixJobConf.SCAFFOLD_SEED_ID, "CGCGTCTTATCAGGCCTACAA");
-                    pregelixJobs.add(RayVertex.getConfiguredJob(conf, RayVertex.class));
-                    
-                    
-                }**/
                     else {
                     Float scorePercentile = conf.getFloat(GenomixJobConf.SCAFFOLD_SEED_SCORE_PERCENTILE, -1);
                     Float lengthPercentile = conf.getFloat(GenomixJobConf.SCAFFOLD_SEED_LENGTH_PERCENTILE, -1);
@@ -344,6 +333,44 @@ public class GenomixDriver {
                 break;
             case RAY_SCAFFOLD_PRUNE:
             	pregelixJobs.add(PruneVertex.getConfiguredJob(conf, PruneVertex.class));
+            	break;
+            case FIND_CONFIDENT_SEEDS:
+            	
+            	int jobNumber = 0;
+            	tmpPrevOutput = prevOutput;
+            	String removeBadCoverageMin = conf.get(GenomixJobConf.REMOVE_BAD_COVERAGE_MIN_COVERAGE);
+            	conf.set(GenomixJobConf.REMOVE_BAD_COVERAGE_MIN_COVERAGE, conf.
+            			get(GenomixJobConf.SCAFFOLDING_CONFIDENT_SEEDS_MIN_COVERAGE));
+            	pregelixJobs.add(RemoveBadCoverageVertex.getConfiguredJob(conf, RemoveBadCoverageVertex.class));
+            	
+            	conf.set(GenomixJobConf.REMOVE_BAD_COVERAGE_MIN_COVERAGE, removeBadCoverageMin );
+            	
+            	prevOutput =curOutput;
+            	curOutput = conf.get(GenomixJobConf.HDFS_WORK_PATH) + File.separator
+                        + String.format("%02d-", stepNum) + step + "-job-" + jobNumber;
+            	FileInputFormat.setInputPaths(conf, new Path(prevOutput));
+                FileOutputFormat.setOutputPath(conf, new Path(curOutput));
+                
+                pregelixJobs.add(P4ForPathMergeVertex.getConfiguredJob(conf, P4ForPathMergeVertex.class));
+                
+            	jobNumber++;
+            	prevOutput =curOutput;
+            	curOutput = conf.get(GenomixJobConf.HDFS_WORK_PATH) + File.separator
+                        + String.format("%02d-", stepNum) + step + "-job-" + jobNumber;
+            	FileInputFormat.setInputPaths(conf, new Path(prevOutput));
+                FileOutputFormat.setOutputPath(conf, new Path(curOutput));
+                
+            	pregelixJobs.add(ConfidentVertex.getConfiguredJob(conf, ConfidentVertex.class));
+            	
+            	jobNumber++;
+            	prevOutput =tmpPrevOutput;
+            	curOutput = conf.get(GenomixJobConf.HDFS_WORK_PATH) + File.separator
+                        + String.format("%02d-", stepNum) + step + "-job-" + jobNumber;
+            	FileInputFormat.setInputPaths(conf, new Path(prevOutput));
+                FileOutputFormat.setOutputPath(conf, new Path(curOutput));
+                
+                pregelixJobs.add(PruneSeedVertex.getConfiguredJob(conf, PruneSeedVertex.class));           	
+            	
             	break;
             case DUMP_FASTA:
                 flushPendingJobs(conf);
@@ -565,6 +592,7 @@ public class GenomixDriver {
         numMachines = DriverUtils.getSlaveList(conf).length;
         pregelixJobs = new ArrayList<PregelixJob>();
         stepNum = 0;
+        aggressivePrune = false;
         runLocal = Boolean.parseBoolean(conf.get(GenomixJobConf.RUN_LOCAL));
 
         // clear anything in our HDFS work path and local output directory
