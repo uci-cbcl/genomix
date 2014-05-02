@@ -489,9 +489,15 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         DIR prevDir = msg.getEdgeTypeBackToFrontier().dir();
 
         if (DELAY_PRUNE || SAVE_BEST_PATH) {
-        	Pair<Entry<EDGETYPE, VKmer>, Rules> p = new ImmutablePair<Entry<EDGETYPE, VKmer>, Rules>(new SimpleEntry<EDGETYPE, VKmer>(msg.getEdgeTypeBackToFrontier(), lastId), msg.previousRules);
-        	LOG.info("incoming edge I'm saving: " + p);
-			vertex.getIncomingEdgesToKeep().add(p);
+        	Entry<EDGETYPE, VKmer> edges = new SimpleEntry<EDGETYPE, VKmer>(msg.getEdgeTypeBackToFrontier(), lastId);
+        	LOG.info("incoming edge I'm saving: " + edges + "=" + msg.previousRules);
+        	if (vertex.getIncomingEdgesToKeep().containsKey(edges)) {
+        		if (vertex.getIncomingEdgesToKeep().get(edges) == null || (msg.previousRules != null && vertex.getIncomingEdgesToKeep().get(edges).ruleC < msg.previousRules.ruleC)) {
+        			vertex.getIncomingEdgesToKeep().put(edges, msg.previousRules);
+        		}
+        	} else {
+        		vertex.getIncomingEdgesToKeep().put(edges, msg.previousRules);
+        	}
 		} else {
 	        for (EDGETYPE et : prevDir.edgeTypes()) {
 	            Iterator<VKmer> it = vertex.getEdges(et).iterator();
@@ -1237,8 +1243,14 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         	if (dominantEdgeFound) {
         		// if a dominant edge is found, all the others must be removed.
         		if (DELAY_PRUNE || SAVE_BEST_PATH) {
-        			Pair<Entry<EDGETYPE, VKmer>, Rules> p = new ImmutablePair<Entry<EDGETYPE, VKmer>, Rules>(new SimpleEntry<EDGETYPE, VKmer>(dominantEdgeType, dominantKmer), dominantRules);
-        			vertex.getOutgoingEdgesToKeep().add(p);
+                	Entry<EDGETYPE, VKmer> edges = new SimpleEntry<EDGETYPE, VKmer>(dominantEdgeType, dominantKmer);
+                	if (vertex.getOutgoingEdgesToKeep().containsKey(edges)) {
+                		if (vertex.getOutgoingEdgesToKeep().get(edges) == null || vertex.getOutgoingEdgesToKeep().get(edges).ruleC < dominantRules.ruleC) {
+                			vertex.getOutgoingEdgesToKeep().put(edges, dominantRules);
+                		}
+                	} else {
+                		vertex.getOutgoingEdgesToKeep().put(edges, dominantRules);
+                	}
         		} else if (REMOVE_OTHER_OUTGOING) {
         			for (EDGETYPE et : dominantEdgeType.dir().edgeTypes()) {
         				for (VKmer kmer : vertex.getEdges(et)) {

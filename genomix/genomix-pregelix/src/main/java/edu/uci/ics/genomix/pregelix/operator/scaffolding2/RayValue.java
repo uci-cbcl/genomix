@@ -28,8 +28,8 @@ public class RayValue extends VertexValueWritable {
     HashMap<VKmer, Boolean> stopSearch = null;
     HashMap<VKmer, Integer> pendingCandidateBranchesMap = null;
     HashMap<VKmer, ArrayList<RayMessage>> candidateMsgsMap =  null;
-    ArrayList<Pair<Entry<EDGETYPE, VKmer>, Rules>> outgoingEdgesToKeep  =  null;
-    ArrayList<Pair<Entry<EDGETYPE, VKmer>, Rules>> incomingEdgesToKeep  =  null;
+    HashMap<Entry<EDGETYPE, VKmer>, Rules> outgoingEdgesToKeep  =  null;
+    HashMap<Entry<EDGETYPE, VKmer>, Rules> incomingEdgesToKeep  =  null;
     //ArrayList<RayMessage> candidateMsgs = null;
     
     protected static class FIELDS {
@@ -122,7 +122,7 @@ public class RayValue extends VertexValueWritable {
         }
         
         if ((state & FIELDS.OUTGOING_EDGES_TO_KEEP) != 0) {
-        	outgoingEdgesToKeep = new ArrayList<>();
+        	outgoingEdgesToKeep = new HashMap<>();
         	int count = in.readInt();
         	for (int i = 0; i < count; i++) {
         		EDGETYPE et = EDGETYPE.fromByte(in.readByte());
@@ -133,12 +133,11 @@ public class RayValue extends VertexValueWritable {
         			rules = new Rules();
         			rules.readFields(in);
         		}
-        		Pair<Entry<EDGETYPE, VKmer>, Rules> p = new ImmutablePair<Entry<EDGETYPE, VKmer>, Rules>(new SimpleEntry<EDGETYPE, VKmer>(et, kmer), rules);
-        		getOutgoingEdgesToKeep().add(p);
+        		getOutgoingEdgesToKeep().put(new SimpleEntry<EDGETYPE, VKmer>(et, kmer), rules);
         	}
         }
         if ((state & FIELDS.INCOMING_EDGES_TO_KEEP) != 0) {
-        	incomingEdgesToKeep = new ArrayList<>();
+        	incomingEdgesToKeep = new HashMap<>();
         	int count = in.readInt();
         	for (int i = 0; i < count; i++) {
         		EDGETYPE et = EDGETYPE.fromByte(in.readByte());
@@ -149,7 +148,7 @@ public class RayValue extends VertexValueWritable {
         			rules = new Rules();
         			rules.readFields(in);
         		}
-        		getIncomingEdgesToKeep().add(new ImmutablePair<Entry<EDGETYPE, VKmer>, Rules>(new SimpleEntry<EDGETYPE, VKmer>(et, kmer), rules));
+        		getIncomingEdgesToKeep().put(new SimpleEntry<EDGETYPE, VKmer>(et, kmer), rules);
         	}
         }
     }
@@ -239,9 +238,9 @@ public class RayValue extends VertexValueWritable {
         }
         if (outgoingEdgesToKeep != null && outgoingEdgesToKeep.size() > 0) {
             out.writeInt(outgoingEdgesToKeep.size());
-            for (Pair<Entry<EDGETYPE, VKmer>, Rules> path : outgoingEdgesToKeep){
-            	Entry<EDGETYPE, VKmer> entry = path.getLeft();
-            	Rules rules = path.getRight();
+            for (Entry<Entry<EDGETYPE, VKmer>, Rules> path : outgoingEdgesToKeep.entrySet()){
+            	Entry<EDGETYPE, VKmer> entry = path.getKey();
+            	Rules rules = path.getValue();
             	out.writeByte(entry.getKey().get());
             	entry.getValue().write(out);
             	out.writeBoolean(rules != null);
@@ -253,9 +252,9 @@ public class RayValue extends VertexValueWritable {
         
         if (incomingEdgesToKeep != null && incomingEdgesToKeep.size() > 0) {
             out.writeInt(incomingEdgesToKeep.size());
-            for (Pair<Entry<EDGETYPE, VKmer>, Rules> path : incomingEdgesToKeep){
-            	Entry<EDGETYPE, VKmer> entry = path.getLeft();
-            	Rules rules = path.getRight();
+            for (Entry<Entry<EDGETYPE, VKmer>, Rules> path : incomingEdgesToKeep.entrySet()){
+            	Entry<EDGETYPE, VKmer> entry = path.getKey();
+            	Rules rules = path.getValue();
             	out.writeByte(entry.getKey().get());
             	entry.getValue().write(out);
             	out.writeBoolean(rules != null);
@@ -381,25 +380,25 @@ public class RayValue extends VertexValueWritable {
     	this.flippedFromInitialDirection= flippedFromInitialDirection;
     }
     
-    public ArrayList<Pair<Entry<EDGETYPE, VKmer>, Rules>> getOutgoingEdgesToKeep() {
+    public HashMap<Entry<EDGETYPE, VKmer>, Rules> getOutgoingEdgesToKeep() {
     	if (outgoingEdgesToKeep == null) {
-    		outgoingEdgesToKeep = new ArrayList<>();
+    		outgoingEdgesToKeep = new HashMap<>();
     	}
 		return outgoingEdgesToKeep;
 	}
     
-    public void setForwardEdgesToKeep(ArrayList<Pair<Entry<EDGETYPE, VKmer>, Rules>> outgoingEdgesToKeep) {
+    public void setForwardEdgesToKeep(HashMap<Entry<EDGETYPE, VKmer>, Rules> outgoingEdgesToKeep) {
     	this.outgoingEdgesToKeep = outgoingEdgesToKeep;
 	}
     
-    public ArrayList<Pair<Entry<EDGETYPE, VKmer>, Rules>> getIncomingEdgesToKeep() {
+    public HashMap<Entry<EDGETYPE, VKmer>, Rules> getIncomingEdgesToKeep() {
     	if (incomingEdgesToKeep == null) {
-    		incomingEdgesToKeep = new ArrayList<>();
+    		incomingEdgesToKeep = new HashMap<>();
     	}
 		return incomingEdgesToKeep;
 	}
     
-    public void setIncomingEdgesToKeep(ArrayList<Pair<Entry<EDGETYPE, VKmer>, Rules>> incomingEdgesToKeep) {
+    public void setIncomingEdgesToKeep(HashMap<Entry<EDGETYPE, VKmer>, Rules> incomingEdgesToKeep) {
     	this.incomingEdgesToKeep = incomingEdgesToKeep;
 	}
     

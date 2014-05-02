@@ -52,37 +52,37 @@ public class PruneVertex extends DeBruijnGraphCleanVertex<RayValue, PruneMessage
 		RayValue vertex = getVertexValue();
 		if (getSuperstep() == 1) {
 			// notify neighbors about which edges I want to keep
-			for (Pair<Entry<EDGETYPE, VKmer>, Rules> path : vertex.getOutgoingEdgesToKeep()) {
-				Entry<EDGETYPE, VKmer> entry = path.getLeft();
+			for (Entry<Entry<EDGETYPE, VKmer>, Rules> path : vertex.getOutgoingEdgesToKeep().entrySet()) {
+				Entry<EDGETYPE, VKmer> entry = path.getKey();
 				// send to my neighbor the scores I want to keep
 				outgoingMsg.reset();
 				outgoingMsg.setSourceVertexId(getVertexId());
 				outgoingMsg.setFlag(entry.getKey().mirror().get());
-				outgoingMsg.rules = path.getRight();
+				outgoingMsg.rules = path.getValue();
 				sendMsg(entry.getValue(), outgoingMsg);
 				
 				// also send a msg to myself indicating I want to keep this edge to my neighbor
 				outgoingMsg.reset();
 				outgoingMsg.setSourceVertexId(entry.getValue());
 				outgoingMsg.setFlag(entry.getKey().get());
-				outgoingMsg.rules = path.getRight();
+				outgoingMsg.rules = path.getValue();
 				sendMsg(getVertexId(), outgoingMsg);
 			}
 			
-			for (Pair<Entry<EDGETYPE, VKmer>, Rules> path : vertex.getIncomingEdgesToKeep()) {
-				Entry<EDGETYPE, VKmer> entry = path.getLeft();
+			for (Entry<Entry<EDGETYPE, VKmer>, Rules> path : vertex.getIncomingEdgesToKeep().entrySet()) {
+				Entry<EDGETYPE, VKmer> entry = path.getKey();
 				// to neighbor
 				outgoingMsg.reset();
 				outgoingMsg.setSourceVertexId(getVertexId());
 				outgoingMsg.setFlag(entry.getKey().mirror().get());
-				outgoingMsg.rules = path.getRight();
+				outgoingMsg.rules = path.getValue();
 				sendMsg(entry.getValue(), outgoingMsg);
 				
 				// to self
 				outgoingMsg.reset();
 				outgoingMsg.setSourceVertexId(entry.getValue());
 				outgoingMsg.setFlag(entry.getKey().get());
-				outgoingMsg.rules = path.getRight();
+				outgoingMsg.rules = path.getValue();
 				sendMsg(getVertexId(), outgoingMsg);
 			}
 			

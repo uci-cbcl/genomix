@@ -267,10 +267,10 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
                     PlotOrientation.VERTICAL, true, true, false);
             // Write the data to the output stream:
             FileSystem fileSys = FileSystem.get(conf);
-            FSDataOutputStream outstream = fileSys.create(
-                    new Path(outputDir + File.separator + graphType + "-hist.png"), true);
-            ChartUtilities.writeChartAsPNG(outstream, chart, 800, 600);
-            outstream.close();
+//            FSDataOutputStream outstream = fileSys.create(
+//                    new Path(outputDir + File.separator + graphType + "-hist.png"), true);
+//            ChartUtilities.writeChartAsPNG(outstream, chart, 800, 600);
+//            outstream.close();
         }
     }
 
@@ -315,10 +315,10 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
                     PlotOrientation.VERTICAL, true, true, false);
             // Write the data to the output stream:
             FileSystem fileSys = FileSystem.get(conf);
-            FSDataOutputStream outstream = fileSys.create(
-                    new Path(outputDir + File.separator + graphType + "-hist.png"), true);
-            ChartUtilities.writeChartAsPNG(outstream, chart, 800, 600);
-            outstream.close();
+//            FSDataOutputStream outstream = fileSys.create(
+//                    new Path(outputDir + File.separator + graphType + "-hist.png"), true);
+//            ChartUtilities.writeChartAsPNG(outstream, chart, 800, 600);
+//            outstream.close();
         }
     }
 
