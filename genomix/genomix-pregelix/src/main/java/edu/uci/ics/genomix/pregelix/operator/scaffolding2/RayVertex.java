@@ -1465,7 +1465,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
 
         long numSeen = 0;
         int ignore = 0;
-        Integer lastSeen = null;
+        int lastSeen = 0;
         for (Entry<Integer, Long> e : scoreHistogram.descendingMap().entrySet()) {
         	//ignore++;
         	//if (ignore > (scoreHistogram.size()/ (1.5))){
