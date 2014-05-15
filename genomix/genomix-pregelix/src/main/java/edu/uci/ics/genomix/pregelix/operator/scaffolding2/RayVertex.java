@@ -1299,7 +1299,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
 
 	private static HashSet<Entry<EDGETYPE, VKmer>> getHighNeighbors(RayValue frontier, ArrayList<RayScores> pairedEndScores, ArrayList<RayScores> singleEndScores) {
 		HashSet<Entry<EDGETYPE, VKmer>> countHighNeighbors = new HashSet<>();
-		if (frontier.getKmerLength() > MAX_DISTANCE) {
+//		if (frontier.getKmerLength() > MAX_DISTANCE) {
 			for (List<RayScores> list : Arrays.asList(pairedEndScores, singleEndScores)) {
 				for (RayScores score: list) {
 					Entry<EDGETYPE, VKmer> scoreKey = score.getSingleKey();
@@ -1309,7 +1309,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
 					}
 				}
 			}
-		}
+//		}
 		return countHighNeighbors;
 	}
 	
@@ -1340,8 +1340,8 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
 //			}
 //			VKmer newId = new VKmer("ATGCTGTGCTGCTGATCGATCGTAGCTAGCTAGTCGATCGTAG" + b.toString());
 //			creationCount++;
-			VKmer newId = new VKmer(kmerSize + 5);
-			rng.nextBytes(newId.getLetterBytes());
+			VKmer newId = new VKmer(kmerSize);
+			rng.nextBytes(newId.getLetterBytes());  // probably won't collide... I was doing a different length here as well but it causes trouble in the kmerlist...
 			newId = new VKmer(newId); // this fixes some crazy bug in rng...
 			
 			// deep copy using the stream read/write methods.  Thanks, Java.  That's a lot of wrappers.
@@ -1478,7 +1478,6 @@ public class RayVertex extends DeBruijnGraphCleanVertex<RayValue, RayMessage> {
         }
         return lastSeen;
     }
-    
     
     
 }

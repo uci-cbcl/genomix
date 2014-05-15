@@ -239,6 +239,8 @@ public class GenomixClusterManager {
      * @throws IOException
      */
     private void deployJarsToHadoop() throws IOException {
+    	if (true)
+    		return;
         if (!jarsCopiedToHadoop) {
             LOG.info("Deploying jars in my classpath to HDFS Distributed Cache...");
             FileSystem dfs = FileSystem.get(conf);
