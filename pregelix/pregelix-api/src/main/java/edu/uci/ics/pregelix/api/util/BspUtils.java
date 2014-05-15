@@ -51,7 +51,7 @@ import edu.uci.ics.pregelix.api.job.PregelixJob;
  */
 public class BspUtils {
     
-    public static final String TMP_DIR = "/tmp/";
+    public static final String TMP_DIR = "/fast-scratch/wbiesing/tmp-bsp/";
     private static final String COUNTERS_VALUE_ON_ITERATION = ".counters.valueOnIter.";
     private static final String COUNTERS_LAST_ITERATION_COMPLETED = ".counters.lastIterCompleted";
 
@@ -680,7 +680,7 @@ public class BspUtils {
      * @return the spilling dir name
      */
     public static String getGlobalAggregateSpillingDirName(Configuration conf, long superStep) {
-        return "/tmp/pregelix/agg/" + conf.get(PregelixJob.JOB_ID) + "/" + superStep;
+        return TMP_DIR + "/pregelix/agg/" + conf.get(PregelixJob.JOB_ID) + "/" + superStep;
     }
 
     /**
@@ -691,7 +691,7 @@ public class BspUtils {
      * @return the path for vertex checkpointing
      */
     public static String getVertexCheckpointPath(Configuration conf, long lastSuperStep) {
-        return "/tmp/ckpoint/" + BspUtils.getJobId(conf) + "/vertex/" + lastSuperStep;
+        return TMP_DIR + "/ckpoint/" + BspUtils.getJobId(conf) + "/vertex/" + lastSuperStep;
     }
 
     /**
@@ -702,7 +702,7 @@ public class BspUtils {
      * @return the path for message checkpointing
      */
     public static String getMessageCheckpointPath(Configuration conf, long lastSuperStep) {
-        String path = "/tmp/ckpoint/" + BspUtils.getJobId(conf) + "/message/" + lastSuperStep;
+        String path = TMP_DIR + "/ckpoint/" + BspUtils.getJobId(conf) + "/message/" + lastSuperStep;
         return path;
     }
 
@@ -714,7 +714,7 @@ public class BspUtils {
      * @return the path for message checkpointing
      */
     public static String getSecondaryIndexCheckpointPath(Configuration conf, long lastSuperStep) {
-        return "/tmp/ckpoint/" + BspUtils.getJobId(conf) + "/secondaryindex/" + lastSuperStep;
+        return TMP_DIR + "/ckpoint/" + BspUtils.getJobId(conf) + "/secondaryindex/" + lastSuperStep;
     }
 
     /***

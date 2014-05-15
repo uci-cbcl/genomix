@@ -710,7 +710,8 @@ public class GenomixJobConf extends JobConf {
         Kmer.setGlobalKmerLength(Integer.parseInt(conf.get(KMER_LENGTH)));
         //        ExternalableTreeSet.setupManager(conf, new Path(conf.get("hadoop.tmp.dir", "/tmp")));
         //        ExternalableTreeSet.setupManager(conf, new Path("tmp"));
-        FileManager.getManager().initialize(conf, new Path("tmp"));
+//        FileManager.getManager().initialize(conf, new Path("tmp"));
+        FileManager.getManager().initialize(conf, new Path("/fast-scratch/wbiesing/tmp-file-manager"));
         ExternalableTreeSet.setCountLimit(1000);
 
         if (conf.get(READ_LENGTHS) != null) {
