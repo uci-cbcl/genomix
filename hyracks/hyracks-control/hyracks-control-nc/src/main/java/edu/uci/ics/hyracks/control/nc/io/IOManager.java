@@ -17,6 +17,7 @@ package edu.uci.ics.hyracks.control.nc.io;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -154,7 +155,7 @@ public class IOManager implements IIOManager {
         String waPath = dev.getWorkAreaPath();
         File waf;
         try {
-            waf = File.createTempFile(prefix, ".waf", new File(dev.getPath(), waPath));
+            waf = File.createTempFile(prefix + "." + new SecureRandom().nextInt(), ".waf", new File(dev.getPath(), waPath));
         } catch (IOException e) {
             throw new HyracksDataException(e);
         }
