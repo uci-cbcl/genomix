@@ -335,7 +335,6 @@ public class GenomixDriver {
             	pregelixJobs.add(PruneVertex.getConfiguredJob(conf, PruneVertex.class));
             	break;
             case FIND_CONFIDENT_SEEDS:
-            	
             	int jobNumber = 0;
             	tmpPrevOutput = prevOutput;
             	String removeBadCoverageMin = conf.get(GenomixJobConf.REMOVE_BAD_COVERAGE_MIN_COVERAGE);
@@ -706,8 +705,9 @@ public class GenomixDriver {
         String localInputDir = conf.get(GenomixJobConf.LOCAL_INPUT_DIR);
         if (localInputDir != null) {
             hasLocalInput = true;
-            GenomixClusterManager.copyLocalToHDFS(conf, localInputDir, HDFSInputFromLocalDir);
+//            GenomixClusterManager.copyLocalToHDFS(conf, localInputDir, HDFSInputFromLocalDir);
         }
+
         if (hasLocalInput) {
             conf.set(GenomixJobConf.INITIAL_HDFS_INPUT_DIR, HDFSInputFromLocalDir);
         }
