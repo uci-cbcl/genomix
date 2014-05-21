@@ -139,8 +139,12 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
                 for (EDGETYPE e : EDGETYPE.values()) {
                     localUniNode.getEdges(e).unionUpdate(readNode.getEdges(e));
                 }
-                localUniNode.getUnflippedReadIds().unionUpdate(readNode.getUnflippedReadIds());
-                localUniNode.getFlippedReadIds().unionUpdate(readNode.getFlippedReadIds());
+                if (localUniNode.getUnflippedReadIds().size() < 500) {
+                	localUniNode.getUnflippedReadIds().unionUpdate(readNode.getUnflippedReadIds());
+                }
+                if (localUniNode.getFlippedReadIds().size() < 500) {
+                	localUniNode.getFlippedReadIds().unionUpdate(readNode.getFlippedReadIds());
+                }
                 localUniNode.setAverageCoverage(localUniNode.getAverageCoverage() + readNode.getAverageCoverage());
 
                 //TODO This piece of code is for the debug use. It's better to have a better solution for it.
