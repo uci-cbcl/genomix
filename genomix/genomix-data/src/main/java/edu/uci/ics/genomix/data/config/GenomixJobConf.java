@@ -161,6 +161,9 @@ public class GenomixJobConf extends JobConf {
         @Option(name = "-scaffold_seedLengthPercentile", usage = "Choose scaffolding seeds as the nodes with longest kmer length.  If this is 0 < percentile < 1, this value will be interpreted as a fraction of the graph (so .01 will mean 1% of the graph will be a seed).  For fraction >= 1, it will be interpreted as the (approximate) *number* of seeds to include. Mutually exclusive with -scaffold_seedScorePercentile.", required = false)
         private float scaffold_seedLengthPercentile = -1;
         
+        @Option(name = "-scaffold_confidentSeedLengthThreshold", usage = "Choose confident scaffolding seeds as the nodes with longest kmer length.", required = false)
+        private float scaffold_confidentSeedLengthThreshold = -1;
+        
         @Option(name = "-scaffold_removeOtherOutgoing", usage = "Whether or not to remove all non-walk edges in the direction of the walk during scaffold.", handler=ExplicitBooleanOptionHandler.class)
 		private boolean scaffold_removeOtherOutgoing = true;
 
@@ -181,6 +184,12 @@ public class GenomixJobConf extends JobConf {
 
         @Option(name = "-scaffold_earlyStop", usage = "Whether or not to stop walks that cross paths.", handler=ExplicitBooleanOptionHandler.class)
 		private boolean scaffold_earlyStop = false;
+        
+        @Option(name = "-scaffold_confidentSeeds", usage = "Whether or not to choose seeds based on confident graph", handler=ExplicitBooleanOptionHandler.class)
+		private boolean scaffold_confidentSeeds = false;
+        
+        @Option(name = "-scaffold_confidentSeedsMinCoverage", usage = "Minimum coverage for a confident seed", required = false)
+		private float scaffold_confidentSeedsMinCoverage = -1;
 
         // Hyracks/Pregelix Setup
         @Option(name = "-profile", usage = "Whether or not to do runtime profifling", required = false)
@@ -216,6 +225,7 @@ public class GenomixJobConf extends JobConf {
 
         @Option(name = "-setCutoffCoverageByFittingMixture", usage = "Whether or not to automatically set cutoff coverage based on fitting mixture")
         private boolean setCutoffCoverageByFittingMixture = false;
+
     }
 
     /**
@@ -250,7 +260,10 @@ public class GenomixJobConf extends JobConf {
         TIP_ADD,
         BRIDGE_ADD,
         BUBBLE_ADD,
-        BFS;
+        BFS, 
+        LOAD_CONFIDENT_SEEDS,
+        SAVE_CONFIDENT_SEEDS;
+        
         /** the jobs that actually mutate the graph */
         public static final EnumSet<Patterns> mutatingJobs = EnumSet.complementOf(EnumSet.of(Patterns.DUMP_FASTA,
                 Patterns.CHECK_SYMMETRY, Patterns.PLOT_SUBGRAPH, Patterns.STATS, Patterns.TIP_ADD, Patterns.BRIDGE_ADD,
@@ -346,6 +359,9 @@ public class GenomixJobConf extends JobConf {
 	public static final String SCAFFOLDING_EXPAND_CANDIDATE_BRANCHES = "genomix.scaffolding.expandCandidateBranches";
 	public static final String SCAFFOLDING_DELAY_PRUNE = "genomix.scaffolding.delayPrune";
 	public static final String SCAFFOLDING_EARLY_STOP = "genomix.scaffolding.earlyStop";
+	public static final String SCAFFOLDING_CONFIDENT_SEEDS = "genomix.scaffolding.confidentSeeds";
+	public static final String SCAFFOLDING_CONFIDENT_SEEDS_MIN_COVERAGE = "genomix.scaffolding.confidentSeedsMinCoverage";
+	public static final String SCAFFOLDING_CONFIDENT_SEED_LENGTH_THRESHOLD = "genomix.scaffolding.confidentSeedLengthThreshold";
 	
     public static final String PLOT_SUBGRAPH_START_SEEDS = "genomix.plotSubgraph.startSeeds";
     public static final String PLOT_SUBGRAPH_NUM_HOPS = "genomix.plotSubgraph.numHops";
@@ -648,6 +664,9 @@ public class GenomixJobConf extends JobConf {
         setBoolean(SCAFFOLDING_EXPAND_CANDIDATE_BRANCHES, opts.scaffold_expandCandidateBranches);
         setBoolean(SCAFFOLDING_DELAY_PRUNE, opts.scaffold_delayPrune);
         setBoolean(SCAFFOLDING_EARLY_STOP, opts.scaffold_earlyStop);
+        setBoolean(SCAFFOLDING_CONFIDENT_SEEDS, opts.scaffold_confidentSeeds);
+        setFloat(SCAFFOLDING_CONFIDENT_SEEDS_MIN_COVERAGE, opts.scaffold_confidentSeedsMinCoverage);
+        setFloat(SCAFFOLDING_CONFIDENT_SEED_LENGTH_THRESHOLD, opts.scaffold_confidentSeedLengthThreshold);
         
         setInt(STATS_EXPECTED_GENOMESIZE, opts.stats_expectedGenomeSize);
         setInt(STATS_MIN_CONTIGLENGTH, opts.stats_minContigLength);
